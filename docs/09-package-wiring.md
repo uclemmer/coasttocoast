@@ -15,7 +15,7 @@ never as a path repository and never as `dev-main` or `@dev`. Path repositories 
     { "type": "vcs", "url": "https://github.com/uclemmer/laravel-core.git" }
 ],
 "require": {
-    "uclemmer/laravel-core": "^0.1.0"
+    "uclemmer/laravel-core": "^0.2"
 }
 ```
 
@@ -28,9 +28,9 @@ credentials are cached there; CI and deploy targets need a deploy key or PAT wit
 2. Bump the constraint here and `composer update uclemmer/laravel-core`.
 3. Publish any new migrations (below), run them, and run the suite.
 
-This app currently sits on `v0.1.0`, which is behind `main` — notably it predates the extraction of
-legal into `uclemmer/laravel-legal`. That lag is the intended consequence of the tagged-release
-policy, not a defect.
+This app sits on **core `^0.2`** (`v0.2.0`) as of 2026-08-17. Note that `^0.2` deliberately does not
+admit a future `0.3.0`: under SemVer 0.x each minor is treated as breaking, so moving to the next
+core release is always an explicit decision here, never a drift.
 
 ## Publishing migrations — the part that is easy to miss
 
@@ -50,13 +50,21 @@ and reads like the package is broken when it is not.
 The two hand-registered tags in core's service provider are the exception and do use the long
 form: `laravel-core-theme` and `laravel-core-legal-stubs`.
 
-### Open item — the legal migrations
+### The legal migrations — settled 2026-08-17
 
-Publishing under `v0.1.0` brings three `core_legal_*` migrations (documents, versions,
-acceptances), because that tag predates the legal extraction. They are harmless but this app has no
-legal feature. **Decide before the next deploy** whether to drop them from `database/migrations` or
-leave them; if core is later bumped past the extraction, they will no longer be published and the
-tables would be orphaned.
+Publishing under core `v0.1.0` brought three `core_legal_*` migrations (documents, versions,
+acceptances), because that tag predated the legal extraction. **They have been deleted.** Nothing in
+this app referenced legal — no config, no routes, no code, no tests — so the tables were pure
+residue from a feature that now lives in `uclemmer/laravel-legal`.
+
+If this app ever does want versioned legal documents, the answer is to require that package rather
+than to resurrect these files: it owns `legal_documents`, `legal_versions` and `legal_acceptances`
+under its own prefix, and requires core `^0.2` exactly as this app now does.
+
+**If a database has already run them**, dropping the migration files does not drop the tables. A
+local or staging database migrated before 2026-08-17 still carries three empty `core_legal_*`
+tables, and no future migration will remove them. They are inert, but remove them by hand if you
+care about a clean schema.
 
 ## Test bootstrap — permissions must be synced
 
@@ -106,3 +114,5 @@ in the `rep` arm — not email verification.
 | 2026-08-16 | Converted from a broken path repo (`../laravel-core`) to vcs + `^0.1.0`. Filament v5.7.6 arrived transitively via core. Published 16 core migrations. Added the permission sync to `tests/Pest.php`. Removed the redundant `hasVerifiedEmail()` check from `canAccessPanel()`. Suite went from not booting at all to 32/32. |
 | 2026-08-16 | Workspace-wide dependency alignment: PHP was already `^8.4`; `livewire/livewire: ^4.3` added as a direct dependency (v4.4.0, previously arriving only transitively through Filament). |
 | 2026-08-16 | Added `it('leaves email verification to the route middleware, not the panel gate')` to `RepPanelAccessTest`, pinning that `canAccessPanel('rep')` stays open while the `verified:` middleware does the blocking. Verified by mutation: restoring `hasVerifiedEmail()` fails the new test on the gate assertion. Suite 33/33. |
+| 2026-08-17 | Upgraded core `^0.1.0` → `^0.2` (`v0.2.0`), the release that extracted legal. Deleted the three orphaned `core_legal_*` migrations. No new migrations to publish — core `v0.2.0` ships the same thirteen this app already has. Suite 33/33. |
+| 2026-08-17 | Installed Laravel Boost. `boost.json` was missing its `agents` key, so no `CLAUDE.md`/`AGENTS.md`/`.mcp.json` had ever been generated here and `boost:update` failed on every `composer update`. This could not be fixed before now: the app did not boot until core was installed, and `boost:install` needs a bootable app. |

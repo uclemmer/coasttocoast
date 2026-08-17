@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2e912fe1d729920b728542a42058a8e5",
+    "content-hash": "111dbb0ce6a40ea0aa11f00672d5ecef",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -7907,16 +7907,16 @@
         },
         {
             "name": "uclemmer/laravel-core",
-            "version": "v0.1.0",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-core.git",
-                "reference": "8e279bea9b9007d51f2d1233d629af6780e4c132"
+                "reference": "30e2eb24112fd62a74e03d3344d98f8eee66068d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/8e279bea9b9007d51f2d1233d629af6780e4c132",
-                "reference": "8e279bea9b9007d51f2d1233d629af6780e4c132",
+                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/30e2eb24112fd62a74e03d3344d98f8eee66068d",
+                "reference": "30e2eb24112fd62a74e03d3344d98f8eee66068d",
                 "shasum": ""
             },
             "require": {
@@ -7974,6 +7974,12 @@
                 "prepare": [
                     "@php vendor/bin/testbench package:discover --ansi"
                 ],
+                "test": [
+                    "@php -d memory_limit=1G vendor/bin/pest"
+                ],
+                "test-coverage": [
+                    "@php -d memory_limit=1G vendor/bin/pest --coverage"
+                ],
                 "analyse": [
                     "@prepare",
                     "vendor/bin/phpstan analyse --memory-limit=1G"
@@ -7981,14 +7987,15 @@
                 "analyze": [
                     "@analyse"
                 ],
-                "test": [
-                    "@php -d memory_limit=1G vendor/bin/pest"
-                ],
-                "test-coverage": [
-                    "@php -d memory_limit=1G vendor/bin/pest --coverage"
-                ],
                 "format": [
+                    "@format-php",
+                    "@format-blade"
+                ],
+                "format-php": [
                     "vendor/bin/pint"
+                ],
+                "format-blade": [
+                    "npx blade-formatter --write \"resources/views/**/*.blade.php\""
                 ]
             },
             "license": [
@@ -8009,7 +8016,7 @@
                 "laravel-core"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-core/tree/v0.1.0",
+                "source": "https://github.com/uclemmer/laravel-core/tree/v0.2.0",
                 "issues": "https://github.com/uclemmer/laravel-core/issues"
             },
             "funding": [
@@ -8018,7 +8025,7 @@
                     "url": "https://github.com/UClemmer"
                 }
             ],
-            "time": "2026-08-11T15:47:16+00:00"
+            "time": "2026-08-17T19:07:23+00:00"
         },
         {
             "name": "ueberdosis/tiptap-php",

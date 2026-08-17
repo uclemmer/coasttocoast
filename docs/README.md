@@ -2,7 +2,9 @@
 
 Planning documentation for rebuilding [coasttocoastcollegefair.com](https://www.coasttocoastcollegefair.com)
 from scratch as a Laravel 13 + Filament v5 application built on the owner's **`uclemmer/laravel-core`**
-package (sibling repo `C:\Users\uriah\Herd\laravel-core` — read its `/docs` too). Written 2026-08-15/16.
+package (repo `C:\Users\uriah\Sync\Projects\packages\core` — read its `/docs` too, including
+`docs/packages/` for the planned package family). Written 2026-08-15/16; package path corrected
+2026-08-16.
 
 **Reading order** (a new Claude session or developer should read 00–04 and 07 before writing code, then work
 cards from 05 under the rules in 06):
@@ -18,6 +20,7 @@ cards from 05 under the rules in 06):
 | [06-testing-strategy.md](06-testing-strategy.md) | Pest conventions, the critical test inventory, and reusable test patterns |
 | [08-install-runbook.md](08-install-runbook.md) | The commands that bring the app up on Herd, what card 1.1 configured in `config/core.php`, and the one deviation from the card |
 | [07-email-design.md](07-email-design.md) | Themed HTML email template, cross-year audience segmentation, and send tracking via laravel-core's EmailLog |
+| [09-package-wiring.md](09-package-wiring.md) | How this app consumes `uclemmer/laravel-core` (vcs + tagged release), publishing core's migrations, the permission sync the test suite needs, and why `canAccessPanel` returns `true` for the rep panel |
 
 **Golden rules** (duplicated from the docs because they matter):
 

@@ -32,3 +32,20 @@ it('sends an unverified rep to the email verification prompt', function () {
 it('keeps a coordinator out of nothing — the two panels are independent', function () {
     $this->actingAs(coordinator())->get('/portal')->assertOk();
 });
+
+/*
+ * Pins which layer enforces email verification. The panel gate must stay open:
+ * Filament's Authenticate middleware aborts 403 on a false canAccessPanel, and it
+ * runs before the `verified:` middleware that would otherwise offer the prompt —
+ * so gating on hasVerifiedEmail() here sends unverified reps to a dead end
+ * instead of to the page that fixes their problem (docs/09).
+ */
+it('leaves email verification to the route middleware, not the panel gate', function () {
+    $unverified = User::factory()->unverified()->create();
+
+    expect($unverified->canAccessPanel(Filament\Facades\Filament::getPanel('rep')))->toBeTrue();
+
+    $this->actingAs($unverified)
+        ->get('/portal')
+        ->assertRedirectContains('/portal/email-verification');
+});

@@ -67,7 +67,11 @@ class User extends Authenticatable implements FilamentUser, HasRoles, MustVerify
     {
         return match ($panel->getId()) {
             'core' => Gate::forUser($this)->allows(AdminPermissions::ACCESS),
-            'rep' => $this->hasVerifiedEmail(),
+            // Not `hasVerifiedEmail()` — the rep panel calls `->emailVerification()`,
+            // so Filament already guards its routes with the `verified:` middleware.
+            // Repeating the check here runs earlier, in Authenticate, which aborts 403
+            // and denies unverified users the verification prompt they were sent for.
+            'rep' => true,
             default => false,
         };
     }

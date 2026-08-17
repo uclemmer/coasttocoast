@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 
 /*
@@ -12,10 +14,18 @@ use Tests\TestCase;
 | core_permissions, core_email_logs, …) are published migrations in this app,
 | so RefreshDatabase brings them along with ours.
 |
+| RefreshDatabase migrates but seeds nothing, which leaves `core_permissions`
+| empty. `Role::givePermissionTo()` resolves names against that table and
+| silently drops any that are missing, so without this sync a factory that
+| grants `admin.access` produces a role holding no permissions at all — and
+| the panel tests fail as 403s that look like an authorization bug. Deploys
+| run `core:sync-permissions`; the suite mirrors that.
+|
 */
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => Artisan::call('core:sync-permissions'))
     ->in('Feature');
 
 /*
@@ -33,16 +43,16 @@ pest()->extend(TestCase::class)
 /**
  * A coordinator: verified, holding the `coordinator` role and `admin.access`.
  */
-function coordinator(array $attributes = []): App\Models\User
+function coordinator(array $attributes = []): User
 {
-    return App\Models\User::factory()->coordinator()->create($attributes);
+    return User::factory()->coordinator()->create($attributes);
 }
 
 /**
  * A plain user with a verified email — a representative, before card 3.0
  * gives them an organization.
  */
-function rep(array $attributes = []): App\Models\User
+function rep(array $attributes = []): User
 {
-    return App\Models\User::factory()->create($attributes);
+    return User::factory()->create($attributes);
 }

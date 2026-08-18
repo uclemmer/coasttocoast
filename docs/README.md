@@ -2,9 +2,10 @@
 
 Planning documentation for rebuilding [coasttocoastcollegefair.com](https://www.coasttocoastcollegefair.com)
 from scratch as a Laravel 13 + Filament v5 application built on the owner's **`uclemmer/laravel-core`**
-package (repo `C:\Users\uriah\Sync\Projects\packages\core` — read its `/docs` too, including
-`docs/packages/` for the planned package family). Written 2026-08-15/16; package path corrected
-2026-08-16.
+package (repo `github.com/uclemmer/laravel-core`, checked out in the workspace at
+`projects/packages/core` — read its `/docs` too, including `docs/packages/` for the planned package
+family). Written 2026-08-15/16; package path corrected 2026-08-16, and again 2026-08-18 when the
+workspace became a submodule parent repo under `C:\Users\uriah\Code\Laravel`.
 
 **Reading order** (a new Claude session or developer should read 00–04 and 07 before writing code, then work
 cards from 05 under the rules in 06):

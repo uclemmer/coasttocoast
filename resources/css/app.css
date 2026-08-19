@@ -25,20 +25,116 @@
 @source '../../vendor/livewire/livewire/src';
 @source '../../storage/framework/views/*.php';
 
-/* Alpine-cloaked elements (Flowbite dropdowns, mobile nav) stay hidden until
-   Alpine initialises, so nothing flashes open on load. */
+/*
+ * The full-bleed sections on the landing page use `margin: 0 calc(50% - 50vw)`
+ * inside the 1140px container. Without this, that technique produces a
+ * horizontal scrollbar on every page (design handoff, "Full-bleed technique").
+ */
+body {
+    overflow-x: clip;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* Alpine-cloaked elements (the mobile nav, Flowbite dropdowns) stay hidden
+   until Alpine initialises, so nothing flashes open on load. */
 [x-cloak] {
     display: none !important;
 }
 
+/*
+ * ---------------------------------------------------------------------------
+ * Design tokens — from the Claude Design handoff (2026-08-19)
+ * ---------------------------------------------------------------------------
+ *
+ * Every value here is quoted from the handoff's token tables. They are the
+ * contract with the design: change one here rather than reaching for an
+ * arbitrary hex in a template.
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Brand green. Taken from the existing site's wordmark. */
+    --color-brand-50: #eef7f1; /* ghost/secondary hover, inline code bg */
+    --color-brand-100: #f2f8f4; /* section tint, page-header bg, table header */
+    --color-brand-200: #bfe0cb; /* light borders on green tints */
+    --color-brand-300: #bfe6cd; /* Caveat script on green panels */
+    --color-brand-400: #dcefe2; /* body copy on green panels */
+    --color-brand-500: #b8f0ca; /* script accent over the hero photo */
+    --color-brand-600: #188042; /* primary */
+    --color-brand-650: #146a37; /* green text on white/light buttons */
+    --color-brand-700: #0f5c2e; /* primary hover */
 
-    /*
-     * The fair's palette belongs here once the design handoff lands. Until
-     * then the only brand value in the application is `fair.brand.color_primary`
-     * in config/fair.php, which the email layout reads — email cannot use a
-     * CSS custom property, so that one stays a config scalar either way.
-     */
+    /* Ink — headings through to the faintest label. */
+    --color-ink-300: #93a89a; /* disabled button text */
+    --color-ink-400: #7a8f81; /* uppercase eyebrow labels, inactive tabs */
+    --color-ink-500: #5a6e62; /* card copy, table cells */
+    --color-ink-600: #44584c; /* secondary copy, labels */
+    --color-ink-700: #3a4e42; /* long-form body copy */
+    --color-ink-800: #22302a; /* default body text */
+    --color-ink-900: #1a2b21; /* headings, footer background */
+
+    /* Chrome. */
+    --color-footer-text: #c4d4c9;
+    --color-line: #e3ece6; /* default 1px borders, nav/footer dividers */
+    --color-line-soft: #eef2ef; /* table row / accordion dividers */
+
+    /* Forms. */
+    --color-field-border: #cfe0d5;
+    --color-field-bg: #fbfdfb;
+    --color-placeholder: #9ab0a2;
+    --color-disabled-bg: #dfe8e2;
+
+    /* Status. */
+    --color-danger: #b23b2e;
+    --color-danger-dark: #8f2d23;
+    --color-danger-50: #f6e9e7;
+    --color-danger-100: #fdf7f6; /* error input bg */
+    --color-danger-200: #e5c6c1;
+    --color-warn: #c8891f;
+    --color-warn-dark: #8a5a12;
+    --color-warn-50: #fdf3e6;
+    --color-warn-200: #eed9b5;
+
+    /* Type. Body is Source Sans 3; display and UI chrome are Montserrat;
+       Caveat is the script accent and is never used for body copy. */
+    --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --font-script: 'Caveat', ui-serif, cursive;
+
+    /* The content container. */
+    --container-site: 1140px;
+
+    /* Shadows, quoted from the handoff. */
+    --shadow-card: 0 1px 3px rgba(26, 43, 33, 0.06);
+    --shadow-map: 0 2px 16px rgba(26, 43, 33, 0.12);
+    --shadow-over-photo: 0 4px 18px rgba(0, 0, 0, 0.35);
+    --shadow-wordmark: 0 6px 28px rgba(8, 24, 14, 0.45);
+}
+
+/*
+ * Legibility over the hero photograph.
+ *
+ * The design deliberately has NO dark overlay — the client wants the painted
+ * cityscape colours to stay vivid — so contrast comes entirely from layered
+ * text shadows. Expressed as utilities because they are applied to every text
+ * element in the hero and on the maintenance page, and because the next person
+ * needs to understand that removing them is not a cosmetic change.
+ */
+@utility text-over-photo {
+    text-shadow:
+        0 2px 4px rgba(8, 24, 14, 0.85),
+        0 6px 28px rgba(8, 24, 14, 0.65);
+}
+
+@utility text-over-photo-sm {
+    text-shadow:
+        0 1px 3px rgba(8, 24, 14, 0.9),
+        0 3px 16px rgba(8, 24, 14, 0.7);
+}
+
+/* Tabular figures, so the countdown does not jitter as the seconds tick. */
+@utility tabular {
+    font-feature-settings: 'tnum' 1;
+    font-variant-numeric: tabular-nums;
 }

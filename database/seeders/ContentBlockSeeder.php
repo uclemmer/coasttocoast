@@ -16,16 +16,22 @@ use UClemmer\LaravelCore\Content\ContentType;
  * saying what the fair already says. Every block is editable in the admin panel
  * with revision history, so this seeder is a starting point, never the authority.
  *
- * Idempotent by slug: re-running does NOT overwrite an edited block. A seeder
- * that clobbered the coordinator's wording every deploy would be worse than no
- * seeder at all.
+ * Idempotent by slug: re-running does NOT overwrite an edited block, and does
+ * not resurrect one the coordinator deleted. A seeder that clobbered their
+ * wording every deploy would be worse than no seeder at all.
  */
 class ContentBlockSeeder extends Seeder
 {
     public function run(): void
     {
         foreach ($this->blocks() as $slug => $block) {
-            if (Content::query()->where('slug', $slug)->exists()) {
+            // withTrashed(), deliberately. Content soft-deletes, but its unique
+            // index is (type, slug) and does not include deleted_at -- so a
+            // block the coordinator has deleted still occupies the slug. Asking
+            // the default scope would report it missing, and the insert would
+            // then die on a UNIQUE constraint and take the whole deploy's seed
+            // down with it.
+            if (Content::query()->withTrashed()->where('slug', $slug)->exists()) {
                 continue;
             }
 
@@ -48,24 +54,21 @@ class ContentBlockSeeder extends Seeder
     {
         return [
             'home.hero' => [
-                'title' => 'Home — hero',
+                'title' => 'Home — hero paragraph',
                 'body' => <<<'MD'
-                    ## One evening. More than 100 colleges.
-
-                    The Coast to Coast College Fair brings admissions representatives from across the
-                    country to Chattanooga to meet local sophomores, juniors and their families.
-
-                    Admission is free for students and parents.
+                    Each spring, more than one hundred colleges and universities meet the sophomores,
+                    juniors, and parents of Tennessee's tri-state area in a single evening.
+                    Registration includes your exhibit table, the pre-fair dinner reception,
+                    complimentary parking, and student volunteers to carry your materials in.
                     MD,
             ],
 
             'home.for_representatives' => [
-                'title' => 'Home — for representatives',
+                'title' => 'Home — what registration includes',
                 'body' => <<<'MD'
-                    ### Representing a college?
-
-                    Reserve your table in advance. Registration includes your place at the fair, the
-                    counselor reception beforehand, and a listing on our public roster.
+                    Register online and we will add you to our mailing list and follow up with full
+                    details. Institutions paying by check may print the completed registration form
+                    and post it with the computed fees.
                     MD,
             ],
 

@@ -96,6 +96,19 @@ describe('the production seed', function () {
             ->and(Event::query()->count())->toBe(3)
             ->and(Content::query()->ofType(ContentType::Block)->count())->toBe(9);
     });
+
+    it('is safe to run after the coordinator deletes a block', function () {
+        // Content soft-deletes, and its unique index is (type, slug) with no
+        // deleted_at column -- so a deleted block still owns its slug. A guard
+        // that asked the default scope would call the slug free, and the insert
+        // would abort the whole deploy's seed on a UNIQUE violation.
+        Content::query()->where('slug', 'home.hero')->firstOrFail()->delete();
+
+        $this->seed(ProductionSeeder::class);
+
+        expect(Content::query()->where('slug', 'home.hero')->exists())->toBeFalse()
+            ->and(Content::query()->withTrashed()->where('slug', 'home.hero')->count())->toBe(1);
+    });
 });
 
 describe('the development seed', function () {

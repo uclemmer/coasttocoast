@@ -425,8 +425,13 @@ Phase 5 was built under. **The rep portal at `/portal` stays Filament** — owne
 2026-08-19, so this phase touches the public site alone. Background and the full reasoning are in
 doc 10, D-5.1-a.
 
-**A design handoff from Claude Design is coming and has not landed yet.** Nothing below should be
-built against a guess at the visual design.
+**The design handoff landed on 2026-08-19** and lives in
+`storage/app/private/design_handoff_college_fair_landing/` — a landing page, an interior page, a
+maintenance page, and a README that declares colours, typography, spacing and copy final. Cards
+8.1–8.5 were built against it. Two structural readings were confirmed with the owner before
+building: the landing page is **Home** (not a one-pager — the interior layout serves the other six
+pages), and **"Representatives" keeps meaning the public roster**, not a registration call to
+action.
 
 ### Card 8.0 — Front-end wiring
 
@@ -451,7 +456,20 @@ publishing that D-8-a fixed. None of them assert anything about how the site loo
 
 ### Card 8.1 — The layout and chrome
 
-**Depends on:** the design handoff. Replace `resources/views/components/layouts/app.blade.php` with
+**Status: done (2026-08-19).** `resources/views/components/layouts/app.blade.php` is the real layout:
+skip link, `<x-site.header />`, an unwrapped `<main id="main">` so a full-bleed section can reach the
+viewport edge, and `<x-site.footer />`. The chrome lives in `resources/views/components/site/`
+(`header`, `footer`, `container`, `page-header`) and the reusable primitives in
+`components/ui/` (`button`, `eyebrow`, `section-heading`, `prose`, `field`, `alert`). The header's
+mobile drawer is Flowbite's `data-collapse-toggle`; the "Log in" and "Register" links point at the
+rep panel's own auth routes.
+
+Fonts are **self-hosted** rather than loaded from the handoff's Google Fonts `<link>`: `vite-plugin-webfont-dl`
+via `bunny()` in `vite.config.js` for Montserrat, Caveat and Source Sans 3. A public marketing site
+should not make every visitor issue a third-party request, and self-hosting removes a render-blocking
+round trip to another origin. See doc 10, D-8.1-a.
+
+**Original card.** Replace `resources/views/components/layouts/app.blade.php` with
 the real layout: header, public navigation (Home, About, Representatives, Last Year, Sponsors, FAQ,
 Contact), footer carrying the contact block from `config('fair.contact')` — the same source the
 email footer and the check PDF read, so an address change lands everywhere at once. Flowbite's
@@ -459,7 +477,24 @@ navbar handles the mobile toggle.
 
 ### Card 8.2 — The static pages
 
-**Depends on:** 8.1. Home, About, Sponsors and FAQ as plain Blade views behind controller actions.
+**Status: done (2026-08-19).** `App\Http\Controllers\SiteController` with `home`, `about`,
+`sponsors`, `faq`, `contact` and `event` actions, rendering `resources/views/site/*`. The trait
+became `App\Support\ContentBlocks::render()` — a static helper rather than a concern, because the
+callers are now controllers rather than a shared Page base class. **Its behaviour is unchanged,
+including a missing or empty block rendering as nothing at all** (D-5.2-a).
+
+The landing page's prose is editable copy, not strings in the template: `home.hero` and
+`home.for_representatives` were reseeded with the handoff's final wording and the view renders them
+through `ContentBlocks`. Hard-coding the design's paragraphs would have removed the coordinator's
+ability to change them without a deploy and orphaned two content blocks. The headline and section
+titles stay in the template — they are display type, sized and cropped to the layout.
+
+Fixing that surfaced a real defect in `ContentBlockSeeder`: core's `Content` soft-deletes, its unique
+index is `(type, slug)` with no `deleted_at`, so a block the coordinator deleted still owns its slug.
+The guard asked the default scope, called the slug free, and the next deploy's seed would have died
+on a UNIQUE violation. The guard is now `withTrashed()`, with a test.
+
+**Original card.** Home, About, Sponsors and FAQ as plain Blade views behind controller actions.
 Each one's content already exists as a Filament `content()` method under `app/Filament/Site/Pages/`;
 the data-gathering moves almost unaltered and only the rendering changes.
 
@@ -469,7 +504,12 @@ typography.
 
 ### Card 8.3 — The rosters
 
-**Depends on:** 8.1. Representatives and Last Year. The natural Livewire candidates — they want
+**Status: done (2026-08-19).** `App\Livewire\RepresentativesRoster` and `LastYearRoster`, both over
+`App\Livewire\Concerns\ShowsARoster` — one implementation serving both pages, against different
+fairs, which is the whole point of D-5.3-a. Server-rendered first paint, search, pagination at 30,
+the initial-letter placeholder and lazy-loaded logos with real alt text all survive.
+
+**Original card.** Representatives and Last Year. The natural Livewire candidates — they want
 search and pagination — and the one place to be careful: `RosterService` and the shared
 current/previous split (doc 10, D-5.3-a) exist because the live site's Last Year page was showing
 the *current* roster. **Keep one component serving both pages.** Keep the initial-letter placeholder
@@ -483,7 +523,18 @@ If a roster swaps DOM after load, Flowbite's initialisers need re-running — `i
 
 ### Card 8.4 — Event pages and the contact form
 
-**Depends on:** 8.1. The event page keeps its three CTA states (open → register; not yet open → the
+**Status: done (2026-08-19).** `App\Livewire\ContactForm` and `App\Livewire\EventInterest`, with
+their logic carried across rather than reimplemented: `ContactService::submit()`, `accepted()` on the
+consent checkbox, the honeypot, and the per-IP throttle. The interest capture keeps its plain POST
+route as the non-JavaScript path. The event page keeps its three CTA states and an unpublished fair
+is still a 404.
+
+`App\Livewire\EventCountdown` is new to this phase — the handoff's landing page has one. It does
+**not** `wire:poll`: a one-second poll on a public marketing page is one request per visitor per
+second. The ticking is an Alpine `setInterval` over a server-rendered first paint, so the numbers are
+correct before JavaScript runs and correct without it. See doc 10, D-8.4-a.
+
+**Original card.** The event page keeps its three CTA states (open → register; not yet open → the
 date to diarise; closed → the interest form). That state machine is the fix for the current site's
 dead end and is covered by tests that should survive the move. An unpublished fair stays a 404
 (D-5.4-c).
@@ -495,7 +546,21 @@ D-5.4-b). The interest capture also keeps its plain POST route as the non-JavaSc
 
 ### Card 8.5 — Retire the panel
 
-**Depends on:** 8.1–8.4. Delete `SitePanelProvider`, the eight `Page` classes under
+**Status: done (2026-08-19).** `SitePanelProvider`, the eight `Page` classes, the three roster
+widgets and the `RendersContentBlocks` concern are deleted, and `bootstrap/providers.php` lost the
+registration-order comment that existed only because the site panel claimed the root. Doc 02's
+"Public pages" row and panel table, this file, and golden rule 1 in `docs/README.md` are updated.
+
+A test now asserts the negative directly — the landing page carries no `class="fi"` and loads no
+`/css/filament/` stylesheet, so a future session cannot quietly reintroduce a public panel and have
+the suite stay green.
+
+The **maintenance page** from the handoff also landed here, as `resources/views/errors/503.blade.php`.
+It is deliberately self-contained — inline styles, static image paths, no `@vite` — because
+`artisan down --render=errors::503` freezes the rendered HTML to a flat file for the whole outage,
+which is exactly when `public/build` is being replaced.
+
+**Original card.** Delete `SitePanelProvider`, the eight `Page` classes under
 `app/Filament/Site/Pages/`, the roster widgets, and `resources/views/filament/admin/audience-preview`
 if nothing else uses it. Remove the registration-order comment in `bootstrap/providers.php`, which
 exists only because the site panel claimed the root.
@@ -509,28 +574,28 @@ doc 02 (its "Public pages" row and the panel table), this file, and golden rule 
 
 ## Where this leaves the build (2026-08-19)
 
-Phases 1–7 are implemented and 620 tests pass with Pint clean. The application is functionally
-complete: registration, payments, grants, the admin panel, the rep portal and the whole comms system
-work end to end.
+All eight phases are implemented and **630 tests pass** with Pint clean. The application is
+functionally complete: registration, payments, grants, the admin panel, the rep portal, the whole
+comms system, and now a public site built the way the owner directive asks for.
 
-**One piece of code work is outstanding, and it is Phase 8.** The public site was built under the
-old "all UI is Filament" directive and is being rebuilt in Blade + Livewire + Flowbite. The wiring
-(card 8.0) is done; the rest waits on the design handoff from Claude Design.
-
-Everything else is **content and credentials**:
+**No code work is outstanding.** What is left is content, credentials and a look at it in a browser:
 
 1. **[11-deployment.md](11-deployment.md) has an owner content queue** — the 2027 date and price, the
-   refund policy, parking, hotels, conduct guidelines, the W-9, the brand colour and logo, and the
-   ISPEUS roster export. Everything on it is editable in the admin panel or an env value; nothing
-   needs a deploy.
-2. **The FAQ still wants a map embed and a W-9 download** (card 5.2). Both wait on owner content, and
-   both land in the Phase 8 rebuild rather than in the Filament pages.
-3. **A browser pass** before launch, per doc 11's checklist. The last one found four rendering
-   faults that 609 passing tests had not (doc 10, D-8-a…d), so it is not a formality.
+   refund policy, parking, hotels, conduct guidelines, the W-9, and the ISPEUS roster export.
+   Everything on it is editable in the admin panel or an env value; nothing needs a deploy.
+2. **The design handoff leaves four assets outstanding**, listed at the bottom of doc 11: the four
+   sponsor school logos, a transparent-background wordmark, a higher-resolution cityscape, and a map
+   embed pinned to the venue rather than to Chattanooga generally. The site renders without them —
+   a sponsor tile falls back to the school's name — but each is a visible gap.
+3. **An address discrepancy needs the owner's word.** The design says "1 Carter Plaza"; doc 00 and the
+   seed say "1150 Carter Street". The build kept 1150 Carter Street, because that is what the live
+   site says today. Also in doc 11.
+4. **A browser pass** before launch, per doc 11's checklist. The last one found four rendering faults
+   that 609 passing tests had not (doc 10, D-8-a…d), so it is not a formality.
 
-**Both decisions previously flagged for the owner are now answered.** D-5.1-a (the public site as a
-Filament panel) is answered "rework it" and is Phase 8. D-5.4-a (contact consent) was resolved by
-rebuilding the form so its checkbox is actually validated — see D-8-d.
+**Both decisions previously flagged for the owner are answered and closed.** D-5.1-a (the public site
+as a Filament panel) was answered "rework it", and Phase 8 did it. D-5.4-a (contact consent) was
+resolved by rebuilding the form so its checkbox is actually validated — see D-8-d.
 
 **Still open and NOT to be acted on without asking:** whether the rep portal at `/portal` eventually
 leaves Filament too. The owner confirmed on 2026-08-19 that it **stays Filament for now**; the
@@ -541,5 +606,5 @@ reasoning and the sibling precedent are in doc 10, D-5.1-a.
 ## Suggested first session
 
 Cards 1.1 → 1.2 → 1.3 → 1.4 fit comfortably in one focused session and unblock everything else.
-**That advice is historical** — those cards are long done. A session picking this project up today
-starts at Phase 8, card 8.1, with the design handoff in hand.
+**That advice is historical** — every card in this file is done. A session picking this project up
+today starts by reading doc 11's owner content queue and doc 10's decision log, not by writing code.

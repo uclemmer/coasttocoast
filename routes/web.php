@@ -1,30 +1,56 @@
 <?php
 
 use App\Http\Controllers\EventInterestController;
+use App\Http\Controllers\SiteController;
+use App\Livewire\LastYearRoster;
+use App\Livewire\RepresentativesRoster;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Public routes
+| The public site
 |--------------------------------------------------------------------------
 |
-| Three Filament panels register their own routes: /admin (laravel-core),
-| /portal (RepPanelProvider) and the public site at the root
-| (SitePanelProvider, card 5.1). Almost nothing is left here.
+| Blade and Livewire (owner directive, 2026-08-19). Filament keeps the two
+| authenticated panels — /admin (laravel-core) and /portal (RepPanelProvider) —
+| and registers their routes itself.
 |
-| The interest endpoint stays a plain POST route: it is the non-JavaScript
-| path to the same capture the event page offers as a Livewire form, and a
-| route with its own throttle is the only way to rate-limit it per IP.
+| Route names are prefixed `site.` so the navigation can highlight the current
+| page without matching on URLs.
 |
 */
 
+Route::name('site.')->group(function (): void {
+    Route::get('/', [SiteController::class, 'home'])->name('home');
+    Route::get('/about', [SiteController::class, 'about'])->name('about');
+    Route::get('/sponsors', [SiteController::class, 'sponsors'])->name('sponsors');
+    Route::get('/faq', [SiteController::class, 'faq'])->name('faq');
+
+    /*
+     * The rosters are Livewire because they want search and pagination. One
+     * component behind both, differing only in which fair it reads — the live
+     * site's Last Year page was showing the *current* roster (doc 00), and
+     * that is what happens when they are two pieces of code.
+     */
+    Route::get('/representatives', RepresentativesRoster::class)->name('representatives');
+    Route::get('/last-year', LastYearRoster::class)->name('last-year');
+
+    Route::get('/contact', [SiteController::class, 'contact'])->name('contact');
+
+    /*
+     * `{event:slug}` rather than an id: the slug is in every link the fair has
+     * ever sent out.
+     */
+    Route::get('/events/{event:slug}', [SiteController::class, 'event'])->name('event');
+});
+
 /*
- * "Tell me when registration opens."
+ * "Tell me when registration opens", as a plain POST.
  *
- * Rate-limited by IP because it is an unauthenticated write with no captcha:
- * the honeypot in the form request catches naive bots, and this catches the
- * ones that get past it. Five an hour is far more than any human needs and far
- * fewer than a script wants.
+ * The event page offers the same capture as a Livewire form; this is the
+ * non-JavaScript path, and the only place an IP throttle can hang. Both
+ * lowercase the address before writing, so they cannot diverge in the way that
+ * matters (doc 10, D-5.4-b).
  */
 Route::post('/events/{event}/interest', [EventInterestController::class, 'store'])
     ->middleware('throttle:5,60')

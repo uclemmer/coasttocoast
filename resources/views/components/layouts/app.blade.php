@@ -1,39 +1,61 @@
 {{--
-    The public site's layout.
+    The public site's layout (card 8.1).
 
-    ============================================================================
-    PLACEHOLDER. This is plumbing, not design.
-    ============================================================================
+    Used two ways, which is why it lives at a component path:
 
-    It exists so the Vite pipeline and Livewire's page layout resolve today
-    (config/livewire.php points `component_layout` here). There is deliberately
-    no navigation, no header, no footer and no colour: the design handoff from
-    Claude Design replaces this file wholesale, and inventing a look now would
-    only be something to unpick.
+      * a static page writes `<x-layouts.app>`;
+      * a full-page Livewire component gets it automatically, because
+        `config/livewire.php` points `component_layout` here.
 
-    What must survive whatever replaces it:
+    One layout for both, so the chrome cannot drift between them.
 
-      * `@vite` for both entrypoints — `app.css` carries the Flowbite plugin,
-        `app.js` carries Flowbite's behaviour;
-      * `{{ $slot }}`, which is what makes this usable both as
-        `<x-layouts.app>` from a plain Blade page and as Livewire's page layout;
-      * `$title`, so a page can set its own without a second layout.
+    `$slot` is NOT wrapped in a container. The design interleaves full-bleed
+    bands (hero, sponsors, interior page header) with contained ones, and the
+    prototype achieved that with `margin: 0 calc(50% - 50vw)` inside a
+    container. The handoff itself says to prefer moving those sections outside
+    the container in Tailwind, so pages wrap their own contained parts in
+    `<x-site.container>` and full-bleed sections simply do not.
 
-    Livewire injects its own script and Alpine with it, so neither is included
-    here.
+    Props:
+      $title        browser title; the site name is appended
+      $description  meta description, for the pages that want one
 --}}
+@props([
+    'title' => null,
+    'description' => null,
+])
+
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? config('app.name') }}</title>
+    <title>{{ $title ? $title.' — '.config('app.name') : config('app.name') }}</title>
+
+    @if ($description)
+        <meta name="description" content="{{ $description }}">
+    @endif
+
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
-    {{ $slot }}
+<body class="bg-white font-sans text-ink-800 antialiased">
+    {{-- Keyboard and screen-reader users should not have to walk the whole nav
+         on every page. --}}
+    <a href="#main"
+       class="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-brand-600 focus:px-4 focus:py-2 focus:font-display focus:text-sm focus:font-bold focus:uppercase focus:text-white">
+        {{ __('Skip to content') }}
+    </a>
+
+    <x-site.header />
+
+    <main id="main">
+        {{ $slot }}
+    </main>
+
+    <x-site.footer />
 </body>
 </html>

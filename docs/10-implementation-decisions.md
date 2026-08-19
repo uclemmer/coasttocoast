@@ -533,7 +533,7 @@ group, so there is no session and no CSRF token. The caller is a server and its 
 the signature. A separate file makes that exemption visible rather than burying it in a middleware
 exclusion list.
 
-### D-5.1-a — The public site is a third Filament panel — **answered 2026-08-19: rework it**
+### D-5.1-a — The public site is a third Filament panel — **closed 2026-08-19: reworked**
 
 **Context.** The owner's directive at build time (2026-08-16) was that all UI is Filament: no
 hand-built Blade, Tailwind, Livewire or Flowbite. Doc 02 offered two readings for public pages —
@@ -569,9 +569,12 @@ therefore built with the wrong tool and diverges from the documented direction.
 - The public-page tests are already plain HTTP tests (`get('/faq')->assertSee(...)`, doc 06), so
   most of them should survive the move; they assert content, not Filament internals.
 
-**Not yet scheduled.** No roadmap card exists for this. `bootstrap/providers.php` still registers
-`SitePanelProvider` last so `/admin` and `/portal` claim their prefixes first; that ordering comment
-goes away with the panel.
+**Done — Phase 8, 2026-08-19.** All five bullets above were carried out, and the prediction held:
+the page logic moved across almost unaltered and the public HTTP tests survived the move. The panel,
+the eight `Page` classes, the three roster widgets and the ordering comment in
+`bootstrap/providers.php` are all gone. A test now asserts the negative — the landing page carries no
+`class="fi"` and loads no `/css/filament/` stylesheet — so the panel cannot come back unnoticed.
+Cards 8.0–8.5 in doc 05 record what each step actually did.
 
 **The rep portal is a separate, still-open question.** `/portal` is also a Filament panel, and reps
 are external users rather than staff. The sibling `duespay` project made the opposite call for the
@@ -580,16 +583,17 @@ consumer UI, not admin software". Whether that reading extends here is the owner
 is a far larger rework than the public site (the registration wizard is a Filament form wizard).
 Nothing has been changed on that assumption. **Ask before acting.**
 
-Registration order matters and is commented in `bootstrap/providers.php`: `SitePanelProvider` is
-last, so `/admin` and `/portal` register their literal prefixes first. Filament adds no catch-all,
-so there is no conflict either way.
-
 ### D-5.2-a — A missing content block renders as nothing
 
-**Decision.** `RendersContentBlocks::block()` returns null when the block is absent or empty, and
-`blocks()` drops the nulls. Not a placeholder and not an error: a half-seeded database, or a block
+**Decision.** The helper returns null when the block is absent or empty, and the caller drops the
+nulls. Not a placeholder and not an error: a half-seeded database, or a block
 somebody archived, should leave a page one paragraph short rather than printing `content.missing` in
 front of a hundred colleges.
+
+**Moved in Phase 8.** The `RendersContentBlocks` concern became `App\Support\ContentBlocks::render()`
+when the Filament `Page` base class it hung off was deleted. A static helper, not a trait: the
+callers are now controllers and Livewire components with no common ancestor, and there is nothing
+about looking a block up that wants to be mixed into a class. The behaviour is unchanged.
 
 ### D-5.3-a — One roster widget, two pages
 
@@ -914,3 +918,124 @@ it matters on every request.
 **Fixed** in the local `.env`. The rule generalises and is in doc 11's environment table: `APP_URL`
 is what absolute URLs in assets and in email are built from, so it has to match the host actually
 serving the site in every environment.
+
+---
+
+## Phase 8 — the public site rebuild (2026-08-19)
+
+These follow the design handoff in `storage/app/private/design_handoff_college_fair_landing/`, whose
+README declares colours, typography, spacing and copy final. Where the build departs from it, the
+departure is here.
+
+### D-8.1-a — Fonts are self-hosted, not loaded from Google
+
+**Context.** The handoff's three pages each open with `<link rel="preconnect">` to
+`fonts.googleapis.com` and `fonts.gstatic.com` and a stylesheet link for Montserrat, Caveat and
+Source Sans 3.
+
+**Decision.** Same three families, same weights, fetched at build time and served from this origin —
+`bunny()` from `vite-plugin-webfont-dl` in `vite.config.js`, which emits the `@font-face` rules and
+the `woff2`/`woff` files into `public/build`.
+
+**Why.** Two reasons, and neither is a matter of taste. A public marketing site that loads fonts from
+Google makes every visitor's browser announce itself to a third party before the page paints, and
+this site's visitors are largely high school students and their parents. And a cross-origin font
+request costs a DNS lookup, a TLS handshake and a render-blocking round trip to an origin we do not
+control; self-hosting removes all three. The visual result is identical.
+
+**To reverse:** drop the `bunny()` calls from `vite.config.js` and put the handoff's `<link>` tags in
+`components/layouts/app.blade.php`.
+
+### D-8.4-a — The countdown does not poll
+
+**Context.** The handoff's landing page has a days/hours/minutes/seconds countdown to the fair. The
+obvious Livewire implementation is `wire:poll.1s`.
+
+**Decision.** No polling. `EventCountdown` renders the correct numbers server-side on first paint,
+and an Alpine `setInterval` ticks them in the browser.
+
+**Why.** A one-second poll on the public landing page is one HTTP request per visitor per second,
+each one booting the framework, to redraw four numbers the browser can compute itself. On the evening
+the fair is announced that is the difference between a busy site and a fallen-over one. Server-side
+first paint also means the numbers are right for a visitor with JavaScript disabled and for anything
+crawling the page — they are simply frozen at page load, which for a countdown to a date months away
+is not a lie.
+
+**The trade-off:** a tab left open for days drifts from the server's clock. It re-syncs on any
+navigation, which is enough for this.
+
+### D-8.4-b — The landing page's prose is content, the headline is not
+
+**Context.** The handoff supplies final copy for the landing page. Typing it into the Blade template
+is the direct reading.
+
+**Decision.** Split. The hero paragraph and the registration panel's introduction render from the
+`home.hero` and `home.for_representatives` content blocks, seeded with the handoff's words. The
+headline, the eyebrows and the section titles stay in the template.
+
+**Why.** Everything else on this site that a coordinator might want to change is editable without a
+deploy, and that was a deliberate design point (D-5.2-a, doc 03). Hard-coding the design's paragraphs
+would have made the landing page — the page most likely to want a seasonal tweak — the one page
+needing an engineer, and it would have orphaned two content blocks that already existed. The
+headline is different in kind: it is display type, cropped and sized to the layout, and a coordinator
+lengthening it would break the hero rather than update it.
+
+### D-8.4-c — The fee appears on the landing page, which the design does not show
+
+**Decision.** The registration panel prints `Event::priceFor()` for the active fair.
+
+**Why.** Doc 00 lists "pricing and deadlines scattered or missing" as a named weakness of the current
+site, and doc 01 makes not repeating it a requirement. A representative deciding whether to come
+should not have to hunt. It is a small addition inside the design's existing panel and does not
+disturb the layout.
+
+### D-8.5-a — A sponsor with no logo shows its name once, not twice
+
+**Decision.** When `logo_path` is null the placeholder tile *is* the caption, rather than a name tile
+with the same name printed underneath it.
+
+**Why.** The four school logos have not been supplied (doc 11's asset queue). The first pass rendered
+the fallback tile and the caption independently, which read as a bug rather than as a placeholder.
+Once the logos arrive the caption returns beneath the mark, as the design has it.
+
+### D-8.5-b — `ContentBlockSeeder` asks `withTrashed()`
+
+**Symptom found while reseeding the landing copy.** Deleting `home.hero` and re-running the seeder
+died on `UNIQUE constraint failed: core_contents.type, core_contents.slug`.
+
+**Cause.** laravel-core's `Content` uses `SoftDeletes`, but its unique index is `(type, slug)` and
+does not include `deleted_at`. A deleted block therefore still owns its slug. The seeder's
+idempotence guard used the default scope, could not see the row, and inserted.
+
+**Why it matters beyond the moment.** `ProductionSeeder` runs on deploy. A coordinator deleting a
+content block they did not want — an ordinary thing to do in the admin panel — would have made the
+next deploy's seed abort, and it would abort partway, leaving whatever blocks came after it in the
+array unseeded.
+
+**Fixed** by scoping the guard `withTrashed()`, with a test in `SeederTest` that deletes a block and
+reseeds. The behaviour is now: a deleted block stays deleted, and the seed completes.
+
+### D-8.5-c — The maintenance page is self-contained
+
+**Decision.** `resources/views/errors/503.blade.php` carries its own inline `<style>`, references
+images by static path under `public/images/`, and calls no `@vite`.
+
+**Why.** `php artisan down --render=errors::503` renders the view **once** and serves that flat HTML
+for the whole outage — which is precisely the window in which `public/build` is being replaced. An
+`@vite` call would freeze one moment's hashed asset URL into the file and the maintenance page would
+404 its own stylesheet, on the one page whose entire job is to work when nothing else does.
+
+Config is still readable at that point (bootstrapping precedes the maintenance middleware), so the
+contact address comes from `config('fair.coordinator.email')` — but note it freezes at render time
+and only refreshes on the next `artisan down`.
+
+### D-8.5-d — The venue address stays "1150 Carter Street"
+
+**Context.** The handoff's landing page gives the venue address as "1 Carter Plaza". Doc 00, taken
+from the live site, and the production seed both say "1150 Carter Street".
+
+**Decision.** Kept 1150 Carter Street, and flagged the discrepancy in doc 11 for the owner.
+
+**Why.** A wrong address on a page whose purpose is getting people to a building is worse than a
+stale one, and the live site is the better evidence of what the Convention Center's address actually
+is. This is content, so correcting it is an admin-panel edit, not a deploy.

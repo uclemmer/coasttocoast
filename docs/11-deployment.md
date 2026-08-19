@@ -170,9 +170,29 @@ None of these block a deploy; all of them are visible to a visitor.
 | Hotel list | Admin → FAQ | `TODO-OWNER` badge |
 | Fair conduct guidelines | Admin → FAQ | `TODO-OWNER` badge |
 | Signed W-9 PDF | Admin → FAQ (and a file to upload) | `TODO-OWNER` badge |
-| Google Map embed for the venue | Admin → FAQ | Not yet built — see doc 05 Phase 5 |
+| Google Map embed for the venue | Admin → FAQ | The design's embed is pinned at Chattanooga generally, not the venue — see the asset queue below |
 | Brand colour and logo | `FAIR_BRAND_COLOR`, `FAIR_BRAND_LOGO_URL` | Email falls back to the app name in text |
 | Historical roster export (2025/2026) | `php artisan fair:import-roster <file.csv>` | See below |
+
+### Design assets still outstanding (2026-08-19)
+
+The Claude Design handoff in `storage/app/private/design_handoff_college_fair_landing/` names four
+assets it could not supply. **The site renders correctly without all four** — each has a deliberate
+fallback — but each is a visible gap that only Matt can close.
+
+| Asset | Where it goes | What happens without it |
+|---|---|---|
+| The four sponsor school logos | Admin → Sponsors → logo | The tile falls back to the school's name set in the display face. Legible, clearly a placeholder |
+| A wordmark with a transparent background | `public/images/wordmark.jpg` | The current file is a JPEG with a white background, so it sits on the hero photo as a white card with a rounded corner and a shadow. That is the design's own treatment, so it does not look broken — but a transparent PNG or SVG would let it sit on the photograph directly |
+| A higher-resolution cityscape | `public/images/cityscape.jpg` | The current file is fine at desktop widths and soft on a large display. It is the hero background and the maintenance page's full-bleed image |
+| A map embed pinned to the venue | Admin → FAQ | The handoff's embed centres on Chattanooga generally rather than on the Convention Center. Pointing it at the building is a one-line change once the correct embed URL exists |
+
+**One discrepancy needs Matt's word rather than a file.** The design gives the venue address as
+**1 Carter Plaza**; doc 00 (transcribed from the live site) and the production seed both say
+**1150 Carter Street**. The build kept 1150 Carter Street — a wrong address on a page whose job is
+getting people to a building is worse than a stale one, and the live site is the better evidence.
+This is a content block, so correcting it is an admin-panel edit rather than a deploy. See doc 10,
+D-8.5-d.
 
 ### The roster import
 

@@ -26,14 +26,14 @@ No app code, packages, or migrations beyond the skeleton exist yet.
 >   plain Blade views where it does not. No public-facing Filament panel.
 > - **Admin (`/admin`) — Filament v5**, unchanged. laravel-core's prebuilt panel plus `FairPlugin`.
 >
-> **What this invalidates.** The public site was built the other way, under the old directive: it is
-> currently `App\Providers\Filament\SitePanelProvider`, a Filament panel at the site root with eight
-> `Page` classes under `app/Filament/Site/Pages/`. That was the stricter reading of the 2026-08-16
-> directive, and it was flagged for the owner at the time — see
-> [10-implementation-decisions.md](10-implementation-decisions.md) D-5.1-a. **This directive is the
-> answer to that flag.** The panel now diverges from the documented direction and is queued for rework
-> into Blade/Livewire/Flowbite route views; the page logic moves to controllers or Livewire components
-> largely unaltered, which is what D-5.1-a predicted. No card has been scheduled for it yet.
+> **Done — Phase 8, 2026-08-19.** The public site was originally built the other way, under the old
+> directive: a Filament panel at the site root (`SitePanelProvider`) with eight `Page` classes. That
+> was flagged for the owner at the time — see
+> [10-implementation-decisions.md](10-implementation-decisions.md) D-5.1-a — and this directive was
+> the answer to that flag. **It has been rebuilt.** `SitePanelProvider`, the eight `Page` classes and
+> the three site widgets are deleted; the public site is now `SiteController` + Blade route views,
+> with Livewire components for the two rosters, the countdown and the two forms. The page logic moved
+> across largely unaltered, which is what D-5.1-a predicted.
 >
 > **Open — needs the owner's call: the rep portal (`/portal`).** It is a Filament panel today. Reps are
 > external users rather than staff, and the sibling `duespay` project already decided that an
@@ -49,7 +49,7 @@ No app code, packages, or migrations beyond the skeleton exist yet.
 | Admin UI | **Filament v5** — settled: laravel-core pins `filament/filament ^5.0` | Backend only, per the directive above |
 | Public UI | **Blade + Livewire + Flowbite** on Tailwind CSS 4 | Owner directive 2026-08-19. `flowbite` npm package, `@plugin 'flowbite/plugin'` in `resources/css/app.css`, `import 'flowbite'` in `resources/js/app.js` — `ckbs` is the reference wiring |
 | Panels | **Admin** = laravel-core's prebuilt panel (`core.admin.enabled = true`, path `/admin`, branded via `core.admin.brand`), with the app's resources attached as a Filament plugin class registered in `core.admin.plugins` (the same seam `uclemmer/laravel-tickets` uses). **Rep** = app-owned `RepPanelProvider` (`/portal`). | App plugin: `App\Filament\FairPlugin` registering Events, Registrations, Payments, Organizations, Grants, Sponsors, FAQ, Messages resources + dashboard widgets |
-| Public pages | **Blade route views + Livewire components, styled with Flowbite** on a shared public layout | Owner directive 2026-08-19. Still a Filament panel as built (`SitePanelProvider`) — diverges, queued for rework. Keep public UI thin; most complexity lives in the panels |
+| Public pages | **Blade route views + Livewire components, styled with Flowbite** on a shared public layout | Owner directive 2026-08-19, built in Phase 8. `SiteController` renders `resources/views/site/*`; `app/Livewire/*` holds the rosters, the countdown and the two forms. Keep public UI thin — the rules stay in the services |
 | Auth | Filament's built-in auth (login, registration, email verification, password reset) on the Rep panel. Admin access via **laravel-core roles/permissions** (`HasCoreRoles` trait on User; coordinator role holding app permissions; core's panel-access check). No `is_admin` boolean, no spatie/laravel-permission, no Fortify/Breeze/Jetstream. | Register app permissions through `core.permission_providers` so `core:sync-permissions` picks them up |
 | Payments | `stripe/stripe-php` + Stripe Checkout (hosted) + webhooks | Never render card fields ourselves |
 | Email | Postmark via Laravel's `postmark` mail transport (`symfony/postmark-mailer`); **all mail renders in the themed HTML template**; **all sends logged** via laravel-core's EmailLog (`core.email_log.enabled = true` — READ AT BOOT, restart workers after toggling) | Streams: `outbound` (transactional), `broadcast` (campaigns). Full email design: [07-email-design.md](07-email-design.md) |
@@ -117,7 +117,11 @@ remaining deliverable):
 |---|---|---|---|---|
 | Admin | `core` | `/admin` | laravel-core `CorePanelProvider` | `admin.access` permission (coordinator role, or super admin) |
 | Rep portal | `rep` | `/portal` | `App\\Providers\\Filament\\RepPanelProvider` | authenticated + verified email; membership gating lands with card 3.0 |
-| Public site | `site` | `/` | `App\\Providers\\Filament\\SitePanelProvider` | none. **Diverges from the 2026-08-19 UI directive** — should be Blade/Livewire/Flowbite route views, not a panel |
+
+**Two panels, not three.** The public site is not a panel — it is `App\Http\Controllers\SiteController`
+plus the `site.*` route group, rendering Blade views under `resources/views/site/`. Anything on the
+public site that needs to react to the visitor is a Livewire component in `app/Livewire/`; the
+rosters, the countdown and the two public forms are the whole of that list.
 
 `User::canAccessPanel()` switches on the panel id rather than using core's `CanAccessCorePanel` trait — see
 the deviation note in [05-build-roadmap.md](05-build-roadmap.md) card 1.1.

@@ -37,7 +37,10 @@ describe('the Livewire page layout', function () {
         $rendered = Blade::render('<x-layouts.app title="A page">Body here</x-layouts.app>');
 
         expect($rendered)->toContain('Body here')
-            ->toContain('<title>A page</title>');
+            // The site name is appended, so a browser tab reads
+            // "About the fair — Coast to Coast College Fair".
+            ->toContain('A page')
+            ->toContain(config('app.name'));
     });
 
     it('loads both Vite entrypoints, which is where Flowbite lives', function () {
@@ -104,5 +107,36 @@ describe('Filament assets', function () {
 
         expect($composer['scripts']['post-autoload-dump'] ?? [])
             ->toContain('@php artisan filament:upgrade');
+    });
+});
+
+describe('the maintenance page', function () {
+    it('renders standalone, with no dependency on the Vite build', function () {
+        // `artisan down --render=errors::503` freezes this view to a flat file
+        // that is served for the whole outage -- which is precisely when
+        // public/build is being swapped. An @vite call would bake in an asset
+        // hash that no longer exists and the page would 404 its own stylesheet.
+        // errors.503, not errors::503 -- the `errors` hint is registered
+        // lazily by the exception handler, so the namespaced form does not
+        // resolve from a cold container. `artisan down --render` registers it
+        // itself, which the next test covers.
+        $rendered = view('errors.503')->render();
+
+        expect($rendered)->not->toContain('/build/assets/')
+            ->toContain('Down for maintenance')
+            ->toContain('/images/cityscape.jpg')
+            ->toContain('mailto:'.config('fair.coordinator.email'));
+    });
+
+    it('serves the maintenance page while the site is down, and lets the site back up', function () {
+        $this->artisan('down', ['--render' => 'errors::503'])->assertSuccessful();
+
+        try {
+            $this->get('/')->assertStatus(503)->assertSee('Down for maintenance');
+        } finally {
+            $this->artisan('up')->assertSuccessful();
+        }
+
+        $this->get('/')->assertOk();
     });
 });

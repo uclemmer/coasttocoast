@@ -159,6 +159,40 @@ describe('the maintenance page', function () {
             ->toContain('mailto:'.config('fair.coordinator.email'));
     });
 
+    it('freezes a flat page that survives its own deploy', function () {
+        // The prerendered HTML is served for the whole outage -- including the
+        // window where public/build is being replaced. If anything Vite-hashed
+        // ever leaks into this view, the maintenance page 404s its own assets
+        // at exactly the moment it is the only page running.
+        $this->artisan('down', ['--render' => 'errors::503'])->assertSuccessful();
+
+        try {
+            $frozen = json_decode(
+                (string) file_get_contents(storage_path('framework/down')),
+                true,
+            );
+
+            expect($frozen['template'] ?? '')
+                ->not->toContain('/build/')
+                ->toContain('/images/cityscape.jpg')
+                ->toContain('Down for maintenance');
+        } finally {
+            $this->artisan('up')->assertSuccessful();
+        }
+    });
+
+    it('is the command the deploy runbook actually documents', function () {
+        // doc 11's "every deploy" block. The view path and the flag live in two
+        // files that nothing else connects; renaming errors/503.blade.php
+        // without touching the runbook would leave a deploy rendering
+        // Laravel's stock page and nobody would notice until an outage.
+        $runbook = (string) file_get_contents(base_path('docs/11-deployment.md'));
+
+        expect($runbook)->toContain('php artisan down --render="errors::503"')
+            ->toContain('php artisan up')
+            ->and(view()->exists('errors.503'))->toBeTrue();
+    });
+
     it('serves the maintenance page while the site is down, and lets the site back up', function () {
         $this->artisan('down', ['--render' => 'errors::503'])->assertSuccessful();
 

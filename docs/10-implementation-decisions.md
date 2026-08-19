@@ -1037,6 +1037,27 @@ Config is still readable at that point (bootstrapping precedes the maintenance m
 contact address comes from `config('fair.coordinator.email')` — but note it freezes at render time
 and only refreshes on the next `artisan down`.
 
+**Wired into the deploy on 2026-08-19, which it initially was not.** The view existed and plain
+`artisan down` found it — the exception handler registers `resources/views/errors` under the
+`errors::` namespace — but doc 11's deploy sequence never took the site down at all, so nothing ever
+passed `--render` and the deploy-safe mode the page was designed around was unreachable in practice.
+The runbook now opens with
+`php artisan down --render="errors::503" --retry=60 --with-secret` and closes with `php artisan up`.
+
+Three properties are worth stating because each is a decision:
+
+- **`--with-secret`** prints a bypass URL, so the coordinator can walk the deployed site before `up`
+  lifts maintenance for everyone.
+- **The static images are served by nginx, not by PHP** — verified while actually down: `/` returned
+  503 while `/images/cityscape.jpg` returned 200. That is what lets a page served from a flat file
+  still carry a photograph.
+- **A failed deploy leaves the site down, on purpose.** No automatic `up` in a `finally`: lifting
+  maintenance on a half-migrated database is worse than staying dark.
+
+A test asserts the frozen template contains no `/build/` reference, and another asserts the runbook
+still documents the exact command — the view path and the flag live in two files nothing else
+connects.
+
 ### D-8.5-d — The venue address stays "1150 Carter Street"
 
 **Context.** The handoff's landing page gives the venue address as "1 Carter Plaza". Doc 00, taken

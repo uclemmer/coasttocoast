@@ -43,13 +43,35 @@ account **without a usable password** outside local — send a reset link rather
 ### Every deploy after the first
 
 ```bash
+php artisan down --render="errors::503" --retry=60 --with-secret
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
 php artisan config:cache route:cache view:cache
 php artisan filament:optimize
 php artisan core:doctor
 php artisan queue:restart           # workers hold old code and old config until told otherwise
+php artisan up
 ```
+
+**`--render` is the whole point of the maintenance page.** Without it, `artisan down` still shows
+`resources/views/errors/503.blade.php` — the exception handler registers `resources/views/errors`
+under the `errors::` namespace — but it renders it **live, per request, through a booted
+application**, in the window where `vendor/` is being replaced and the config cache is being
+rewritten. With `--render`, Laravel renders the page **once, now**, and serves that flat HTML from
+`storage/framework/down` for the rest of the outage. That is why the view carries inline styles and
+static `/images/` paths and calls no `@vite`: it has to survive its own deploy. See doc 10, D-8.5-c.
+
+`--with-secret` prints a URL that bypasses maintenance mode, so the coordinator can walk the site
+before `up` lifts it for everybody. `--retry=60` sets `Retry-After`, which is what keeps a crawler
+from treating the outage as a permanent 410.
+
+**A deploy with no migrations does not need the window.** `down`/`up` exist here because
+`migrate --force` runs against a schema the old code is still serving; skip them for a
+docs-or-assets-only release rather than taking the site down for nothing.
+
+**If a deploy dies midway, the site stays down** — that is the correct behaviour, not a bug. Fix
+forward and run `php artisan up` deliberately; a `finally`-style automatic `up` would lift
+maintenance on a half-migrated database.
 
 **`queue:restart` is not optional.** `core.email_log.enabled` is read at boot (doc 08), so a worker
 started before a config change keeps the old value indefinitely.
@@ -157,6 +179,7 @@ of a receipt. Do not point both at `outbound` to save a step.
 - [ ] **The owner content queue below is empty**
 - [ ] DNS cut over from ISPEUS
 - [ ] Backups running and a restore tested
+- [ ] `php artisan down --render="errors::503"` shows the maintenance page, and `php artisan up` clears it
 
 ## Owner content queue — the things only Matt can supply
 

@@ -24,6 +24,7 @@
 - [x] Phase 5 — Public site (cards 5.1–5.4) — **complete 2026-08-19**
 - [x] Phase 6 — Communications (cards 6.0–6.6) — **complete 2026-08-19**
 - [x] Phase 7 — Launch hardening (cards 7.1–7.3) — **complete 2026-08-19**
+- [ ] Phase 8 — Public site in Blade/Livewire/Flowbite (cards 8.0–8.5) — **8.0 done 2026-08-19; the rest waits on the design handoff**
 
 ---
 
@@ -416,22 +417,129 @@ launch is on doc 11's go-live checklist.
 
 ---
 
+## Phase 8 — Rebuild the public site in Blade + Livewire + Flowbite
+
+**Owner directive, 2026-08-19.** Frontend UI is Blade + Livewire + Flowbite on Tailwind 4; Filament
+is the admin backend only. This supersedes the 2026-08-16 "all UI is Filament" directive that
+Phase 5 was built under. **The rep portal at `/portal` stays Filament** — owner confirmed
+2026-08-19, so this phase touches the public site alone. Background and the full reasoning are in
+doc 10, D-5.1-a.
+
+**A design handoff from Claude Design is coming and has not landed yet.** Nothing below should be
+built against a guess at the visual design.
+
+### Card 8.0 — Front-end wiring
+
+**Status: done (2026-08-19).** `flowbite` as a runtime dependency, `@plugin 'flowbite/plugin'` and
+the three `@source` lines Tailwind v4 cannot auto-detect in `resources/css/app.css`,
+`import 'flowbite'` in `resources/js/app.js`, matching the `ckbs` reference wiring.
+
+`config/livewire.php` published with `component_layout => 'components.layouts.app'`. Livewire 4 ships
+`layouts::app`, and that namespace does **not** resolve here — `component_namespaces` registers
+namespaces for Livewire's component resolution, not Blade view hints, so the first full-page
+component without a `#[Layout]` attribute would have died with "No hint path defined for [layouts]".
+The layout at that path is a deliberate **placeholder**: `@vite`, a slot, a title, and no design
+whatsoever. The handoff replaces it.
+
+`APP_URL` was pointing at `coasttocoastcollegefair.test`, which Herd does not serve — the site is
+`https://coasttocoast.test`. Harmless while every page came from Filament's published assets; fatal
+the moment a Blade page calls `@vite`, which emits absolute URLs built from `APP_URL`. Fixed in the
+local `.env`. **`APP_URL` must match the serving host in every environment.**
+
+8 tests in `tests/Feature/Foundation/FrontendWiringTest.php` pin all of it, plus the Filament asset
+publishing that D-8-a fixed. None of them assert anything about how the site looks.
+
+### Card 8.1 — The layout and chrome
+
+**Depends on:** the design handoff. Replace `resources/views/components/layouts/app.blade.php` with
+the real layout: header, public navigation (Home, About, Representatives, Last Year, Sponsors, FAQ,
+Contact), footer carrying the contact block from `config('fair.contact')` — the same source the
+email footer and the check PDF read, so an address change lands everywhere at once. Flowbite's
+navbar handles the mobile toggle.
+
+### Card 8.2 — The static pages
+
+**Depends on:** 8.1. Home, About, Sponsors and FAQ as plain Blade views behind controller actions.
+Each one's content already exists as a Filament `content()` method under `app/Filament/Site/Pages/`;
+the data-gathering moves almost unaltered and only the rendering changes.
+
+`RendersContentBlocks` (doc 10, D-5.2-a) is a data source, not UI — keep its behaviour, **including
+a missing block rendering as nothing at all**, but the `fi-prose` wrapper becomes Flowbite/Tailwind
+typography.
+
+### Card 8.3 — The rosters
+
+**Depends on:** 8.1. Representatives and Last Year. The natural Livewire candidates — they want
+search and pagination — and the one place to be careful: `RosterService` and the shared
+current/previous split (doc 10, D-5.3-a) exist because the live site's Last Year page was showing
+the *current* roster. **Keep one component serving both pages.** Keep the initial-letter placeholder
+(D-5.3-c) and lazy-loaded images with real alt text.
+
+The roster must render server-side, not after a round trip (D-5.3-b): a search engine, and a rep
+checking whether their school is already listed, both need it in the HTML.
+
+If a roster swaps DOM after load, Flowbite's initialisers need re-running — `initFlowbite()` in a
+`livewire:navigated` listener. Noted in `resources/js/app.js`.
+
+### Card 8.4 — Event pages and the contact form
+
+**Depends on:** 8.1. The event page keeps its three CTA states (open → register; not yet open → the
+date to diarise; closed → the interest form). That state machine is the fix for the current site's
+dead end and is covered by tests that should survive the move. An unpublished fair stays a 404
+(D-5.4-c).
+
+The contact form and the interest capture both become Livewire components. **Their logic carries
+over verbatim and must not be reimplemented:** `ContactService::submit()` does the work, the consent
+checkbox is validated with `accepted()`, and the honeypot and IP throttle stay (doc 10, D-8-d,
+D-5.4-b). The interest capture also keeps its plain POST route as the non-JavaScript path.
+
+### Card 8.5 — Retire the panel
+
+**Depends on:** 8.1–8.4. Delete `SitePanelProvider`, the eight `Page` classes under
+`app/Filament/Site/Pages/`, the roster widgets, and `resources/views/filament/admin/audience-preview`
+if nothing else uses it. Remove the registration-order comment in `bootstrap/providers.php`, which
+exists only because the site panel claimed the root.
+
+**The public tests are already plain HTTP assertions** (`get('/faq')->assertSee(...)`), so most
+should survive unchanged; the handful calling `livewire(SomePage::class)` need repointing. Update
+doc 02 (its "Public pages" row and the panel table), this file, and golden rule 1 in
+`docs/README.md` — all three still say Filament-only.
+
+---
+
 ## Where this leaves the build (2026-08-19)
 
-All seven phases are implemented, 609 tests pass and Pint is clean. What remains is **content and
-credentials, not code**:
+Phases 1–7 are implemented and 620 tests pass with Pint clean. The application is functionally
+complete: registration, payments, grants, the admin panel, the rep portal and the whole comms system
+work end to end.
+
+**One piece of code work is outstanding, and it is Phase 8.** The public site was built under the
+old "all UI is Filament" directive and is being rebuilt in Blade + Livewire + Flowbite. The wiring
+(card 8.0) is done; the rest waits on the design handoff from Claude Design.
+
+Everything else is **content and credentials**:
 
 1. **[11-deployment.md](11-deployment.md) has an owner content queue** — the 2027 date and price, the
    refund policy, parking, hotels, conduct guidelines, the W-9, the brand colour and logo, and the
    ISPEUS roster export. Everything on it is editable in the admin panel or an env value; nothing
    needs a deploy.
-2. **Two decisions want the owner's eye**, both recorded in doc 10: the public site being a Filament
-   panel (D-5.1-a) and the contact consent being a stated notice rather than a checkbox (D-5.4-a).
-3. **The FAQ still wants a map embed and a W-9 download** (card 5.2). Both wait on owner content.
-4. **A browser pass** before launch, per doc 11's checklist.
+2. **The FAQ still wants a map embed and a W-9 download** (card 5.2). Both wait on owner content, and
+   both land in the Phase 8 rebuild rather than in the Filament pages.
+3. **A browser pass** before launch, per doc 11's checklist. The last one found four rendering
+   faults that 609 passing tests had not (doc 10, D-8-a…d), so it is not a formality.
+
+**Both decisions previously flagged for the owner are now answered.** D-5.1-a (the public site as a
+Filament panel) is answered "rework it" and is Phase 8. D-5.4-a (contact consent) was resolved by
+rebuilding the form so its checkbox is actually validated — see D-8-d.
+
+**Still open and NOT to be acted on without asking:** whether the rep portal at `/portal` eventually
+leaves Filament too. The owner confirmed on 2026-08-19 that it **stays Filament for now**; the
+reasoning and the sibling precedent are in doc 10, D-5.1-a.
 
 ---
 
 ## Suggested first session
 
 Cards 1.1 → 1.2 → 1.3 → 1.4 fit comfortably in one focused session and unblock everything else.
+**That advice is historical** — those cards are long done. A session picking this project up today
+starts at Phase 8, card 8.1, with the design handoff in hand.

@@ -1,9 +1,44 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+/*
+ * Flowbite is the component library for the public site (owner directive,
+ * 2026-08-19: frontend is Blade + Livewire + Flowbite, Filament is the admin
+ * backend only). `ckbs` is the reference wiring in this workspace.
+ *
+ * The admin panel and the rep portal do NOT use this stylesheet — Filament
+ * ships its own compiled CSS, published into `public/css/filament/`. Nothing
+ * here can affect them.
+ */
+@plugin 'flowbite/plugin';
+
+/*
+ * Tailwind v4 auto-detects sources but skips .gitignore'd directories, so the
+ * three that matter have to be named:
+ *
+ *   - Flowbite's own JS injects classes at runtime that never appear in a
+ *     template, so they would otherwise be purged;
+ *   - the framework's pagination views;
+ *   - Livewire's own markup.
+ */
+@source '../../node_modules/flowbite';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views';
+@source '../../vendor/livewire/livewire/src';
 @source '../../storage/framework/views/*.php';
+
+/* Alpine-cloaked elements (Flowbite dropdowns, mobile nav) stay hidden until
+   Alpine initialises, so nothing flashes open on load. */
+[x-cloak] {
+    display: none !important;
+}
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /*
+     * The fair's palette belongs here once the design handoff lands. Until
+     * then the only brand value in the application is `fair.brand.color_primary`
+     * in config/fair.php, which the email layout reads — email cannot use a
+     * CSS custom property, so that one stays a config scalar either way.
+     */
 }

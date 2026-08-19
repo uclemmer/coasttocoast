@@ -876,3 +876,41 @@ are reimplemented on our submit handler, because a Livewire submit never reaches
 route and would otherwise have had neither.
 
 **No longer needs an owner decision.**
+
+### D-8-e — Front-end wiring landed before the design (card 8.0)
+
+**Context.** The owner confirmed on 2026-08-19 that the public site becomes Blade + Livewire +
+Flowbite and that **the rep portal stays Filament for now**, then asked for the design-independent
+groundwork while the Claude Design handoff is prepared.
+
+**Decision.** Only the build pipeline: `flowbite` as a runtime dependency (it ships to the browser,
+so `npm ci --omit=dev` must still install it), the plugin and `@source` lines in `app.css`, the
+import in `app.js`. Mirrors `ckbs`, which the workspace names as the reference wiring.
+
+`config/livewire.php` was published for one reason. Livewire 4 ships `component_layout => 'layouts::app'`
+and that namespace does **not** resolve here — `component_namespaces` registers namespaces for
+Livewire's *component* resolution, not Blade view hints, and the runtime hint list confirms
+`layouts` is absent. The first full-page component anybody wrote would have died at render time
+with "No hint path defined for [layouts]". Pointing it at `components.layouts.app` follows the
+pattern `ckbs` and `budget` use, and that path doubles as a Blade component so static pages and
+Livewire pages share one layout rather than two that drift.
+
+**The layout itself is a deliberate placeholder** and says so at the top of the file: `@vite`, a
+slot, a title, no design. Inventing a look now would only be something to unpick.
+
+**Not done, on purpose:** no pages, no navigation, no components, no colours. All of that waits.
+
+### D-8-f — `APP_URL` must match the serving host
+
+**Symptom found while wiring.** `.env` had `APP_URL=http://coasttocoastcollegefair.test`; Herd serves
+this project at `https://coasttocoast.test`. The Blade layout's `@vite` emitted
+`http://coasttocoastcollegefair.test/build/...` — a cross-origin, mixed-content reference to a host
+that does not exist.
+
+**Why it had not bitten.** Every page so far came from Filament's published assets under
+`public/css` and `public/js`, which do not go through Vite. The moment a Blade page calls `@vite`,
+it matters on every request.
+
+**Fixed** in the local `.env`. The rule generalises and is in doc 11's environment table: `APP_URL`
+is what absolute URLs in assets and in email are built from, so it has to match the host actually
+serving the site in every environment.

@@ -21,11 +21,17 @@ describe('response headers', function () {
     });
 
     it('sends HSTS only over HTTPS', function () {
-        // Pinning coasttocoastcollegefair.test to https in a developer's
-        // browser for a year is a genuinely annoying thing to do to somebody.
-        expect($this->get('/')->headers->has('Strict-Transport-Security'))->toBeFalse();
+        // Pinning a .test domain to https in a developer's browser for a year
+        // is a genuinely annoying thing to do to somebody.
+        //
+        // Both schemes are named explicitly rather than leaning on whatever
+        // `APP_URL` happens to be: this test passed for the wrong reason until
+        // APP_URL moved to https (doc 10, D-8-f), because a relative `get('/')`
+        // inherits the configured scheme.
+        expect($this->get('http://coasttocoast.test/')->headers->has('Strict-Transport-Security'))
+            ->toBeFalse();
 
-        expect($this->get('https://localhost/')->headers->get('Strict-Transport-Security'))
+        expect($this->get('https://coasttocoast.test/')->headers->get('Strict-Transport-Security'))
             ->toContain('max-age=31536000');
     });
 

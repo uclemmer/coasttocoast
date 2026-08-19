@@ -18,7 +18,7 @@
 - [x] Phase 1 — Foundation (cards 1.1–1.4) — **complete 2026-08-18**
 - [x] Phase 2 — Domain & admin core (cards 2.1–2.6) — **complete 2026-08-18**
 - [x] Phase 3 — Rep portal & registration (cards 3.0–3.5) — **complete 2026-08-18**
-- [ ] Phase 4 — Payments (cards 4.1–4.3)
+- [x] Phase 4 — Payments (cards 4.1–4.3) — **complete 2026-08-18**
 - [ ] Phase 5 — Public site (cards 5.1–5.4)
 - [ ] Phase 6 — Communications (cards 6.0–6.6)
 - [ ] Phase 7 — Launch hardening (cards 7.1–7.3)
@@ -277,6 +277,27 @@ case-insensitively behind a honeypot and an IP throttle (D-3.4-a).
 ### Card 4.3 — Stripe webhook + refunds
 **Depends on:** 4.1. Webhook route per 04 (signature verify, idempotency ledger, handlers for completed/expired/refunded); admin Refund action calling `refund()`.
 **Tests:** signed fixture accepted / bad signature 400 / duplicate event no-ops; completed confirms + queues notifications; amount-mismatch flags not confirms; refund transitions.
+
+**Phase 4 status: done (2026-08-18).** Suite 470, Pint clean.
+
+| Card | Shipped |
+|---|---|
+| 4.1 | `StripeCheckoutService::createSession()` / `refund()`, wizard redirect to Checkout, `pay` retry action on the portal detail page |
+| 4.2 | `CheckPaymentService`, `CheckPaymentForm` + `resources/views/pdf/check-form.blade.php`, `markCheckReceived` admin action |
+| 4.3 | `routes/webhooks.php`, `StripeWebhookController`, `StripeWebhookHandler`, `refund` admin action |
+
+**Still owed by this phase:** the `RegistrationCheckInstructions` mailable that attaches the printed
+form. Deferred to card 6.1 with the rest of the comms matrix (doc 10, D-2.3-a) — the PDF itself is
+built and downloadable from the portal today, so the check path is usable without it.
+
+**Decisions (doc 10, D-4.x):** the gateway takes a registration and has no amount parameter, so the
+charged figure and the quoted figure are the same number by construction (D-4.1-a); Checkout is
+opened after the row is saved, so a Stripe outage leaves a recoverable registration rather than
+losing one (D-4.1-b); recording a check confirms in the same transaction and through the same
+`confirmPayment()` the webhook uses (D-4.2-a); the `charge.refunded` webhook owns the refund
+transition, so a refund from the Stripe dashboard and one from our panel agree (D-4.3-a);
+idempotency is claimed before any work and a handler failure still answers 200, because a 500 makes
+Stripe retry for three days (D-4.3-b); an amount mismatch flags and refuses to confirm (D-4.3-c).
 
 ## Phase 5 — Public site
 

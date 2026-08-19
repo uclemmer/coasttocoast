@@ -8,6 +8,7 @@ use App\Filament\Rep\Resources\RegistrationResource;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Models\User;
+use App\Services\Payments\PaymentGateway;
 use App\Services\RegistrationService;
 use App\Support\Money;
 use App\Support\Phone;
@@ -149,12 +150,42 @@ class CreateRegistration extends CreateRecord
         }
     }
 
+    /**
+     * Card payers go straight to Stripe; everyone else lands on their
+     * registration.
+     *
+     * The gateway is called here rather than inside `RegistrationService`
+     * because the registration must exist and be saved first — the session
+     * carries its id, and a Stripe outage must leave a recoverable
+     * `pending_payment` row rather than losing the whole registration. If the
+     * session cannot be opened, the rep still has their place and the
+     * retry-payment button on the detail page.
+     */
     protected function getRedirectUrl(): string
     {
         /** @var Registration $record */
         $record = $this->getRecord();
 
-        return static::getResource()::getUrl('view', ['record' => $record]);
+        $detail = static::getResource()::getUrl('view', ['record' => $record]);
+
+        if ($record->payment_method !== PaymentMethod::Stripe || $record->isFree()) {
+            return $detail;
+        }
+
+        try {
+            return app(PaymentGateway::class)->createSession($record)->url;
+        } catch (Throwable $e) {
+            report($e);
+
+            Notification::make()
+                ->title(__('We could not open the payment page.'))
+                ->body(__('Your place is held. Use the payment button on this page to try again.'))
+                ->warning()
+                ->persistent()
+                ->send();
+
+            return $detail;
+        }
     }
 
     protected function getCreatedNotification(): ?Notification

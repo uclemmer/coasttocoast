@@ -97,12 +97,16 @@ describe('payment gateway binding', function () {
         expect(app(PaymentGateway::class))->toBeInstanceOf(StripeCheckoutService::class);
     });
 
-    it('refuses to pretend the unbuilt methods work', function () {
+    it('refuses a registration with nothing to charge before it ever calls Stripe', function () {
+        // Card 1.4 pinned this as "not yet implemented"; card 4.1 implemented
+        // it, and the guard that replaced the placeholder is worth more: a
+        // registration priced at zero has no business at a gateway, and
+        // charging $0 would paper over whichever caller skipped the free branch.
         config()->set('services.stripe.secret', 'sk_test_123');
         app()->forgetInstance(PaymentGateway::class);
 
-        expect(fn () => app(PaymentGateway::class)->createSession(new Registration))
-            ->toThrow(RuntimeException::class, 'card 4.1');
+        expect(fn () => app(PaymentGateway::class)->createSession(new Registration(['price_cents' => 0])))
+            ->toThrow(RuntimeException::class, 'nothing to pay');
     });
 
     it('can be swapped for the fake the payment tests use', function () {

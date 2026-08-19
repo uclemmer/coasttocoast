@@ -63,4 +63,14 @@ class RegistrationNotAllowed extends RuntimeException
     {
         return new self(__('This registration has already been cancelled or refunded.'));
     }
+
+    public static function notAwaitingACheck(): self
+    {
+        return new self(__('This registration is not waiting on a check.'));
+    }
+
+    public static function notAwaitingPayment(): self
+    {
+        return new self(__('This registration is not waiting on payment.'));
+    }
 }

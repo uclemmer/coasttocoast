@@ -456,3 +456,79 @@ tripped honeypot is deliberately vague, so a bot cannot learn which field caught
 Addresses are lowercased before `updateOrCreate`, so somebody who signs up as `Dana@` and then
 `dana@` is not both told they are on the list and mailed twice. A second submission still improves
 what we know — it fills in the school name if the first left it blank.
+
+### D-4.1-a — The gateway takes a registration, never an amount
+
+**Decision.** `PaymentGateway::createSession(Registration)` reads `price_cents` off the record and
+there is no amount parameter anywhere in the interface. Combined with the wizard having no price
+field (D-3.2-a), the figure Stripe charges, the figure the rep was shown and the figure on the
+receipt are the same number by construction rather than by agreement (N1). It also refuses outright
+when `price_cents` is zero — a grant made that registration free, so reaching the gateway means a
+caller skipped the free branch, and charging $0 would paper over the bug.
+
+### D-4.1-b — Checkout is opened after the registration is saved, from the redirect
+
+**Decision.** `RegistrationService` does not call the gateway. `CreateRegistration::getRedirectUrl()`
+does, once the row exists. The session needs the registration id, and more importantly a Stripe
+outage must leave a recoverable `pending_payment` row rather than losing the whole registration —
+if the session cannot be opened the rep keeps their place and gets the retry button, and the
+notification says so.
+
+The retry path (`pay` action on the detail page) matters more than the happy one: a closed tab, a
+declined card, an outage mid-signup.
+
+### D-4.2-a — Recording a check confirms in the same transaction
+
+**Decision.** `CheckPaymentService::markReceived()` writes the payment and calls
+`RegistrationService::confirmPayment()` inside one `DB::transaction`. A check marked received on a
+registration that stayed `pending_payment` is the failure mode that gets a school turned away at the
+door. It calls the *same* `confirmPayment()` the Stripe webhook does, so both paths fire the same
+events and produce the same receipt.
+
+The amount defaults to the snapshot, so the common case is two fields and a button. A different
+figure is recorded as-is — this is a ledger of what happened, not of what should have — and a short
+check produces a persistent warning rather than a refusal. Nobody should be turned away over a
+dollar; the alternative to a warning is noticing in April.
+
+### D-4.3-a — The `charge.refunded` webhook owns the refund transition, not the admin action
+
+**Decision.** `StripeCheckoutService::refund()` calls Stripe and stops. It does not mark the payment
+refunded. The webhook handler does, which means a refund issued from our panel and one issued from
+the Stripe dashboard leave the database in exactly the same state — the only way the two can be
+trusted to agree.
+
+A **partial** refund moves the payment but not the registration: the school is still coming, it just
+paid less. A full refund sets `Refunded` and clears `show_on_roster`, because a refunded
+registration is one that is not attending.
+
+The refund action is offered only on a settled *card* payment. A mailed check is refunded by writing
+one back, which this application cannot do, and a button that pretended otherwise would be worse
+than none.
+
+### D-4.3-b — Idempotency is claimed before any work, and a handler failure returns 200
+
+**Decision.** `StripeWebhookHandler::handle()` claims the `stripe_webhook_events` row first and
+returns early if the event has been seen. Everything downstream is therefore safe against Stripe's
+redelivery, and `confirmPayment()` is independently idempotent as well.
+
+The controller catches handler exceptions, reports them, and still answers 200. A 500 makes Stripe
+retry for three days, so a deterministic bug would be retried thousands of times; the ledger records
+that the event was seen and the exception is in the log for a human.
+
+**A missing webhook secret is a 500, not a bypass.** Without it every caller is "Stripe" and anyone
+who can reach the URL can confirm a registration.
+
+### D-4.3-c — An amount mismatch flags and refuses to confirm
+
+**Decision.** When `amount_total` differs from the registration's snapshot, the handler appends a
+`PAYMENT MISMATCH` note, fails the payment row, logs an error and leaves the registration
+`pending_payment`. The only routes here are a tampered session or a bug in our own pricing, and both
+mean the figure the school agreed to and the figure that moved are different. Confirming would bless
+it.
+
+### D-4.3-d — Webhook routes live in their own file
+
+**Decision.** `routes/webhooks.php`, loaded through `withRouting(then:)` on the `api` middleware
+group, so there is no session and no CSRF token. The caller is a server and its proof of identity is
+the signature. A separate file makes that exemption visible rather than burying it in a middleware
+exclusion list.

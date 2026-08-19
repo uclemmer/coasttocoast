@@ -235,8 +235,37 @@ one type.
 ## Factories & seeders
 
 - Factory for **every** model (tests depend on them — project instruction on unit testing).
-- `DatabaseSeeder` (dev): coordinator user (`admin@example.com`, seeded `coordinator` role), the 2025 and 2026 events (past, with organizations + confirmed registrations so Last Year AND cross-year audiences are testable — doc 07 §2), a 2027 event (registration open, placeholder date/price flagged `TODO-OWNER`), 4 sponsors with staff, FAQ items and core content blocks seeded from the current site's copy (see 00), a few pending-check registrations, lapsed organizations (2025/2026 only), orgs with multiple/retired/pending reps, and grants in each status (incl. an approved free and a percent-off applied to registrations).
-- Production seeder: sponsors, FAQ, content blocks, coordinator role/user only. Historical roster import is card 6.6.
+
+**As built (card 1.3, 2026-08-18).** Seven seeder classes, each idempotent by a natural key so
+re-running never overwrites edited copy:
+
+| Seeder | What it writes | Runs in |
+|---|---|---|
+| `RoleSeeder` | syncs permissions, creates `coordinator` holding all of them | both |
+| `CoordinatorSeeder` | the coordinator account from `config/fair.php` | both |
+| `ContentBlockSeeder` | 9 core `block` rows — home, about, roster intros, sponsors, contact, refund policy, check instructions | both |
+| `SponsorSeeder` | the 4 sponsor schools + Meg Conner | both |
+| `FaqSeeder` | 11 questions from doc 00 | both |
+| `EventSeeder` | fairs 2025, 2026, 2027 | both |
+| `FairFixtureSeeder` | schools, reps, three years of registrations, grants in every status, the awkward cases | **dev only** |
+
+`DatabaseSeeder` (dev) calls all seven; `ProductionSeeder` calls the first six. Note that
+`DatabaseSeeder` does **not** use `WithoutModelEvents` — `Organization` derives `normalized_name`
+and `Event` fills a blank slug in `saving` hooks, so muting model events would seed rows the
+application itself could never produce, and the duplicate-detection fixtures would seed as
+non-duplicates.
+
+Three things about the fixture set are load-bearing rather than decorative, and card 6.3's audience
+tests depend on all three: two *past* published fairs (`LastEvent` and `AnyPreviousEvent` are
+indistinguishable with one year of history), schools that lapsed after each of them, and two
+schools with no active rep — one with an `admissions_email` (generic fallback) and one without (the
+recipient that gets dropped with a log).
+
+The 2027 event seeds **unpublished** with `TODO-OWNER` in its name because its date and price are
+placeholders; `FairFixtureSeeder` publishes and opens it in development only. See
+[10-implementation-decisions.md](10-implementation-decisions.md) D-1.3-a…e.
+
+Historical roster import is card 6.6.
 
 ## Data lifecycle rules
 

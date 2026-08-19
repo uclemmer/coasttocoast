@@ -1,0 +1,196 @@
+<?php
+
+use App\Enums\GrantStatus;
+use App\Enums\MembershipStatus;
+use App\Enums\RegistrationStatus;
+use App\Models\Event;
+use App\Models\EventInterest;
+use App\Models\FaqItem;
+use App\Models\Grant;
+use App\Models\Organization;
+use App\Models\Registration;
+use App\Models\Sponsor;
+use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\FairFixtureSeeder;
+use Database\Seeders\ProductionSeeder;
+use UClemmer\LaravelCore\Content\Content;
+use UClemmer\LaravelCore\Content\ContentType;
+
+describe('the production seed', function () {
+    beforeEach(fn () => $this->seed(ProductionSeeder::class));
+
+    it('provisions a coordinator who can reach the admin panel', function () {
+        $coordinator = User::query()->where('email', config('fair.coordinator.email'))->first();
+
+        expect($coordinator)->not->toBeNull()
+            ->and($coordinator->hasRole('coordinator'))->toBeTrue()
+            ->and($coordinator->can('admin.access'))->toBeTrue()
+            // A coordinator is not a member of anything — they administer
+            // through the panel, never through the rep portal.
+            ->and($coordinator->organization_id)->toBeNull()
+            ->and($coordinator->membership_status)->toBeNull();
+    });
+
+    it('seeds the page copy as core content blocks, published', function () {
+        $blocks = Content::query()->ofType(ContentType::Block)->published()->pluck('slug');
+
+        expect($blocks)->toContain('home.hero', 'about.body', 'sponsors.intro', 'contact.intro')
+            // Every app table this app might have used for copy is core's
+            // instead (doc 03) — assert we did not quietly build a parallel one.
+            ->and(Content::query()->ofType(ContentType::Block)->count())->toBeGreaterThanOrEqual(9);
+    });
+
+    it('flags the refund policy as owner copy that must be replaced', function () {
+        // doc 01 lists this as an open question; the placeholder must announce
+        // itself rather than read as settled policy.
+        $policy = Content::query()->where('slug', 'policy.refunds')->firstOrFail();
+
+        expect($policy->title)->toContain('TODO-OWNER')
+            ->and($policy->body)->toContain('placeholder');
+    });
+
+    it('seeds the four sponsor schools in billing order', function () {
+        expect(Sponsor::query()->ordered()->pluck('name')->all())->toBe([
+            'Baylor School',
+            'Girls Preparatory School',
+            'McCallie School',
+            'St. Andrews-Sewanee School',
+        ]);
+    });
+
+    it('seeds a published FAQ', function () {
+        expect(FaqItem::query()->published()->count())->toBeGreaterThanOrEqual(10);
+    });
+
+    it('seeds two past fairs and one upcoming one', function () {
+        expect(Event::query()->pluck('slug')->all())
+            ->toBe(['college-fair-2025', 'college-fair-2026', 'college-fair-2027'])
+            // Two past years, not one: LastEvent and AnyPreviousEvent are
+            // indistinguishable with a single year of history (doc 07 §2).
+            ->and(Event::query()->previousPublished()->count())->toBe(2);
+    });
+
+    it('leaves the 2027 fair unpublished because its date and price are placeholders', function () {
+        // An unpublished event cannot take money, so a forgotten placeholder
+        // cannot quietly charge a school the wrong fee.
+        $fair = Event::query()->where('slug', 'college-fair-2027')->firstOrFail();
+
+        expect($fair->is_published)->toBeFalse()
+            ->and($fair->isRegistrationOpen())->toBeFalse()
+            ->and($fair->name)->toContain('TODO-OWNER');
+    });
+
+    it('invents no schools, reps, registrations, grants or payments', function () {
+        expect(Organization::query()->count())->toBe(0)
+            ->and(Registration::query()->count())->toBe(0)
+            ->and(Grant::query()->count())->toBe(0)
+            ->and(User::query()->count())->toBe(1);
+    });
+
+    it('is safe to run twice', function () {
+        $this->seed(ProductionSeeder::class);
+
+        expect(User::query()->count())->toBe(1)
+            ->and(Sponsor::query()->count())->toBe(4)
+            ->and(Event::query()->count())->toBe(3)
+            ->and(Content::query()->ofType(ContentType::Block)->count())->toBe(9);
+    });
+});
+
+describe('the development seed', function () {
+    beforeEach(fn () => $this->seed(DatabaseSeeder::class));
+
+    it('opens the current fair so the portal has something live to work on', function () {
+        $fair = Event::query()->where('slug', 'college-fair-2027')->firstOrFail();
+
+        expect($fair->is_published)->toBeTrue()
+            ->and($fair->isRegistrationOpen())->toBeTrue();
+    });
+
+    it('gives the cross-year audiences schools that lapsed after each past fair', function () {
+        $fair2026 = Event::query()->where('slug', 'college-fair-2026')->firstOrFail();
+        $fair2027 = Event::query()->where('slug', 'college-fair-2027')->firstOrFail();
+
+        $registeredIn2026 = Registration::query()->where('event_id', $fair2026->id)
+            ->pluck('organization_id');
+        $registeredIn2027 = Registration::query()->where('event_id', $fair2027->id)
+            ->pluck('organization_id');
+
+        expect($registeredIn2026->diff($registeredIn2027))->not->toBeEmpty();
+    });
+
+    it('gives every membership state a school to live in', function () {
+        expect(User::query()->where('membership_status', MembershipStatus::Active)->exists())->toBeTrue()
+            ->and(User::query()->where('membership_status', MembershipStatus::Pending)->exists())->toBeTrue()
+            ->and(User::query()->where('membership_status', MembershipStatus::Retired)->exists())->toBeTrue();
+    });
+
+    it('gives the campaign fallback both of its cases', function () {
+        // A school with no active rep but a generic address gets one recipient;
+        // one with neither is dropped with a log (doc 07 §2 rule 1).
+        $noActiveReps = Organization::query()
+            ->whereDoesntHave('users', fn ($q) => $q->where('membership_status', MembershipStatus::Active))
+            ->whereHas('registrations')
+            ->get();
+
+        expect($noActiveReps->where('admissions_email', '!=', null))->not->toBeEmpty()
+            ->and($noActiveReps->whereNull('admissions_email'))->not->toBeEmpty();
+    });
+
+    it('seeds a pair of schools that normalize to the same name', function () {
+        $duplicated = Organization::query()
+            ->selectRaw('normalized_name, count(*) as total')
+            ->groupBy('normalized_name')
+            ->havingRaw('count(*) > 1')
+            ->get();
+
+        expect($duplicated)->not->toBeEmpty();
+    });
+
+    it('seeds a grant in every status', function () {
+        $statuses = Grant::query()->pluck('status')->unique()->values();
+
+        expect($statuses)->toHaveCount(count(GrantStatus::cases()));
+    });
+
+    it('applies the approved grants to real registrations, so the snapshot differs from list price', function () {
+        $fair = Event::query()->where('slug', 'college-fair-2027')->firstOrFail();
+
+        $discounted = Registration::query()
+            ->whereNotNull('grant_id')
+            ->where('event_id', $fair->id)
+            ->get();
+
+        expect($discounted)->not->toBeEmpty()
+            ->and($discounted->pluck('price_cents')->unique()->all())->not->toBe([$fair->price_cents]);
+    });
+
+    it('seeds a free registration with no payment method and no payment row', function () {
+        $free = Registration::query()->where('price_cents', 0)->firstOrFail();
+
+        expect($free->payment_method)->toBeNull()
+            ->and($free->status)->toBe(RegistrationStatus::Confirmed)
+            ->and($free->payments()->count())->toBe(0);
+    });
+
+    it('seeds the registration states the admin panel has to cope with', function () {
+        expect(Registration::query()->where('status', RegistrationStatus::PendingPayment)->exists())->toBeTrue()
+            ->and(Registration::query()->where('status', RegistrationStatus::Cancelled)->exists())->toBeTrue()
+            ->and(Registration::query()->where('show_on_roster', false)->exists())->toBeTrue()
+            ->and(Registration::query()->whereNull('user_id')->exists())->toBeTrue();
+    });
+
+    it('seeds an interest list with a notified row and un-notified ones', function () {
+        expect(EventInterest::query()->unnotified()->count())->toBeGreaterThan(0)
+            ->and(EventInterest::query()->whereNotNull('notified_at')->count())->toBeGreaterThan(0);
+    });
+
+    it('does not duplicate its fixtures when run again', function () {
+        $before = Organization::query()->count();
+
+        $this->seed(FairFixtureSeeder::class);
+
+        expect(Organization::query()->count())->toBe($before);
+    });
+});

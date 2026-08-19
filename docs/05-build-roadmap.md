@@ -79,6 +79,26 @@ database (D-1.2-h).
 **Do:** Dev seeder per doc 03 (2025 + 2026 past events with rosters incl. lapsed reps — audiences need two past years, 2027 placeholder event flagged TODO-OWNER, sponsors/staff, FAQ, core content blocks from doc 00 copy, coordinator user). Production seeder (content + coordinator only).
 **Tests:** seeder runs green; seeded counts/keys assertions.
 
+**Status: done (2026-08-18).** Shipped: `RoleSeeder` (already present), `CoordinatorSeeder`,
+`ContentBlockSeeder` (nine core `block` rows from doc 00's copy), `SponsorSeeder` (the four schools),
+`FaqSeeder` (eleven questions), `EventSeeder` (2025, 2026, 2027), `FairFixtureSeeder` (dev-only), and
+`ProductionSeeder` alongside the dev `DatabaseSeeder`. New `config/fair.php` holds the contact block,
+coordinator identity, brand tokens and admin-alert settings — one source for values that must match
+across a Filament panel, a public page and an email. 20 Pest tests in
+`tests/Feature/Foundation/SeederTest.php`; suite 164, Pint clean.
+
+**Decisions taken (detail in [10-implementation-decisions.md](10-implementation-decisions.md)):**
+`CoordinatorSeeder` only sets a known password in local/testing — anywhere else it sets 64 random
+characters and tells the operator to send a reset (D-1.3-a). The 2027 event seeds **unpublished**,
+because its date and price are placeholders and an unpublished event cannot take money (D-1.3-b);
+`FairFixtureSeeder` publishes and opens it in development only. Every seeder is idempotent by a
+natural key and never overwrites edited copy (D-1.3-c). FAQ answers doc 00 does not contain are
+seeded as explicit `TODO-OWNER` rows rather than invented (D-1.3-d).
+
+**Owner queue — copy that needs you:** the refund/cancellation policy (`policy.refunds` content
+block), the parking/unloading directions, the hotel list, the conduct guidelines, the W-9 PDF, and
+the real 2027 date and price. All are editable in the admin panel; none need a deploy.
+
 ### Card 1.4 — Service scaffolding & config
 **Depends on:** 1.2.
 **Do:** `SmsService` interface + `TwilioSms` + `NullSms`; `PaymentGateway` interface + empty `StripeCheckoutService`; `RegistrationService`, `RosterService` shells; container bindings (env-dependent); add all env keys from doc 02 to `.env.example`; `config/services.php` entries; install `stripe/stripe-php`, `twilio/sdk`, `barryvdh/laravel-dompdf`.

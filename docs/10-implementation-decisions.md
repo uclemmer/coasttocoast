@@ -99,3 +99,47 @@ environment with logging disabled takes.
 sync. Model tests need real tables for casts, scopes and relationships; none of them touch a Gate,
 so paying for the sync on each would buy nothing. A unit test that genuinely needs permissions is a
 feature test in the wrong directory.
+
+### D-1.3-a — The coordinator seeder only sets a known password locally
+
+**Decision.** In `local`/`testing`, `CoordinatorSeeder` creates the account with the password
+`password`. Anywhere else it sets 64 random characters nobody holds and prints "password unset —
+send a reset link". A seeder that plants a guessable admin password on a production host is a back
+door with a changelog entry. Identity comes from `config/fair.php` (`COORDINATOR_EMAIL` /
+`COORDINATOR_NAME`).
+
+### D-1.3-b — The 2027 event seeds unpublished
+
+**Context.** A4 authorised placeholder date and price for 2027.
+
+**Decision.** `EventSeeder` writes it with `is_published = false` and `TODO-OWNER` in the name.
+An unpublished event is never registration-open, so a placeholder the owner forgets about cannot
+quietly charge a school the wrong fee — publishing it is a deliberate act once the real figures are
+known. `FairFixtureSeeder` publishes and opens it in development only, because a local app with no
+current fair is not worth running.
+
+### D-1.3-c — Every seeder is idempotent and never overwrites edited copy
+
+**Decision.** All seeders key on a natural identifier (content slug, sponsor name, FAQ question,
+event slug, coordinator email) and use `firstOrCreate`. `FairFixtureSeeder` no-ops entirely if any
+organization exists. `ProductionSeeder` is therefore safe on every deploy. A seeder that reset the
+coordinator's wording each release would be worse than no seeder.
+
+### D-1.3-d — Missing FAQ content is seeded as visible TODO-OWNER rows
+
+**Context.** The live site's FAQ covers parking, hotels, conduct guidelines and a W-9 download; doc
+00 records that those sections exist but not their text.
+
+**Decision.** Seed the question with a `TODO-OWNER: transcribe …` answer rather than inventing
+plausible detail. A confidently wrong parking answer sends a hundred representatives to the wrong
+door; an obviously unfinished one sends them to the phone. Same treatment for the refund policy,
+which doc 01 lists as an open question — it is a content block so it can be fixed without a deploy.
+
+### D-1.3-e — `config/fair.php` created early
+
+**Context.** Doc 07 §1 puts brand tokens in `config/fair.php` as part of card 6.0.
+
+**Decision.** Created it at card 1.3 instead, because the coordinator identity and the contact block
+were needed by the seeders, and the contact block is the same data the public footer, the email
+footer and the check PDF all need. Card 6.0 fills in the real brand colour and logo URL; the keys
+are already there.

@@ -9,7 +9,7 @@
 > **Phase 8 rebuilt the public site** after the UI directive changed on 2026-08-19: public UI is
 > Blade + Livewire + Flowbite, Filament is the admin backend only, and the old `SitePanelProvider`
 > and its eight `Page` classes are gone. The visual design comes from the Claude Design handoff in
-> `storage/app/private/design_handoff_college_fair_landing/`. Read the stack directive in
+> [`docs/design-handoff/`](design-handoff/). Read the stack directive in
 > [02-architecture.md](02-architecture.md) before touching any public page.
 
 Planning documentation for rebuilding [coasttocoastcollegefair.com](https://www.coasttocoastcollegefair.com)
@@ -36,6 +36,7 @@ cards from 05 under the rules in 06):
 | [07-email-design.md](07-email-design.md) | Themed HTML email template, cross-year audience segmentation, and send tracking via laravel-core's EmailLog |
 | [09-package-wiring.md](09-package-wiring.md) | How this app consumes `uclemmer/laravel-core` (vcs + tagged release), publishing core's migrations, the permission sync the test suite needs, and why `canAccessPanel` returns `true` for the rep panel |
 | [10-implementation-decisions.md](10-implementation-decisions.md) | Every judgement call an implementing session made without the owner present, with its reasoning and how to reverse it — **read this before questioning why something differs from 01–07** |
+| [design-handoff/](design-handoff/) | The Claude Design handoff the public site was built from (2026-08-19) — the landing, interior and maintenance prototypes, and the token/type/spacing reference that declares colours, typography, spacing and copy final. Start at its [PROVENANCE.md](design-handoff/PROVENANCE.md) |
 | [11-deployment.md](11-deployment.md) | Getting it live: host requirements, the deploy sequence, Stripe/Postmark/Twilio setup, backups, the go-live checklist, and the **owner content queue** — the things only Matt can supply |
 
 **Golden rules** (duplicated from the docs because they matter):

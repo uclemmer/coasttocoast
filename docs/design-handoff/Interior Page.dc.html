@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&amp;family=Caveat:wght@600;700&amp;family=Source+Sans+3:ital,wght@0,400;0,600;1,400&amp;display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+body{margin:0;background:#ffffff;color:#22302a;font-family:'Source Sans 3',Georgia,serif;text-wrap:pretty;overflow-x:clip}
+a{color:#188042;text-underline-offset:3px}
+a:hover{color:#0f5c2e}
+html{scroll-behavior:smooth}
+input::placeholder,textarea::placeholder{color:#9ab0a2}
+</style>
+</helmet>
+<nav style="display:flex;align-items:center;gap:28px;padding:14px max(24px,calc((100% - 1140px)/2));border-bottom:1px solid #e3ece6;background:#ffffff">
+  <a href="./Landing Page.dc.html" style="display:flex;align-items:center;text-decoration:none"><img src="./assets/wordmark.jpg" alt="Coast to Coast College Fair" style="height:48px;width:auto;display:block"></a>
+  <a href="#" style="text-decoration:none;color:#22302a;font-size:14.5px;font-weight:600" style-hover="color:#188042">About</a>
+  <a href="#" style="text-decoration:none;color:#22302a;font-size:14.5px;font-weight:600" style-hover="color:#188042">Representatives</a>
+  <a href="#" style="text-decoration:none;color:#22302a;font-size:14.5px;font-weight:600" style-hover="color:#188042">Sponsors</a>
+  <a href="#" style="text-decoration:none;color:#22302a;font-size:14.5px;font-weight:600" style-hover="color:#188042">FAQ</a>
+  <a href="#" style="text-decoration:none;color:#22302a;font-size:14.5px;font-weight:600" style-hover="color:#188042">Contact</a>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+    <a href="#" style="white-space:nowrap;text-decoration:none;color:#22302a;font-size:14.5px;font-weight:600" style-hover="color:#188042">Log in</a>
+    <a href="#" style="white-space:nowrap;text-decoration:none;background:#188042;color:#ffffff;font-family:Montserrat,sans-serif;font-weight:700;font-size:13.5px;letter-spacing:0.04em;text-transform:uppercase;padding:12px 22px;border-radius:6px" style-hover="background:#0f5c2e">Register</a>
+  </div>
+</nav>
+
+<header style="background:#f2f8f4;border-bottom:1px solid #e3ece6;padding:36px max(24px,calc((100% - 1140px)/2))">
+  <nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#7a8f81;margin-bottom:12px">
+    <a href="./Landing Page.dc.html" style="text-decoration:none">Home</a>
+    <span>/</span>
+    <a href="#" style="text-decoration:none">Representatives</a>
+    <span>/</span>
+    <span style="color:#44584c;font-weight:600">Style reference</span>
+  </nav>
+  <p style="font-family:Caveat,cursive;font-weight:700;font-size:28px;color:#188042;margin:0 0 4px">Interior page layout</p>
+  <h1 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:clamp(30px,3.6vw,44px);line-height:1.15;text-transform:uppercase;letter-spacing:-0.01em;margin:0;color:#1a2b21">Kitchen sink</h1>
+  <p style="font-size:17px;line-height:1.65;max-width:62ch;margin:14px 0 0;color:#44584c">Every element the interior templates will need — typography, buttons, forms, tables, cards, alerts, tabs, accordions, and pagination — in the fair's palette and type.</p>
+</header>
+
+<div style="max-width:1140px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:56px clamp(32px,5vw,72px);align-items:start">
+  <main style="padding:56px 0;display:grid;gap:56px;min-width:0">
+
+    <section>
+      <h2 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:24px;text-transform:uppercase;margin:0 0 6px;color:#1a2b21">Typography</h2>
+      <div style="height:3px;width:52px;background:#188042;margin-bottom:20px"></div>
+      <h3 style="font-family:Montserrat,sans-serif;font-weight:700;font-size:22px;margin:0 0 8px;color:#1a2b21">Heading level three</h3>
+      <p style="font-size:16.5px;line-height:1.75;margin:0 0 14px;color:#3a4e42">Body copy sets in Source Sans 3 at 16.5px with generous leading. Inline elements include a <a href="#">text link</a>, <strong style="font-weight:600;color:#1a2b21">bold emphasis</strong>, <em>italics</em>, and <code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14.5px;background:#eef7f1;color:#146a37;padding:2px 6px;border-radius:4px">inline code</code>.</p>
+      <blockquote style="margin:0 0 14px;border-left:4px solid #188042;background:#f2f8f4;padding:16px 20px;font-size:17px;line-height:1.7;color:#2b3d33">The wide variety of colleges that attend allows students to consider schools they may not have thought about before.</blockquote>
+      <ul style="font-size:16.5px;line-height:1.8;margin:0 0 14px;padding-left:22px;color:#3a4e42">
+        <li>Unordered list item</li>
+        <li>Another item, slightly longer to show wrapping behavior in the column</li>
+      </ul>
+      <ol style="font-size:16.5px;line-height:1.8;margin:0;padding-left:22px;color:#3a4e42">
+        <li>Register online</li>
+        <li>Receive table assignment</li>
+        <li>Arrive at Carter Street drop-off</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:24px;text-transform:uppercase;margin:0 0 6px;color:#1a2b21">Buttons &amp; badges</h2>
+      <div style="height:3px;width:52px;background:#188042;margin-bottom:20px"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <button type="button" style="border:0;cursor:pointer;background:#188042;color:#ffffff;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:14px 26px;border-radius:6px" style-hover="background:#0f5c2e">Primary</button>
+        <button type="button" style="cursor:pointer;background:#ffffff;color:#188042;border:2px solid #188042;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:12px 24px;border-radius:6px" style-hover="background:#eef7f1">Secondary</button>
+        <button type="button" style="border:0;cursor:pointer;background:transparent;color:#188042;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:14px 12px;border-radius:6px" style-hover="background:#eef7f1">Ghost</button>
+        <button type="button" style="border:0;cursor:pointer;background:#b23b2e;color:#ffffff;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:14px 26px;border-radius:6px" style-hover="background:#8f2d23">Danger</button>
+        <button type="button" disabled="disabled" style="border:0;background:#dfe8e2;color:#93a89a;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:14px 26px;border-radius:6px;cursor:not-allowed">Disabled</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px">
+        <span style="background:#188042;color:#ffffff;font-family:Montserrat,sans-serif;font-weight:700;font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:999px">Registered</span>
+        <span style="background:#eef7f1;color:#146a37;border:1px solid #bfe0cb;font-family:Montserrat,sans-serif;font-weight:700;font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:999px">Pending</span>
+        <span style="background:#fdf3e6;color:#8a5a12;border:1px solid #eed9b5;font-family:Montserrat,sans-serif;font-weight:700;font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:999px">Invoice due</span>
+        <span style="background:#f6e9e7;color:#8f2d23;border:1px solid #e5c6c1;font-family:Montserrat,sans-serif;font-weight:700;font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:999px">Cancelled</span>
+      </div>
+    </section>
+
+    <section>
+      <h2 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:24px;text-transform:uppercase;margin:0 0 6px;color:#1a2b21">Alerts</h2>
+      <div style="height:3px;width:52px;background:#188042;margin-bottom:20px"></div>
+      <div style="display:grid;gap:12px">
+        <div style="background:#eef7f1;border:1px solid #bfe0cb;border-left:4px solid #188042;border-radius:8px;padding:14px 18px"><p style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;margin:0 0 4px;color:#146a37">Registration received</p><p style="font-size:15px;line-height:1.6;margin:0;color:#3a4e42">We've emailed your confirmation and table assignment.</p></div>
+        <div style="background:#fdf3e6;border:1px solid #eed9b5;border-left:4px solid #c8891f;border-radius:8px;padding:14px 18px"><p style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;margin:0 0 4px;color:#8a5a12">Payment outstanding</p><p style="font-size:15px;line-height:1.6;margin:0;color:#3a4e42">Your table is held until April 1. Mail your check or pay online.</p></div>
+        <div style="background:#f6e9e7;border:1px solid #e5c6c1;border-left:4px solid #b23b2e;border-radius:8px;padding:14px 18px"><p style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;margin:0 0 4px;color:#8f2d23">Registration closed</p><p style="font-size:15px;line-height:1.6;margin:0;color:#3a4e42">The 2027 fair has reached capacity. Join the waitlist below.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:24px;text-transform:uppercase;margin:0 0 6px;color:#1a2b21">Cards</h2>
+      <div style="height:3px;width:52px;background:#188042;margin-bottom:20px"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px">
+        <article style="border:1px solid #e3ece6;border-radius:12px;overflow:hidden;background:#ffffff;box-shadow:0 1px 3px rgba(26,43,33,0.06)">
+          <div style="width:100%;height:168px"><image-slot id="ks-card-1" shape="rect" fit="cover" placeholder="Card image" style="width:100%;height:100%"></image-slot></div>
+          <div style="padding:18px"><h3 style="font-family:Montserrat,sans-serif;font-weight:700;font-size:17px;margin:0 0 6px;color:#1a2b21">Exhibitor guide</h3><p style="font-size:15px;line-height:1.6;margin:0 0 12px;color:#5a6e62">Table sizes, electricity, and shipping instructions.</p><a href="#" style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none">Read more →</a></div>
+        </article>
+        <article style="border:1px solid #e3ece6;border-radius:12px;background:#ffffff;padding:18px;box-shadow:0 1px 3px rgba(26,43,33,0.06)">
+          <p style="font-family:Montserrat,sans-serif;font-weight:800;font-size:34px;line-height:1;color:#188042;margin:0 0 8px;font-feature-settings:'tnum' 1">100+</p>
+          <h3 style="font-family:Montserrat,sans-serif;font-weight:700;font-size:17px;margin:0 0 6px;color:#1a2b21">Institutions</h3>
+          <p style="font-size:15px;line-height:1.6;margin:0;color:#5a6e62">Public, private, military, and international schools attend each spring.</p>
+        </article>
+        <article style="border:0;border-radius:12px;background:#188042;color:#ffffff;padding:18px">
+          <h3 style="font-family:Montserrat,sans-serif;font-weight:700;font-size:17px;margin:0 0 6px">Reserve your table</h3>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 14px;color:#dcefe2">Registration closes two weeks before the fair.</p>
+          <a href="#" style="display:inline-block;background:#ffffff;color:#188042;text-decoration:none;font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;padding:11px 20px;border-radius:6px" style-hover="background:#eef7f1">Register</a>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:24px;text-transform:uppercase;margin:0 0 6px;color:#1a2b21">Tabs</h2>
+      <div style="height:3px;width:52px;background:#188042;margin-bottom:20px"></div>
+      <div style="display:flex;gap:4px;border-bottom:2px solid #e3ece6">
+        <button type="button" onClick="{{ selectTab0 }}" style="{{ tabStyle0 }}">Schedule</button>
+        <button type="button" onClick="{{ selectTab1 }}" style="{{ tabStyle1 }}">Fees</button>
+        <button type="button" onClick="{{ selectTab2 }}" style="{{ tabStyle2 }}">Shipping</button>
+      </div>
+      <div style="padding:20px 2px 0;font-size:16.5px;line-height:1.75;color:#3a4e42">{{ tabBody }}</div>
+    </section>
+
+    <section>
+      <h2 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:24px;text-transform:uppercase;margin:0 0 6px;color:#1a2b21">Table</h2>
+      <div style="height:3px;width:52px;background:#188042;margin-bottom:20px"></div>
+      <div style="border:1px solid #e3ece6;border-radius:10px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:15.5px">
+          <thead><tr style="background:#f2f8f4">
+            <th style="text-align:left;font-family:Montserrat,sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.08em;text-transform:uppercase;color:#44584c;padding:12px 16px">Institution</th>
+            <th style="text-align:left;font-family:Montserrat,sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.08em;text-transform:uppercase;color:#44584c;padding:12px 16px">State</th>
+            <th style="text-align:left;font-family:Montserrat,sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.08em;text-transform:uppercase;color:#44584c;padding:12px 16px">Table</th>
+            <th style="text-align:left;font-family:Montserrat,sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.08em;text-transform:uppercase;color:#44584c;padding:12px 16px">Status</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ rows }}" as="row" hint-placeholder-count="4">
+              <tr style="border-top:1px solid #eef2ef">
+                <td style="padding:12px 16px;color:#1a2b21;font-weight:600">{{ row.name }}</td>
+                <td style="padding:12px 16px;color:#5a6e62">{{ row.state }}</td>
+                <td style="padding:12px 16px;color:#5a6e62;font-feature-settings:'tnum' 1">{{ row.table }}</td>
+                <td style="padding:12px 16px"><span style="{{ row.badgeStyle }}">{{ row.status }}</span></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <nav aria-label="Pagination" style="display:flex;gap:6px;align-items:center;margin-top:18px">
+        <a href="#" style="text-decoration:none;font-size:14px;font-weight:600;color:#5a6e62;padding:8px 12px;border:1px solid #e3ece6;border-radius:6px" style-hover="background:#f2f8f4">Previous</a>
+        <a href="#" style="text-decoration:none;font-size:14px;font-weight:700;color:#ffffff;background:#188042;padding:8px 14px;border:1px solid #188042;border-radius:6px">1</a>
+        <a href="#" style="text-decoration:none;font-size:14px;font-weight:600;color:#5a6e62;padding:8px 14px;border:1px solid #e3ece6;border-radius:6px" style-hover="background:#f2f8f4">2</a>
+        <a href="#" style="text-decoration:none;font-size:14px;font-weight:600;color:#5a6e62;padding:8px 14px;border:1px solid #e3ece6;border-radius:6px" style-hover="background:#f2f8f4">3</a>
+        <a href="#" style="text-decoration:none;font-size:14px;font-weight:600;color:#5a6e62;padding:8px 12px;border:1px solid #e3ece6;border-radius:6px" style-hover="background:#f2f8f4">Next</a>
+      </nav>
+    </section>
+
+    <section>
+      <h2 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:24px;text-transform:uppercase;margin:0 0 6px;color:#1a2b21">Accordion</h2>
+      <div style="height:3px;width:52px;background:#188042;margin-bottom:20px"></div>
+      <div style="border:1px solid #e3ece6;border-radius:10px;overflow:hidden">
+        <sc-for list="{{ faqs }}" as="faq" hint-placeholder-count="3">
+          <div style="{{ faq.rowStyle }}">
+            <button type="button" onClick="{{ faq.toggle }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;text-align:left;cursor:pointer;background:#ffffff;border:0;padding:16px 18px;font-family:Montserrat,sans-serif;font-weight:700;font-size:16px;color:#1a2b21" style-hover="background:#f8fbf9">
+              <span>{{ faq.q }}</span>
+              <span style="color:#188042;font-size:20px;line-height:1">{{ faq.sign }}</span>
+            </button>
+            <div style="{{ faq.bodyStyle }}">{{ faq.a }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section>
+      <h2 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:24px;text-transform:uppercase;margin:0 0 6px;color:#1a2b21">Form elements</h2>
+      <div style="height:3px;width:52px;background:#188042;margin-bottom:20px"></div>
+      <form style="display:grid;gap:16px;max-width:560px">
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#44584c">Institution<input type="text" placeholder="College or university" style="font-family:'Source Sans 3',sans-serif;font-size:15.5px;padding:12px 14px;border:1.5px solid #cfe0d5;border-radius:8px;background:#fbfdfb;color:#22302a" style-focus="border-color:#188042;outline:none"></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <label style="display:grid;gap:6px;font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#44584c">Representative<input type="text" placeholder="Full name" style="font-family:'Source Sans 3',sans-serif;font-size:15.5px;padding:12px 14px;border:1.5px solid #cfe0d5;border-radius:8px;background:#fbfdfb;color:#22302a" style-focus="border-color:#188042;outline:none"></label>
+          <label style="display:grid;gap:6px;font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#44584c">Email<input type="email" placeholder="you@college.edu" style="font-family:'Source Sans 3',sans-serif;font-size:15.5px;padding:12px 14px;border:1.5px solid #cfe0d5;border-radius:8px;background:#fbfdfb;color:#22302a" style-focus="border-color:#188042;outline:none"></label>
+        </div>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#44584c">Number of representatives<select style="font-family:'Source Sans 3',sans-serif;font-size:15.5px;padding:12px 14px;border:1.5px solid #cfe0d5;border-radius:8px;background:#fbfdfb;color:#22302a" style-focus="border-color:#188042;outline:none"><option>One</option><option>Two</option><option>Three or more</option></select></label>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#44584c">Notes<textarea placeholder="Anything we should know?" style="font-family:'Source Sans 3',sans-serif;font-size:15.5px;padding:12px 14px;border:1.5px solid #cfe0d5;border-radius:8px;background:#fbfdfb;color:#22302a;min-height:100px;resize:vertical" style-focus="border-color:#188042;outline:none"></textarea></label>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#b23b2e">Payment reference<input type="text" value="invalid entry" style="font-family:'Source Sans 3',sans-serif;font-size:15.5px;padding:12px 14px;border:1.5px solid #b23b2e;border-radius:8px;background:#fdf7f6;color:#22302a" style-focus="outline:none"><span style="font-size:13.5px;font-weight:400;letter-spacing:0;text-transform:none;color:#8f2d23">Enter a valid purchase order number.</span></label>
+        <div style="display:grid;gap:10px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:15.5px;color:#3a4e42"><input type="checkbox" checked="checked" style="width:17px;height:17px;accent-color:#188042">Attending the dinner reception</label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:15.5px;color:#3a4e42"><input type="checkbox" style="width:17px;height:17px;accent-color:#188042">Requires electricity at table</label>
+        </div>
+        <fieldset style="border:1px solid #e3ece6;border-radius:8px;padding:14px 16px;margin:0;display:grid;gap:10px">
+          <legend style="font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#44584c;padding:0 6px">Payment method</legend>
+          <label style="display:flex;align-items:center;gap:10px;font-size:15.5px;color:#3a4e42"><input type="radio" name="pay" checked="checked" style="width:17px;height:17px;accent-color:#188042">Pay online</label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:15.5px;color:#3a4e42"><input type="radio" name="pay" style="width:17px;height:17px;accent-color:#188042">Mail a check</label>
+        </fieldset>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button type="button" style="border:0;cursor:pointer;background:#188042;color:#ffffff;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:14px 26px;border-radius:6px" style-hover="background:#0f5c2e">Submit registration</button>
+          <button type="button" style="cursor:pointer;background:#ffffff;color:#188042;border:2px solid #188042;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:12px 24px;border-radius:6px" style-hover="background:#eef7f1">Save draft</button>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <aside style="padding:56px 0;display:grid;gap:24px;align-content:start;position:sticky;top:24px">
+    <nav style="border:1px solid #e3ece6;border-radius:10px;padding:16px 18px">
+      <p style="font-family:Montserrat,sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.1em;text-transform:uppercase;color:#7a8f81;margin:0 0 12px">On this page</p>
+      <div style="display:grid;gap:9px;font-size:14.5px">
+        <a href="#" style="text-decoration:none">Typography</a>
+        <a href="#" style="text-decoration:none">Buttons &amp; badges</a>
+        <a href="#" style="text-decoration:none">Alerts</a>
+        <a href="#" style="text-decoration:none">Cards</a>
+        <a href="#" style="text-decoration:none">Tabs</a>
+        <a href="#" style="text-decoration:none">Table</a>
+        <a href="#" style="text-decoration:none">Accordion</a>
+        <a href="#" style="text-decoration:none">Form elements</a>
+      </div>
+    </nav>
+    <div style="background:#f2f8f4;border:1px solid #e3ece6;border-radius:10px;padding:18px">
+      <p style="font-family:Caveat,cursive;font-weight:700;font-size:24px;color:#188042;margin:0 0 6px">Need a hand?</p>
+      <p style="font-size:14.5px;line-height:1.6;margin:0 0 12px;color:#5a6e62">Questions about registration or the fair floor.</p>
+      <a href="#" style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none">Contact us →</a>
+    </div>
+  </aside>
+</div>
+
+<footer style="background:#1a2b21;color:#c4d4c9;padding:0 max(24px,calc((100% - 1140px)/2));min-height:72px;font-size:13.5px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+  <span>© 2007–2026 Coast to Coast College Fair · Chattanooga, Tennessee</span>
+  <span>Powered by Uriah Clemmer</span>
+</footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { tab: 0, open: 0 };
+  renderVals() {
+    const tabBase = 'cursor:pointer;background:transparent;border:0;border-bottom:3px solid transparent;margin-bottom:-2px;padding:12px 18px;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.03em;text-transform:uppercase;';
+    const tabStyle = (i) => tabBase + (this.state.tab === i ? 'color:#188042;border-bottom-color:#188042;' : 'color:#7a8f81;');
+    const bodies = [
+      '5:00–6:00 p.m. dinner reception; 6:30–8:00 p.m. fair floor; teardown by 8:30 p.m.',
+      'Registration is $175 per institution, including one table and two representatives. Additional representatives are $40 each.',
+      'Ship materials to arrive no earlier than three business days before the fair; the Convention Center holds packages at the loading dock.',
+    ];
+    const badge = (kind) => {
+      const map = {
+        Registered: 'background:#188042;color:#ffffff;',
+        Pending: 'background:#eef7f1;color:#146a37;border:1px solid #bfe0cb;',
+        Waitlist: 'background:#fdf3e6;color:#8a5a12;border:1px solid #eed9b5;',
+      };
+      return "font-family:Montserrat,sans-serif;font-weight:700;font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase;padding:4px 11px;border-radius:999px;white-space:nowrap;" + (map[kind] || '');
+    };
+    const rows = [
+      { name: 'Auburn University', state: 'AL', table: 'A-12', status: 'Registered' },
+      { name: 'Belmont University', state: 'TN', table: 'A-13', status: 'Registered' },
+      { name: 'Colorado College', state: 'CO', table: 'B-04', status: 'Pending' },
+      { name: 'Sewanee: The University of the South', state: 'TN', table: '—', status: 'Waitlist' },
+    ].map((r) => ({ ...r, badgeStyle: badge(r.status) }));
+
+    const faqData = [
+      ['Is admission free for families?', 'Yes. Students, parents, and counselors attend at no cost, and no pre-registration is required.'],
+      ['Where do representatives park?', 'Parking is complimentary for registered representatives in the Convention Center garage.'],
+      ['Can we ship exhibit materials ahead?', 'Yes — the loading dock accepts packages up to three business days before the fair.'],
+    ];
+    const faqs = faqData.map(([q, a], i) => ({
+      q, a,
+      sign: this.state.open === i ? '\u2013' : '+',
+      toggle: () => this.setState((s) => ({ open: s.open === i ? -1 : i })),
+      rowStyle: i < faqData.length - 1 ? 'border-bottom:1px solid #eef2ef' : '',
+      bodyStyle: this.state.open === i
+        ? 'padding:0 18px 18px;font-size:16px;line-height:1.7;color:#3a4e42'
+        : 'display:none',
+    }));
+
+    return {
+      rows, faqs,
+      tabBody: bodies[this.state.tab],
+      tabStyle0: tabStyle(0), tabStyle1: tabStyle(1), tabStyle2: tabStyle(2),
+      selectTab0: () => this.setState({ tab: 0 }),
+      selectTab1: () => this.setState({ tab: 1 }),
+      selectTab2: () => this.setState({ tab: 2 }),
+    };
+  }
+}
+</script>
+</body>
+</html>

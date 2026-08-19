@@ -923,7 +923,7 @@ serving the site in every environment.
 
 ## Phase 8 — the public site rebuild (2026-08-19)
 
-These follow the design handoff in `storage/app/private/design_handoff_college_fair_landing/`, whose
+These follow the design handoff in [`docs/design-handoff/`](design-handoff/), whose
 README declares colours, typography, spacing and copy final. Where the build departs from it, the
 departure is here.
 

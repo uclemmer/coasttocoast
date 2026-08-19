@@ -176,7 +176,7 @@ None of these block a deploy; all of them are visible to a visitor.
 
 ### Design assets still outstanding (2026-08-19)
 
-The Claude Design handoff in `storage/app/private/design_handoff_college_fair_landing/` names four
+The Claude Design handoff in [`docs/design-handoff/`](design-handoff/) names four
 assets it could not supply. **The site renders correctly without all four** — each has a deliberate
 fallback — but each is a visible gap that only Matt can close.
 

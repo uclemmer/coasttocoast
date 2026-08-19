@@ -426,7 +426,7 @@ Phase 5 was built under. **The rep portal at `/portal` stays Filament** — owne
 doc 10, D-5.1-a.
 
 **The design handoff landed on 2026-08-19** and lives in
-`storage/app/private/design_handoff_college_fair_landing/` — a landing page, an interior page, a
+[`docs/design-handoff/`](design-handoff/) — a landing page, an interior page, a
 maintenance page, and a README that declares colours, typography, spacing and copy final. Cards
 8.1–8.5 were built against it. Two structural readings were confirmed with the owner before
 building: the landing page is **Home** (not a one-pager — the interior layout serves the other six

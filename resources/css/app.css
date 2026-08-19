@@ -26,6 +26,14 @@
 @source '../../storage/framework/views/*.php';
 
 /*
+ * The design handoff moved into docs/ so a fresh clone has it, which also put
+ * it inside Tailwind's automatic scan. It is a frozen record of what was
+ * designed, not a build input -- its prototype runtime is 134 kB of JS whose
+ * string literals were adding utilities to our stylesheet for nothing.
+ */
+@source not '../../docs';
+
+/*
  * The full-bleed sections on the landing page use `margin: 0 calc(50% - 50vw)`
  * inside the 1140px container. Without this, that technique produces a
  * horizontal scrollbar on every page (design handoff, "Full-bleed technique").

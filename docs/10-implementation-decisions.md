@@ -731,3 +731,52 @@ is not. Raised rather than trimming the PDF assertions, which are worth having.
 
 **Worth watching in production:** a long-lived queue worker rendering many PDFs may want the same
 treatment. Noted for the deployment runbook (card 7.3).
+
+### D-7.1-a — No Content-Security-Policy, deliberately
+
+**Decision.** `SecurityHeaders` sets HSTS (over HTTPS only), `X-Content-Type-Options`,
+`X-Frame-Options` and `Referrer-Policy`, and no CSP.
+
+This application takes card payments through a *hosted* Stripe page — no card fields on our origin —
+and runs three Filament panels, which ship inline styles and Alpine expressions. A CSP tight enough
+to be worth having would break the admin panel; one loose enough not to (`unsafe-inline`,
+`unsafe-eval`) would be decoration. That is a judgement, not an oversight, and it is the sort of
+thing a later security review should revisit deliberately rather than "add" in ten minutes.
+
+HSTS is withheld on plaintext requests, which also keeps it out of local development: pinning
+`coasttocoastcollegefair.test` to https in a developer's browser for a year is a genuinely annoying
+thing to do to somebody.
+
+### D-7.1-b — The Stripe ledger prunes processed rows only, after 90 days
+
+**Decision.** Stripe stops retrying after roughly three days, so a row older than that has no
+idempotency job left — but the ledger is also the answer to "did Stripe ever tell us about this?",
+which comes up weeks later from somebody reconciling a bank statement. Ninety days. A row with no
+`processed_at` is a delivery that failed halfway and is never pruned.
+
+### D-7.2-a — An HTTP route smoke instead of a browser pass
+
+**Context.** Card 7.2 asks for a browser smoke of both panels and the wizard.
+
+**Decision.** `tests/Feature/SmokeTest.php` discovers GET routes from the router and loads each one
+as the right user. No browser driver, so it runs in CI on a machine with no Chrome, and — because
+routes are discovered rather than listed — a page added later is smoked without anybody remembering
+to add it.
+
+**It earned its place immediately.** It found `/admin/messages/create` returning 500 on
+`Select::descriptions()`, which is a `Radio` method in Filament v5. No resource test had caught it,
+because none of them opened the create page. That is exactly the class of bug a browser pass is for,
+and this caught it for a fraction of the cost.
+
+What it does not replace: anything about how a page *looks*, and any JavaScript behaviour. A real
+browser pass before launch is still worth an hour of somebody's time (added to the go-live checklist
+in doc 11).
+
+### D-7.3-a — The deployment runbook is doc 11, not doc 07
+
+**Context.** Card 7.3 says "write `docs/07-deployment.md`". Doc 07 was already the email design when
+the card was written.
+
+**Decision.** [11-deployment.md](11-deployment.md). Doc numbers are load-bearing — code comments
+cite them (workspace `CLAUDE.md`) — so renumbering an existing file to free 07 would have been the
+worse trade. The note is at the top of the new file too.

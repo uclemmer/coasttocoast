@@ -38,3 +38,9 @@ Schedule::command('fair:send-scheduled-campaigns')->everyMinute()->withoutOverla
  * Message recipient rows past the 24-month privacy promise (N3, card 7.1).
  */
 Schedule::command('fair:prune-message-recipients')->dailyAt('03:30');
+
+/*
+ * The Stripe idempotency ledger. Processed rows only — an unprocessed one is a
+ * delivery that failed halfway and is worth keeping (card 7.1).
+ */
+Schedule::command('fair:prune-stripe-events')->weeklyOn(1, '03:40');

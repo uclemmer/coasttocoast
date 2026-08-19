@@ -1,5 +1,11 @@
 # Coast to Coast College Fair — Project Documentation
 
+> **Build status (2026-08-19): all seven phases of [05-build-roadmap.md](05-build-roadmap.md) are
+> implemented.** 609 Pest tests pass, Pint is clean. What is left before launch is content and
+> credentials rather than code — the owner content queue is at the bottom of
+> [11-deployment.md](11-deployment.md), and two decisions wanting the owner's eye are flagged in
+> [10-implementation-decisions.md](10-implementation-decisions.md) (D-5.1-a, D-5.4-a).
+
 Planning documentation for rebuilding [coasttocoastcollegefair.com](https://www.coasttocoastcollegefair.com)
 from scratch as a Laravel 13 + Filament v5 application built on the owner's **`uclemmer/laravel-core`**
 package (repo `github.com/uclemmer/laravel-core`, checked out in the workspace at
@@ -23,6 +29,7 @@ cards from 05 under the rules in 06):
 | [07-email-design.md](07-email-design.md) | Themed HTML email template, cross-year audience segmentation, and send tracking via laravel-core's EmailLog |
 | [09-package-wiring.md](09-package-wiring.md) | How this app consumes `uclemmer/laravel-core` (vcs + tagged release), publishing core's migrations, the permission sync the test suite needs, and why `canAccessPanel` returns `true` for the rep panel |
 | [10-implementation-decisions.md](10-implementation-decisions.md) | Every judgement call an implementing session made without the owner present, with its reasoning and how to reverse it — **read this before questioning why something differs from 01–07** |
+| [11-deployment.md](11-deployment.md) | Getting it live: host requirements, the deploy sequence, Stripe/Postmark/Twilio setup, backups, the go-live checklist, and the **owner content queue** — the things only Matt can supply |
 
 **Golden rules** (duplicated from the docs because they matter):
 

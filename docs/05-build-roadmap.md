@@ -21,7 +21,7 @@
 - [x] Phase 4 — Payments (cards 4.1–4.3) — **complete 2026-08-18**
 - [x] Phase 5 — Public site (cards 5.1–5.4) — **complete 2026-08-19**
 - [x] Phase 6 — Communications (cards 6.0–6.6) — **complete 2026-08-19**
-- [ ] Phase 7 — Launch hardening (cards 7.1–7.3)
+- [x] Phase 7 — Launch hardening (cards 7.1–7.3) — **complete 2026-08-19**
 
 ---
 
@@ -393,6 +393,40 @@ Rate limits (auth, interest; contact throttle via core config), policy/permissio
 Coverage review against doc 06 inventory; browser smoke of both panels + wizard; seed a realistic 2027 event.
 ### Card 7.3 — Deployment & ops runbook
 Write `docs/07-deployment.md`: host setup, queue worker, cron, Postmark domain verification, Stripe live webhook, Twilio A2P registration, backup policy, go-live checklist including DNS cutover from ISPEUS.
+
+**Phase 7 status: done (2026-08-19).** Suite 609, Pint clean.
+
+| Card | Shipped |
+|---|---|
+| 7.1 | `SecurityHeaders` middleware, `fair:prune-stripe-events`, `fair:prune-message-recipients`, the full pruning schedule, and a permission audit asserted against actions rather than navigation (`tests/Feature/Foundation/SecurityTest.php`) |
+| 7.2 | `tests/Feature/SmokeTest.php` — every GET route in all three panels, discovered from the router |
+| 7.3 | [11-deployment.md](11-deployment.md) |
+
+**No Content-Security-Policy, deliberately** (doc 10, D-7.1-a): Filament ships inline styles and
+Alpine expressions, so a CSP tight enough to matter would break the admin panel and a loose one
+would be decoration. Card payments never touch our origin. Worth a deliberate revisit at a real
+security review rather than a ten-minute addition.
+
+**The smoke test earned its place immediately** — it found `/admin/messages/create` returning 500 on
+`Select::descriptions()`, a Filament `Radio` method. No resource test had opened that page. It is an
+HTTP sweep rather than the browser pass the card asks for (D-7.2-a); a real browser pass before
+launch is on doc 11's go-live checklist.
+
+---
+
+## Where this leaves the build (2026-08-19)
+
+All seven phases are implemented, 609 tests pass and Pint is clean. What remains is **content and
+credentials, not code**:
+
+1. **[11-deployment.md](11-deployment.md) has an owner content queue** — the 2027 date and price, the
+   refund policy, parking, hotels, conduct guidelines, the W-9, the brand colour and logo, and the
+   ISPEUS roster export. Everything on it is editable in the admin panel or an env value; nothing
+   needs a deploy.
+2. **Two decisions want the owner's eye**, both recorded in doc 10: the public site being a Filament
+   panel (D-5.1-a) and the contact consent being a stated notice rather than a checkbox (D-5.4-a).
+3. **The FAQ still wants a map embed and a W-9 download** (card 5.2). Both wait on owner content.
+4. **A browser pass** before launch, per doc 11's checklist.
 
 ---
 

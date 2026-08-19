@@ -18,6 +18,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -108,20 +109,22 @@ class MessageResource extends Resource
                         ->options(collect(Audience::cases())
                             ->mapWithKeys(fn (Audience $case): array => [$case->value => $case->getLabel()])
                             ->all())
-                        // The definitions in the picker itself, because
-                        // "lapsed" means nothing to a coordinator until it is
-                        // spelled out.
-                        ->descriptions(collect(Audience::cases())
-                            ->mapWithKeys(fn (Audience $case): array => [$case->value => $case->getDescription()])
-                            ->all()),
+                        // The chosen audience's definition, spelled out under
+                        // the picker, because "lapsed" means nothing to a
+                        // coordinator until somebody says what it means.
+                        // A live helper text rather than per-option
+                        // descriptions: `descriptions()` is a Radio method, and
+                        // eight options is too many for radios.
+                        ->helperText(fn (Get $get): ?string => Audience::tryFrom((string) $get('audience'))
+                            ?->getDescription()),
 
-                    TextInput::make('preview_count')
+                    Placeholder::make('preview_count')
                         ->label(__('This will reach'))
-                        ->disabled()
-                        ->dehydrated(false)
                         // Live, so changing the audience updates the number
-                        // before anybody commits to it (doc 07 §3).
-                        ->formatStateUsing(fn (Get $get): string => static::previewCount($get))
+                        // before anybody commits to it (doc 07 §3). A
+                        // Placeholder rather than a disabled input: there is
+                        // nothing to type here, and nothing to save.
+                        ->content(fn (Get $get): string => static::previewCount($get))
                         ->helperText(__('Recalculated again when the message actually sends, so this is a guide.')),
                 ])
                 ->columns(3),

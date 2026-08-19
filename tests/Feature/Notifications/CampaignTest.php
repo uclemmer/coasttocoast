@@ -2,6 +2,8 @@
 
 use App\Enums\Audience;
 use App\Enums\DeliveryStatus;
+use App\Enums\MessageChannel;
+use App\Filament\Admin\Resources\MessageResource\Pages\CreateMessage;
 use App\Filament\Admin\Resources\MessageResource\Pages\ListMessages;
 use App\Filament\Admin\Resources\MessageResource\Pages\ViewMessage;
 use App\Jobs\SendEventBroadcast;
@@ -251,6 +253,28 @@ describe('the composer', function () {
         expect(view('filament.admin.audience-preview', ['recipients' => $recipients])->render())
             ->toContain('dana@kenyon.example')
             ->toContain('Kenyon College');
+    });
+
+    it('composes a campaign, recording who wrote it', function () {
+        // The create page 500ed on a Filament API that does not exist
+        // (`Select::descriptions()`, which is a Radio method) and no resource
+        // test noticed, because none of them opened it. The route smoke test
+        // did. This pins it.
+        livewire(CreateMessage::class)
+            ->assertSuccessful()
+            ->fillForm([
+                'event_id' => $this->fair->id,
+                'audience' => Audience::LapsedLastEvent->value,
+                'subject' => 'We would love to see you again',
+                'channels' => [MessageChannel::Email->value],
+                'email_body' => 'Registration is open.',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        expect(Message::query()->where('subject', 'We would love to see you again')->first())
+            ->audience->toBe(Audience::LapsedLastEvent)
+            ->created_by->not->toBeNull();
     });
 
     it('sends a test to the coordinator without recording it against the campaign', function () {

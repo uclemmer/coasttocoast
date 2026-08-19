@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Enums\MembershipStatus;
 use App\Events\MembershipApproved;
+use App\Events\MembershipClaimed;
 use App\Events\MembershipDenied;
 use App\Events\MembershipRetired;
+use App\Events\OrganizationCreated;
 use App\Exceptions\MembershipNotAllowed;
 use App\Models\Organization;
 use App\Models\Registration;
@@ -25,6 +27,65 @@ use Illuminate\Support\Facades\DB;
  */
 class OrganizationService
 {
+    /**
+     * Signup path one: this school is not in the directory yet (D9).
+     *
+     * The founder is `active` immediately. There is nobody to approve them —
+     * they are the school's first representative, and making them wait would
+     * mean waiting on a coordinator to vouch for a school only they know
+     * about. The coordinator is alerted instead, with the duplicate warning
+     * attached, because the rep saw that warning and pressed on and somebody
+     * should look.
+     *
+     * @param  array<string, mixed>  $profile
+     */
+    public function createWithFounder(array $profile, User $founder): Organization
+    {
+        return DB::transaction(function () use ($profile, $founder): Organization {
+            $duplicates = Organization::query()
+                ->matchingName((string) ($profile['name'] ?? ''))
+                ->pluck('name')
+                ->all();
+
+            $organization = Organization::query()->create($profile + [
+                'created_by' => $founder->getKey(),
+            ]);
+
+            $founder->forceFill([
+                'organization_id' => $organization->getKey(),
+                'membership_status' => MembershipStatus::Active,
+                'membership_approved_at' => Carbon::now(),
+            ])->save();
+
+            OrganizationCreated::dispatch($organization, $founder, $duplicates);
+
+            return $organization;
+        });
+    }
+
+    /**
+     * Signup path two: the school is already in the directory (D9).
+     *
+     * The rep is `pending` until a coordinator approves. This asymmetry with
+     * `createWithFounder()` is the whole point of the two paths: anyone can
+     * claim to represent Vanderbilt, and the school's registration history,
+     * grants and roster entry are on the other side of that claim.
+     */
+    public function claim(Organization $organization, User $rep): User
+    {
+        $rep->forceFill([
+            'organization_id' => $organization->getKey(),
+            'membership_status' => MembershipStatus::Pending,
+            'membership_approved_at' => null,
+            'retired_at' => null,
+            'retired_by' => null,
+        ])->save();
+
+        MembershipClaimed::dispatch($rep, $organization);
+
+        return $rep;
+    }
+
     /**
      * A coordinator approving a rep's claim on an existing school.
      */

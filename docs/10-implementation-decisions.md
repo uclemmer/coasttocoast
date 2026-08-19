@@ -363,3 +363,96 @@ is money in the post rather than money lost.
 **Decision.** Both widgets scope to `Event::active()`, and `RecentRegistrations` shows an empty table
 rather than every registration ever taken when no fair is published. A dashboard that leads with last
 year's tail tells the coordinator nothing about today.
+
+### D-3.0-a — Signup asymmetry: creating a school activates, claiming one waits
+
+**Decision.** `OrganizationService::createWithFounder()` makes the founder `active` immediately;
+`claim()` makes them `pending`. Doc 01 D9 specifies this, and it is worth restating why the two
+differ: anyone can say they represent Vanderbilt, and on the other side of that claim sit the
+school's registration history, its grants and its place on the roster. There is nobody to vouch for
+a school only the founder knows about, so making *them* wait would mean waiting on nothing. Both
+paths alert the coordinator; the create path carries the duplicate warning the rep pressed past.
+
+### D-3.0-b — A denied claim detaches the account rather than deleting or freezing it
+
+**Decision.** `denyClaim()` sets `organization_id` and `membership_status` to null. The person
+survives with a working account and no school. The realistic denial is a typo — somebody claimed
+"Boston University" meaning "Boston College" — and a lingering `pending` membership would block them
+from claiming the right one.
+
+### D-3.1-a — Portal authorization lives on the rep resources, not in the policies
+
+**Context.** `RegistrationPolicy` and `GrantPolicy` refuse a rep, correctly: they answer "may this
+coordinator administer every row".
+
+**Decision.** The rep resources override `canViewAny()` / `canView()` and ask a different question:
+"is this my school's row". Loosening the policies to accommodate the portal would have made one
+predicate answer two questions and eventually get one of them wrong. Row-level scoping is enforced
+twice over — `getEloquentQuery()` filters to the rep's `organization_id`, so another school's
+registration is a **404 rather than a 403**, which does not confirm that the row exists.
+
+A user with no school gets `whereRaw('1 = 0')`, never `where('organization_id', null)`.
+
+### D-3.1-b — The portal lists the school's registrations, not the rep's
+
+**Decision.** Scoped by `organization_id`, not `user_id`. A new admissions officer inheriting the
+job should see their school's history rather than an empty page and the impression that nothing was
+ever done. This is D8 (the organization is the unit that registers) made visible.
+
+### D-3.1-c — Phone numbers are normalised, not rejected
+
+**Decision.** `App\Support\Phone::normalize()` turns `(423) 757-2845` into `+14237572845` on save.
+Twilio accepts nothing else, and a rep is not going to type E.164. Validation only refuses input
+that cannot be turned into something dialable, so the difference between "we texted them" and "we
+had their number and the format was wrong" never arises. A number that already carries `+` is
+trusted as-is, so an international rep is not mangled.
+
+Storing a number is **not** consent to use it: `sms_opt_in` is a separate toggle, off by default (N3).
+
+### D-3.2-a — The wizard displays the price and has no field for it
+
+**Decision.** Step three renders `Event::priceFor()` — the same call that writes the snapshot and
+the same figure Stripe is handed — and there is no price input anywhere in the form, nor an argument
+for one in `RegistrationService::create()`. "The client set the price" is unrepresentable rather
+than checked for (N1). When a grant applies, the summary names the list price, the benefit and the
+result, because a discount nobody explains is a discount somebody queries.
+
+A fully-granted registration hides the payment step entirely and confirms on submit.
+
+### D-3.2-b — The duplicate check runs at step one as well as in the service
+
+**Decision.** A `rule()` on the fair selector calls `RegistrationService::alreadyRegistered()`. The
+service refuses it anyway, so this is not the guard — it is the difference between being told at the
+first question and being told after filling in the whole wizard.
+
+### D-3.5-a — Applying is a modal action, not a page
+
+**Decision.** Doc 01 Appendix A says "one screen, no wizard", and the form is one textarea. The
+apply action lives on the fee-assistance list as a header action, and the resource has no create
+page. All copy — the intro, the helper text, the confirmation toast, and the three status
+sentences — is Appendix A verbatim.
+
+The action hides itself when there is no fair left to apply for, and for pending and retired reps.
+The fair list is not limited to fairs with registration open, per D-2.6-a.
+
+### D-3.3-a — The receipt renders from the snapshot and only for confirmed registrations
+
+**Decision.** `ReceiptPdf` reads `registrations.price_cents` and the grant that was applied; it
+recomputes nothing. A receipt that recalculated would quietly disagree with the invoice the moment
+the fair's price changed, which is the one thing a receipt must never do. The download is hidden
+until the registration is confirmed — a receipt for money that has not arrived is exactly the
+document a finance office files and forgets about.
+
+The Blade template is table-based with inline styles because dompdf supports no flexbox or grid.
+It is not an exception to the Filament-only UI directive: a PDF has no Filament to render it.
+
+### D-3.4-a — The interest form is honeypot + IP throttle, and dedupes case-insensitively
+
+**Decision.** `StoreEventInterestRequest` carries a `prohibited` honeypot field named `website`
+(plausible enough that a naive bot fills it, invisible to a human), and the route is throttled to
+five per hour per IP because it is an unauthenticated write with no captcha. The error message for a
+tripped honeypot is deliberately vague, so a bot cannot learn which field caught it.
+
+Addresses are lowercased before `updateOrCreate`, so somebody who signs up as `Dana@` and then
+`dana@` is not both told they are on the list and mailed twice. A second submission still improves
+what we know — it fills in the school name if the first left it blank.

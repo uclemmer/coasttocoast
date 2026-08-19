@@ -17,7 +17,7 @@
 
 - [x] Phase 1 — Foundation (cards 1.1–1.4) — **complete 2026-08-18**
 - [x] Phase 2 — Domain & admin core (cards 2.1–2.6) — **complete 2026-08-18**
-- [ ] Phase 3 — Rep portal & registration (cards 3.0–3.5)
+- [x] Phase 3 — Rep portal & registration (cards 3.0–3.5) — **complete 2026-08-18**
 - [ ] Phase 4 — Payments (cards 4.1–4.3)
 - [ ] Phase 5 — Public site (cards 5.1–5.4)
 - [ ] Phase 6 — Communications (cards 6.0–6.6)
@@ -243,6 +243,26 @@ rather than every registration ever taken when nothing is published (D-2.5-b).
 ### Card 3.4 — Interest form ("notify me")
 **Depends on:** 1.2. On closed-event pages: email + optional organization-name capture → `event_interests` (unique per event+email), honeypot + rate limit.
 **Tests:** stores row, dedupes, rate-limited.
+
+**Phase 3 status: done (2026-08-18).** Suite 431, Pint clean.
+
+| Card | Shipped |
+|---|---|
+| 3.0 | `App\Filament\Rep\Pages\Auth\Register` (create-or-claim signup), `OrganizationService::createWithFounder()` / `claim()`, `OrganizationCreated` + `MembershipClaimed` events, self-retire on the profile page |
+| 3.1 | Rep `RegistrationResource` (school-scoped list + detail), `OrganizationProfile` page, `Auth\EditProfile` (phone, SMS opt-in, self-retire), `App\Support\Phone`, `ActsForAnOrganization` concern |
+| 3.2 | Three-step wizard on the rep `CreateRegistration` page |
+| 3.3 | `ReceiptPdf` + `resources/views/pdf/receipt.blade.php`, download action on the detail page |
+| 3.4 | `EventInterestController`, `StoreEventInterestRequest` (honeypot), throttled route |
+| 3.5 | Rep `GrantResource` + apply/withdraw actions, doc 01 Appendix A copy verbatim |
+
+**Decisions (doc 10, D-3.x):** portal authorization lives on the rep resources rather than in the
+policies, which answer a coordinator's question rather than a school's (D-3.1-a); another school's
+registration is a 404, not a 403, so the response does not confirm the row exists; the portal lists
+the *school's* registrations so a new admissions officer inherits the history rather than an empty
+page (D-3.1-b); phone numbers are normalised rather than rejected, and having one is not consent to
+be texted (D-3.1-c); the wizard displays the price and has no field for it (D-3.2-a); the receipt
+renders from the snapshot and only once confirmed (D-3.3-a); the interest form dedupes
+case-insensitively behind a honeypot and an IP throttle (D-3.4-a).
 
 ## Phase 4 — Payments
 

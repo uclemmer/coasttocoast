@@ -2,6 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Rep\Pages\Auth\EditProfile;
+use App\Filament\Rep\Pages\Auth\Register;
+use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -36,9 +39,14 @@ class RepPanelProvider extends PanelProvider
             ->brandName((string) config('core.admin.brand', config('app.name')))
             ->colors(static::colors())
             ->login()
-            ->registration()
+            // Our own registration page: signing up here also creates or
+            // claims a school, and which of those it is decides whether the
+            // account is active immediately or waits on the coordinator (D9).
+            ->registration(Register::class)
             ->passwordReset()
             ->emailVerification()
+            // Our own profile page: phone, SMS opt-in and self-retire (R2.10).
+            ->profile(EditProfile::class)
             ->pages([Dashboard::class])
             ->discoverResources(app_path('Filament/Rep/Resources'), 'App\\Filament\\Rep\\Resources')
             ->discoverPages(app_path('Filament/Rep/Pages'), 'App\\Filament\\Rep\\Pages')
@@ -55,7 +63,7 @@ class RepPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                \Filament\Http\Middleware\Authenticate::class,
+                Authenticate::class,
             ]);
     }
 

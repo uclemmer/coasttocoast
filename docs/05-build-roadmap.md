@@ -19,7 +19,7 @@
 - [x] Phase 2 — Domain & admin core (cards 2.1–2.6) — **complete 2026-08-18**
 - [x] Phase 3 — Rep portal & registration (cards 3.0–3.5) — **complete 2026-08-18**
 - [x] Phase 4 — Payments (cards 4.1–4.3) — **complete 2026-08-18**
-- [ ] Phase 5 — Public site (cards 5.1–5.4)
+- [x] Phase 5 — Public site (cards 5.1–5.4) — **complete 2026-08-19**
 - [ ] Phase 6 — Communications (cards 6.0–6.6)
 - [ ] Phase 7 — Launch hardening (cards 7.1–7.3)
 
@@ -310,6 +310,33 @@ Stripe retry for three days (D-4.3-b); an amount mismatch flags and refuses to c
 ### Card 5.4 — Event pages + contact form
 **Depends on:** 5.1, 3.4. `/events/{slug}`: details, price, status-aware CTA (register / closed+interest form / not yet open). Contact page via laravel-core's contact module (`core.contact.routes` or component embedded in our page; recipients = coordinator; consent checkbox added on our side; core provides honeypot + throttle + storage + receipt).
 **Tests (all of phase 5):** HTTP tests per page (200, key content, roster correctness incl. hidden/unpaid exclusions, CTA states by registration window), contact submission stored in core_contact_submissions + organizer mail queued.
+
+**Phase 5 status: done (2026-08-18/19).** Suite 500, Pint clean.
+
+The public site is a **third Filament panel** (`SitePanelProvider`, path `''`, no login, no
+`Authenticate` middleware) rather than Blade views — the strictest reading of the Filament-only
+directive. **This is the piece most likely to want your eye:** a Filament panel is an application
+shell, and the visual design of a public marketing site is the owner's call. See doc 10, D-5.1-a,
+which also records how contained a change back to Blade-plus-Filament-components would be.
+
+| Card | Shipped |
+|---|---|
+| 5.1 | `SitePanelProvider` (top navigation, shared palette), `RendersContentBlocks` concern |
+| 5.2 | `Home`, `About`, `Sponsors`, `Faq` pages |
+| 5.3 | `RosterTable` + `CurrentRoster` / `PreviousRoster` widgets, `Representatives` and `LastYear` pages |
+| 5.4 | `EventPage` (state-aware CTA + inline interest form), `Contact` embedding `<x-core::contact-form />` |
+
+**Decisions (doc 10, D-5.x):** a missing content block renders as nothing rather than a placeholder
+(D-5.2-a); one roster widget serves both pages, which is the fix for the staleness bug doc 00
+recorded (D-5.3-a); the roster renders with the page rather than lazily, so search engines and
+no-JavaScript visitors can read it (D-5.3-b); the missing-logo placeholder is a generated inline SVG
+rather than a third-party avatar service (D-5.3-c); the contact consent is a stated notice rather
+than an unvalidated checkbox, because making it real needs a change in `laravel-core` and this app
+must not edit a sibling project (D-5.4-a — **owner decision needed**); an unpublished fair is a 404,
+not a 403 (D-5.4-c).
+
+**Still owed:** the FAQ's Google Map embed and W-9 download (card 5.2). Both wait on owner content —
+the map URL and the signed PDF — and the FAQ rows carrying `TODO-OWNER` are where they land.
 
 ## Phase 6 — Communications (design: doc 07)
 

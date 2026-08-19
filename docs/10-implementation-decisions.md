@@ -532,3 +532,84 @@ it.
 group, so there is no session and no CSRF token. The caller is a server and its proof of identity is
 the signature. A separate file makes that exemption visible rather than burying it in a middleware
 exclusion list.
+
+### D-5.1-a — The public site is a third Filament panel — **flagged for the owner**
+
+**Context.** The owner's directive is that all UI is Filament: no hand-built Blade, Tailwind,
+Livewire or Flowbite (doc 02). Doc 02 offers two readings for public pages — "Filament custom pages
+exposed publicly" or "route views rendered with Filament's Blade components".
+
+**Decision.** The stricter reading: `App\Providers\Filament\SitePanelProvider`, a panel at the site
+root with no `->login()` and no `Authenticate` middleware. Every page is a Filament `Page` whose
+`content()` returns a schema. There is no hand-written markup anywhere in the public site, and the
+public pages inherit the same palette as `/admin` and `/portal`.
+
+**Why this needs your eye.** A Filament panel is an application shell, and a public marketing site
+rendered in one is unusual. `->topNavigation()` and a wide content area get it close to reading like
+a website rather than an admin screen, but the visual design is your call, and this is the piece of
+the build most likely to want revisiting. The alternative — Blade views using Filament's components —
+is a contained change: the pages' logic would move to controllers almost unaltered.
+
+Registration order matters and is commented in `bootstrap/providers.php`: `SitePanelProvider` is
+last, so `/admin` and `/portal` register their literal prefixes first. Filament adds no catch-all,
+so there is no conflict either way.
+
+### D-5.2-a — A missing content block renders as nothing
+
+**Decision.** `RendersContentBlocks::block()` returns null when the block is absent or empty, and
+`blocks()` drops the nulls. Not a placeholder and not an error: a half-seeded database, or a block
+somebody archived, should leave a page one paragraph short rather than printing `content.missing` in
+front of a hundred colleges.
+
+### D-5.3-a — One roster widget, two pages
+
+**Decision.** `RosterTable` is abstract; `CurrentRoster` and `PreviousRoster` differ only in which
+event they name. The staleness bug doc 00 recorded — the live site's Last Year page showing the
+*current* roster — is exactly what happens when they are two pieces of code. `PreviousRoster` reads
+`RosterService::previousEvent()`, which reads the `previousPublished()` scope, which is also what the
+cross-year campaign audiences will use.
+
+### D-5.3-b — The roster renders with the page, not after it
+
+**Decision.** `protected static bool $isLazy = false`. Filament lazy-loads widgets by default, which
+is right in an admin panel and wrong here: the roster *is* the page, and its job is to be read — by a
+search engine, by a rep checking whether their school is already listed, and by anyone whose
+JavaScript did not run. A list that only exists after a round-trip is invisible to all three.
+
+### D-5.3-c — The logo placeholder is a generated inline SVG
+
+**Decision.** A school with no logo gets a data-URI SVG carrying its initial (R1.3). Generated rather
+than fetched from an avatar service: a third-party image would leak every visitor's request off-site
+and break the page when that service is down, for a letter in a circle. Images are lazy-loaded and
+carry the school name as alt text.
+
+### D-5.4-a — The contact consent is a stated notice, not an unvalidated checkbox — **flagged**
+
+**Context.** Doc 02 says the contact page adds a consent checkbox "on our side", with laravel-core
+providing the honeypot, throttle, storage and receipt.
+
+**Decision.** The privacy notice is stated plainly above the embedded `<x-core::contact-form />`,
+and there is no checkbox. Core's controller validates only its own fields, so a checkbox added here
+would be unvalidated — a control that can be skipped is theatre rather than consent, and worse than
+saying the thing plainly. Making it real means a change in the `laravel-core` repo, and the workspace
+rule is explicit that this app must not edit a sibling project.
+
+**Owner decision:** if you want a hard checkbox, it is a small addition to core's contact controller
+and form (an optional, host-configurable required field), and then two lines here.
+
+### D-5.4-b — The interest capture exists twice, deliberately
+
+**Decision.** The event page offers it as a Livewire form; `POST /events/{event}/interest` remains as
+a plain route. The Livewire form is what a visitor uses; the route is the non-JavaScript path and the
+only place an IP throttle can hang. Both lowercase the address before `updateOrCreate` and both
+refuse a filled honeypot, so they cannot diverge in the ways that matter.
+
+`EventPage::$event` is `#[Locked]`: Livewire re-hydrates a model property from its key on every
+request, and without it a visitor could edit the payload to sign up against a different fair's list.
+Small harm, free to close.
+
+### D-5.4-c — An unpublished fair is a 404
+
+**Decision.** `EventPage::mount()` aborts 404, not 403, on an unpublished event. A 403 confirms the
+draft exists; the next fair's date leaking before the coordinator announces it is a real, if minor,
+disclosure.

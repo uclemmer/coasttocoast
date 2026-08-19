@@ -74,6 +74,11 @@ function usingRepPanel(): void
     Filament::setCurrentPanel('rep');
 }
 
+function usingSitePanel(): void
+{
+    Filament::setCurrentPanel('site');
+}
+
 /**
  * Mount a Livewire component — in practice, a Filament page.
  *

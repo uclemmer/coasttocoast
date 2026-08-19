@@ -8,14 +8,15 @@ use Illuminate\Support\Facades\Route;
 | Public routes
 |--------------------------------------------------------------------------
 |
-| The two Filament panels register their own routes (/admin and /portal).
-| Everything here is the public site. Phase 5 fills in the pages; the interest
-| capture (card 3.4) is here already because the wizard and the roster both
-| reference it.
+| Three Filament panels register their own routes: /admin (laravel-core),
+| /portal (RepPanelProvider) and the public site at the root
+| (SitePanelProvider, card 5.1). Almost nothing is left here.
+|
+| The interest endpoint stays a plain POST route: it is the non-JavaScript
+| path to the same capture the event page offers as a Livewire form, and a
+| route with its own throttle is the only way to rate-limit it per IP.
 |
 */
-
-Route::get('/', fn () => view('welcome'))->name('home');
 
 /*
  * "Tell me when registration opens."

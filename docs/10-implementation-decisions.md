@@ -298,3 +298,68 @@ figures.
 revoked. A school that changes its mind may apply again with a better case; a school that was denied
 may not reapply for the same fair, because that decision is the coordinator's and reapplying would be
 a way around it.
+
+### D-2.2-a — `OrganizationService` created for membership and merge
+
+**Context.** Card 2.2 puts approve/deny/retire and merge-duplicates on the Organizations resource;
+card 3.0 owns the membership lifecycle from the portal side.
+
+**Decision.** All of it lives in `App\Services\OrganizationService` now, and both the admin actions
+and (later) the portal call it. Filament actions that wrote membership columns directly would be a
+second implementation of rules that card 3.0 is about to need anyway, and the two would drift.
+
+### D-2.2-b — Merge repoints first, then deletes, and reports collisions rather than fixing them
+
+**Decision.** `merge()` moves users, registrations and grants onto the survivor **before** deleting
+the husk — the foreign keys cascade, so the other order destroys precisely the history the merge
+exists to preserve. Profile fields fill gaps in the survivor but never overwrite a value somebody
+entered.
+
+It returns the registrations that now collide on a fair instead of resolving them. Which of two
+paid registrations a school keeps is a decision about money; the coordinator gets a persistent
+warning and decides.
+
+### D-2.2-c — The Registration edit form exposes only roster visibility, notes and the fair contact
+
+**Decision.** Status, price, school and fair are not editable fields. Editing `status` by hand would
+skip the events that send receipts; editing `price_cents` would break the snapshot that proves what
+a school agreed to pay (N1); moving a registration to another fair would carry a price nobody agreed
+for it. Cancelling is an action that goes through the service, and `RegistrationPolicy::delete()`
+always returns false.
+
+### D-2.2-d — Manual entry goes through `CreateRegistration::handleRecordCreation()`
+
+**Decision.** The create page calls `RegistrationService::createManualEntry()` rather than letting
+Filament write the row. That keeps one set of rules: the coordinator still gets the duplicate check
+and the grant-aware price snapshot, and what she skips she skips because the service was asked to,
+not because this page found a different route to the database. A refusal is re-thrown as a
+`ValidationException` on the field it belongs to, so a duplicate reads as a message about the school.
+
+### D-2.2-e — CSV export is streamed, not queued
+
+**Decision.** Filament's queued exporter mails a file that ignores the table's filters. The feature
+the coordinator wants is "filter, press export, get that list", so the action streams
+`getFilteredTableQuery()` straight to the browser. Fair sizes are in the hundreds; this is
+comfortably within budget, and the alternative would not be the same feature.
+
+### D-2.6-d — The Grants resource has no create or edit page
+
+**Decision.** Only `index` and `view`. A grant is applied for by a school and decided by the
+coordinator through three actions. An edit form would let someone set `status = approved` without a
+benefit — which `Event::priceFor()` reads as "no discount", so the school would be told in writing it
+had a grant and then be charged in full. Routing every change through `GrantService` makes that
+unrepresentable rather than merely discouraged. The revoke action hides itself once a grant is used,
+because an action that always fails is worse than no action.
+
+### D-2.5-a — Dashboard revenue is summed from price snapshots, not from the payments table
+
+**Decision.** `ActiveFairOverview` sums `registrations.price_cents` over confirmed rows. Summing
+`payments.amount_cents` would omit every free registration — a grant has no payment row — and so
+would quietly report a grant-heavy year as a bad one. "Awaiting payment" is the pending set, which
+is money in the post rather than money lost.
+
+### D-2.5-b — The widgets show the active fair only
+
+**Decision.** Both widgets scope to `Event::active()`, and `RecentRegistrations` shows an empty table
+rather than every registration ever taken when no fair is published. A dashboard that leads with last
+year's tail tells the coordinator nothing about today.

@@ -16,7 +16,7 @@
 ## Phase checklist
 
 - [x] Phase 1 — Foundation (cards 1.1–1.4) — **complete 2026-08-18**
-- [ ] Phase 2 — Domain & admin core (cards 2.1–2.6)
+- [x] Phase 2 — Domain & admin core (cards 2.1–2.6) — **complete 2026-08-18**
 - [ ] Phase 3 — Rep portal & registration (cards 3.0–3.5)
 - [ ] Phase 4 — Payments (cards 4.1–4.3)
 - [ ] Phase 5 — Public site (cards 5.1–5.4)
@@ -153,6 +153,18 @@ component rather than through page-class hooks (D-2.1-a); slug suggestion runs o
 **Depends on:** 2.1. Organizations (R3.3a): CRUD incl. profile fields + logo upload, rep list with membership statuses, approve/deny pending claims, retire reps, **merge-duplicates action** (repoints users/registrations/grants). Registrations: list with filters (event, status, method), search, detail view showing grant/price snapshot, `show_on_roster` toggle, notes, cancel action, resend-confirmation action (queues notification), CSV export. Manual-entry creation (user_id null).
 **Tests:** filters/search return expected rows; claim approve/deny transitions + notifications queued; retire; merge repoints all relations; cancel sets status+timestamp; export contains expected columns; policies.
 
+**Status: done (2026-08-18).** `OrganizationResource` (+ `RepresentativesRelationManager`),
+`RegistrationResource` (+ CSV export and cancel action), `OrganizationService`,
+`MembershipNotAllowed`, three membership events, and policies for both models. 16 + 14 tests in
+`tests/Feature/Admin/`, 20 in `tests/Unit/Services/OrganizationServiceTest.php`.
+
+**Decisions (doc 10):** membership and merge live in `OrganizationService`, which card 3.0's portal
+will call too (D-2.2-a); merge repoints before deleting and reports registration collisions rather
+than resolving them, because choosing between two paid registrations is a decision about money
+(D-2.2-b); the registration edit form exposes only roster visibility, notes and the fair contact
+(D-2.2-c); manual entry runs through the service (D-2.2-d); CSV export is streamed so it honours the
+table's filters (D-2.2-e).
+
 ### Card 2.3 — RegistrationService
 **Depends on:** 1.4, 2.1. `create()` (duplicate rules R2.7: hard-block same organization+event non-cancelled; acting rep must be an ACTIVE member; warning flag on normalized-name match at org creation), price snapshot via `Event::priceFor()`, **free-grant path confirms immediately with no payment**, `confirmPayment()`, `cancel()`, capacity enforcement.
 **Tests:** unit — duplicate block, pending/retired rep rejected, capacity full rejection, free-grant immediate confirm (no payment row, receipt queued), discounted price snapshotted, confirm transitions + confirmed_at, cancel rules, event-closed rejection.
@@ -173,7 +185,7 @@ both win (D-2.3-d).
 **Depends on:** 1.2, 2.1. `GrantService`: `apply()` (active rep, one non-withdrawn application per org+event, only while event registration is open or upcoming), `approve()` (coordinator picks benefit: free / custom price / percent off), `deny()` (reason required), `revoke()` (only while unused). Filament Grants resource (R3.3b): review queue filtered by event/status, approve/deny/revoke actions, usage indicator. Decision notifications (R4).
 **Tests:** application rules; approve sets benefit + queues rep email; deny requires reason; revoke blocked once used; permissions.
 
-**Status: service done (2026-08-18); the Filament resource is still to come.** `App\Services\GrantService`
+**Status: done (2026-08-18).** Resource shipped alongside the service: `App\Services\GrantService`
 implements apply / approve / deny / revoke / withdraw plus `hasLiveApplication()` and
 `currentApplication()`, with `App\Exceptions\GrantNotAllowed` and five domain events. 41 tests in
 `tests/Unit/Services/GrantServiceTest.php`.
@@ -187,9 +199,24 @@ than trusting the form, because an incomplete benefit silently falls through to 
 **Depends on:** 1.2. CRUD + `sort_order` reordering. (Content blocks and the contact inbox are laravel-core resources — configure/verify, don't build.)
 **Tests:** resource CRUD, reorder persists; core content + contact resources reachable by coordinator.
 
+**Status: done (2026-08-18).** `SponsorResource` (+ `StaffRelationManager`, drag reordering) and
+`FaqItemResource` (drag reordering, a badge that surfaces the seeded `TODO-OWNER` answers).
+laravel-core's Content and Contact resources are verified as registered and reachable rather than
+rebuilt, and a test asserts this app has no parallel `ContentBlock` or `ContactSubmission` model.
+12 tests in `tests/Feature/Admin/ContentResourcesTest.php`.
+
 ### Card 2.5 — Admin dashboard widgets
 **Depends on:** 2.2. Widgets: confirmed count vs. capacity, revenue collected vs. pending-check amounts, recent registrations. All for the "active" (next upcoming published) event.
 **Tests:** widget queries against seeded fixtures return correct numbers.
+
+**Status: done (2026-08-18).** `ActiveFairOverview` (confirmed schools vs. capacity, collected,
+awaiting payment) and `RecentRegistrations`, both scoped to the active fair. 10 tests in
+`tests/Feature/Admin/DashboardWidgetsTest.php`. Suite 368, Pint clean. **Phase 2 complete.**
+
+**Decisions:** revenue is summed from the registration price snapshots rather than the payments
+table, because a free registration has no payment row and summing payments would report a
+grant-heavy year as a bad one (D-2.5-a); both widgets show the active fair only, and an empty table
+rather than every registration ever taken when nothing is published (D-2.5-b).
 
 ## Phase 3 — Rep portal & registration
 

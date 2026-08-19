@@ -89,6 +89,18 @@ function livewire(string $component, array $params = []): Testable
 }
 
 /**
+ * The body of a file a Livewire component handed back.
+ *
+ * Livewire buffers a returned `StreamedResponse` into its `download` effect,
+ * base64-encoded — the stream itself is long gone by the time a test could
+ * read it. `assertFileDownloaded()` checks the name; this gets at the content.
+ */
+function downloadedContent(Testable $response): string
+{
+    return base64_decode((string) data_get($response->effects, 'download.content'), strict: true) ?: '';
+}
+
+/**
  * A coordinator: verified, holding the `coordinator` role and `admin.access`.
  */
 function coordinator(array $attributes = []): User

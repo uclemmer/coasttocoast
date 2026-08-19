@@ -9,7 +9,9 @@
 > 2. Take ONE card at a time. Mark it in the checklist below when done (edit this file).
 > 3. Every card's Definition of Done includes: Pest tests written and passing (`php artisan test`),
 >    `vendor/bin/pint` clean, factories updated, and the relevant docs updated in the same change.
-> 4. UI is Filament only (owner directive 2026-08-16) — no hand-built Blade/Tailwind/Livewire/Flowbite UI.
+> 4. UI is split (owner directive 2026-08-19, superseding 2026-08-16): the **public site is Blade +
+>    Livewire + Flowbite** on Tailwind 4; the **`/admin` backend is Filament**. No public-facing Filament
+>    panel. Phase 5 was built under the old directive and its output is queued for rework — see doc 02.
 > 5. If a card conflicts with reality (package versions, Filament API changes), fix forward and record the
 >    deviation in this file under the card.
 

@@ -109,7 +109,8 @@ composer path repository in dev). Requires **PHP 8.4** + Filament v5. Modules us
 - Panel access: Admin via laravel-core's panel-access check (coordinator role/permission); Rep via `canAccessPanel()` requiring a verified email.
 - Authorization on every resource via Policies — never rely on navigation hiding alone.
 - Custom actions (Mark check received, Refund, Resend confirmation) call services from 02; keep logic out of Filament classes.
-- Public pages use Filament components/theming (owner directive: no hand-built Blade/Tailwind/Livewire/Flowbite UI).
+- Public pages are **Blade views and Livewire components styled with Flowbite** (owner directive 2026-08-19)
+  — not Filament. They are built as a Filament panel today and queued for rework; see doc 02.
 - Testing: Filament resources and wizard are tested with Pest + Livewire test helpers (`livewire()` against Filament pages) — patterns in 06.
 
 ## Integration environment matrix

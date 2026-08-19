@@ -11,26 +11,45 @@ The repo at `C:\Users\uriah\Herd\coasttocoastcollegefair` is a **fresh Laravel s
 - `laravel/framework ^13.8`, PHP `^8.3`
 - **Pest 5** (`pestphp/pest`, `pest-plugin-laravel`) — the test framework; do not write PHPUnit-style classes
 - `laravel/pint` (code style), `laravel/boost`, `laravel/pail`, `laravel/tinker`
-- Tailwind CSS 4 + Vite 8 skeleton assets (unused once Filament is in — see below)
+- Tailwind CSS 4 + Vite 8 skeleton assets — **used**: they are the build chain for the public site (see the stack directive below)
 - `.env` defaults: **SQLite** database, `database` queue/session/cache drivers, `log` mailer
 
 No app code, packages, or migrations beyond the skeleton exist yet.
 
 ## Stack decisions
 
-> **Owner directive (2026-08-16):** All UI is built with **Filament**. Do **not** hand-build UI with Blade,
-> Tailwind, Livewire, or Flowbite. (Filament runs on Livewire/Alpine/Tailwind internally — those remain as
-> transitive dependencies, but implementers work exclusively through Filament panels, resources, schemas,
-> forms, tables, widgets, and Filament's Blade components for the rare custom view.)
+> **Owner directive (2026-08-19) — supersedes the 2026-08-16 "all UI is Filament" directive.**
+> The two UI surfaces are built with different tools:
+>
+> - **Public site — Blade + Livewire + Flowbite.** Tailwind CSS 4 for styling, **Flowbite** as the
+>   component library on top of it, Livewire full-page components where a page needs interactivity,
+>   plain Blade views where it does not. No public-facing Filament panel.
+> - **Admin (`/admin`) — Filament v5**, unchanged. laravel-core's prebuilt panel plus `FairPlugin`.
+>
+> **What this invalidates.** The public site was built the other way, under the old directive: it is
+> currently `App\Providers\Filament\SitePanelProvider`, a Filament panel at the site root with eight
+> `Page` classes under `app/Filament/Site/Pages/`. That was the stricter reading of the 2026-08-16
+> directive, and it was flagged for the owner at the time — see
+> [10-implementation-decisions.md](10-implementation-decisions.md) D-5.1-a. **This directive is the
+> answer to that flag.** The panel now diverges from the documented direction and is queued for rework
+> into Blade/Livewire/Flowbite route views; the page logic moves to controllers or Livewire components
+> largely unaltered, which is what D-5.1-a predicted. No card has been scheduled for it yet.
+>
+> **Open — needs the owner's call: the rep portal (`/portal`).** It is a Filament panel today. Reps are
+> external users rather than staff, and the sibling `duespay` project already decided that an
+> external-user portal is "plain Livewire pages; owners get consumer UI, not admin software". If the
+> same reading applies here, `RepPanelProvider` and the registration wizard move too — a much larger
+> rework than the public site. Nothing has been changed on that assumption. Ask before acting.
 
 | Concern | Choice | Notes |
 |---|---|---|
 | Framework | Laravel 13, **PHP 8.4** | Skeleton allows ^8.3, but `uclemmer/laravel-core` requires `^8.4` — set Herd/production to PHP 8.4 and bump the app's composer constraint |
 | Foundation | **`uclemmer/laravel-core`** (owner's package, sibling repo at `C:\Users\uriah\Herd\laravel-core`) | Decision D6. Provides admin panel shell, roles/permissions, email logging, contact, content blocks, queue metrics, profiles, `core:doctor`. Install via a composer **path repository** in dev (`"repositories": [{"type": "path", "url": "../laravel-core"}]`); switch to VCS/Packagist for deployment. Read its `/docs` before building on it. |
 | Database | SQLite in dev (as scaffolded); MySQL/Postgres in production | Keep migrations portable — no driver-specific SQL |
-| UI | **Filament v5** — settled: laravel-core pins `filament/filament ^5.0` | |
+| Admin UI | **Filament v5** — settled: laravel-core pins `filament/filament ^5.0` | Backend only, per the directive above |
+| Public UI | **Blade + Livewire + Flowbite** on Tailwind CSS 4 | Owner directive 2026-08-19. `flowbite` npm package, `@plugin 'flowbite/plugin'` in `resources/css/app.css`, `import 'flowbite'` in `resources/js/app.js` — `ckbs` is the reference wiring |
 | Panels | **Admin** = laravel-core's prebuilt panel (`core.admin.enabled = true`, path `/admin`, branded via `core.admin.brand`), with the app's resources attached as a Filament plugin class registered in `core.admin.plugins` (the same seam `uclemmer/laravel-tickets` uses). **Rep** = app-owned `RepPanelProvider` (`/portal`). | App plugin: `App\Filament\FairPlugin` registering Events, Registrations, Payments, Organizations, Grants, Sponsors, FAQ, Messages resources + dashboard widgets |
-| Public pages | Filament **custom pages/theming** on a public-facing layout, or minimal route views rendered with Filament's Blade components — no bespoke component library | Keep public UI thin; most complexity lives in the panels |
+| Public pages | **Blade route views + Livewire components, styled with Flowbite** on a shared public layout | Owner directive 2026-08-19. Still a Filament panel as built (`SitePanelProvider`) — diverges, queued for rework. Keep public UI thin; most complexity lives in the panels |
 | Auth | Filament's built-in auth (login, registration, email verification, password reset) on the Rep panel. Admin access via **laravel-core roles/permissions** (`HasCoreRoles` trait on User; coordinator role holding app permissions; core's panel-access check). No `is_admin` boolean, no spatie/laravel-permission, no Fortify/Breeze/Jetstream. | Register app permissions through `core.permission_providers` so `core:sync-permissions` picks them up |
 | Payments | `stripe/stripe-php` + Stripe Checkout (hosted) + webhooks | Never render card fields ourselves |
 | Email | Postmark via Laravel's `postmark` mail transport (`symfony/postmark-mailer`); **all mail renders in the themed HTML template**; **all sends logged** via laravel-core's EmailLog (`core.email_log.enabled = true` — READ AT BOOT, restart workers after toggling) | Streams: `outbound` (transactional), `broadcast` (campaigns). Full email design: [07-email-design.md](07-email-design.md) |
@@ -55,10 +74,12 @@ No app code, packages, or migrations beyond the skeleton exist yet.
   to Stripe Checkout, the check-instructions flow, or immediate confirmation when free, receipt downloads,
   profile/SMS opt-in management, and self-retire.
 - **Public site** — Home, About, Representatives roster, Last Year, Sponsors, FAQ, Contact, and event pages.
-  Simple controllers/routes rendering Filament-component-based views (or Filament custom pages exposed publicly),
-  themed with the fair's branding via a Filament theme (Tailwind config lives inside the theme only).
+  **Not Filament** (owner directive 2026-08-19): controllers or Livewire full-page components rendering Blade
+  views on a shared public layout, styled with Tailwind 4 + **Flowbite** components and the fair's branding.
+  The roster and event listings are the natural Livewire candidates; the rest are plain Blade.
   Page copy (Home/About blocks) comes from laravel-core's Content module (type `block`); the contact page uses
   its contact component/routes (`core.contact.*` config: recipients, receipt, honeypot, throttle).
+  **As built this is still a Filament panel** — see the divergence note in the stack directive above.
 
 ### laravel-core integration checklist (first build session)
 
@@ -96,6 +117,7 @@ remaining deliverable):
 |---|---|---|---|---|
 | Admin | `core` | `/admin` | laravel-core `CorePanelProvider` | `admin.access` permission (coordinator role, or super admin) |
 | Rep portal | `rep` | `/portal` | `App\\Providers\\Filament\\RepPanelProvider` | authenticated + verified email; membership gating lands with card 3.0 |
+| Public site | `site` | `/` | `App\\Providers\\Filament\\SitePanelProvider` | none. **Diverges from the 2026-08-19 UI directive** — should be Blade/Livewire/Flowbite route views, not a panel |
 
 `User::canAccessPanel()` switches on the panel id rather than using core's `CanAccessCorePanel` trait — see
 the deviation note in [05-build-roadmap.md](05-build-roadmap.md) card 1.1.

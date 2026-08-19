@@ -533,22 +533,52 @@ group, so there is no session and no CSRF token. The caller is a server and its 
 the signature. A separate file makes that exemption visible rather than burying it in a middleware
 exclusion list.
 
-### D-5.1-a — The public site is a third Filament panel — **flagged for the owner**
+### D-5.1-a — The public site is a third Filament panel — **answered 2026-08-19: rework it**
 
-**Context.** The owner's directive is that all UI is Filament: no hand-built Blade, Tailwind,
-Livewire or Flowbite (doc 02). Doc 02 offers two readings for public pages — "Filament custom pages
-exposed publicly" or "route views rendered with Filament's Blade components".
+**Context.** The owner's directive at build time (2026-08-16) was that all UI is Filament: no
+hand-built Blade, Tailwind, Livewire or Flowbite. Doc 02 offered two readings for public pages —
+"Filament custom pages exposed publicly" or "route views rendered with Filament's Blade components".
 
-**Decision.** The stricter reading: `App\Providers\Filament\SitePanelProvider`, a panel at the site
-root with no `->login()` and no `Authenticate` middleware. Every page is a Filament `Page` whose
-`content()` returns a schema. There is no hand-written markup anywhere in the public site, and the
-public pages inherit the same palette as `/admin` and `/portal`.
+**Decision as built.** The stricter reading: `App\Providers\Filament\SitePanelProvider`, a panel at
+the site root with no `->login()` and no `Authenticate` middleware. Every page is a Filament `Page`
+whose `content()` returns a schema. There is no hand-written markup anywhere in the public site, and
+the public pages inherit the same palette as `/admin` and `/portal`.
 
-**Why this needs your eye.** A Filament panel is an application shell, and a public marketing site
+**Why it was flagged.** A Filament panel is an application shell, and a public marketing site
 rendered in one is unusual. `->topNavigation()` and a wide content area get it close to reading like
-a website rather than an admin screen, but the visual design is your call, and this is the piece of
-the build most likely to want revisiting. The alternative — Blade views using Filament's components —
-is a contained change: the pages' logic would move to controllers almost unaltered.
+a website rather than an admin screen, but the visual design is the owner's call, and this was the
+piece of the build most likely to want revisiting. The alternative — Blade views — was noted as a
+contained change: the pages' logic would move to controllers almost unaltered.
+
+**Owner's answer (2026-08-19).** Rework it. The standing directive is now that **frontend UI is
+Blade + Livewire + Flowbite and backend UI is Filament**, workspace-wide. The public site is
+therefore built with the wrong tool and diverges from the documented direction.
+
+**What the rework is.** Roughly the contained change this entry predicted:
+
+- Retire `SitePanelProvider` and the eight `Page` classes under `app/Filament/Site/Pages/`
+  (Home, About, Representatives, LastYear, Sponsors, Faq, Contact, EventPage).
+- Move each page's `content()` logic into a controller action or a Livewire full-page component —
+  the roster pages (`RosterTable`, D-5.3-a) and event listings are the natural Livewire candidates,
+  the rest are plain Blade.
+- Add the public Blade layout and wire Flowbite: `flowbite` in `package.json`,
+  `@plugin 'flowbite/plugin'` in `resources/css/app.css`, `import 'flowbite'` in
+  `resources/js/app.js`. `ckbs` is the reference wiring in this workspace.
+- `RendersContentBlocks` (D-5.2-a) and the laravel-core Content/Contact modules are unaffected —
+  they are data sources, not UI.
+- The public-page tests are already plain HTTP tests (`get('/faq')->assertSee(...)`, doc 06), so
+  most of them should survive the move; they assert content, not Filament internals.
+
+**Not yet scheduled.** No roadmap card exists for this. `bootstrap/providers.php` still registers
+`SitePanelProvider` last so `/admin` and `/portal` claim their prefixes first; that ordering comment
+goes away with the panel.
+
+**The rep portal is a separate, still-open question.** `/portal` is also a Filament panel, and reps
+are external users rather than staff. The sibling `duespay` project made the opposite call for the
+same shape of surface — "owner portal, *not* a Filament panel; plain Livewire pages; owners get
+consumer UI, not admin software". Whether that reading extends here is the owner's to make, and it
+is a far larger rework than the public site (the registration wizard is a Filament form wizard).
+Nothing has been changed on that assumption. **Ask before acting.**
 
 Registration order matters and is commented in `bootstrap/providers.php`: `SitePanelProvider` is
 last, so `/admin` and `/portal` register their literal prefixes first. Filament adds no catch-all,

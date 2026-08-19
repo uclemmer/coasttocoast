@@ -172,7 +172,7 @@ None of these block a deploy; all of them are visible to a visitor.
 | Signed W-9 PDF | Admin → FAQ (and a file to upload) | `TODO-OWNER` badge |
 | Google Map embed for the venue | Admin → FAQ | The design's embed is pinned at Chattanooga generally, not the venue — see the asset queue below |
 | Brand colour and logo | `FAIR_BRAND_COLOR`, `FAIR_BRAND_LOGO_URL` | Email falls back to the app name in text |
-| Historical roster export (2025/2026) | `php artisan fair:import-roster <file.csv>` | See below |
+| Historical rosters, 2022–2026 | `php artisan fair:import-roster <file.csv>` | Five past fairs are seeded and waiting; see below |
 
 ### Design assets still outstanding (2026-08-19)
 

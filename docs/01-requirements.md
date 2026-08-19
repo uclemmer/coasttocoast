@@ -147,5 +147,5 @@ Student/parent registration or ticketing, multi-fair/multi-city support beyond t
 - Should check-pending organizations appear on the public roster? (Default: no — confirmed only.)
 - Whether grant totals need reporting for the sponsors. *(Application form/wording: settled — Appendix A. Roster logos: settled — yes, R1.3.)*
 - Domain/DNS + Postmark sender domain verification timing.
-- **Historical roster export** (2025/2026 institutions + rep contact emails) from the current site/ISPEUS, so cross-year audiences work from day one (see doc 07 §2).
+- **Historical roster export** (institutions + rep contact emails) from the current site/ISPEUS, so cross-year audiences work from day one (see doc 07 §2). Fairs for 2022–2026 are seeded and waiting for it (doc 03); whatever years the export covers can go in.
 - Does the fair need the counselor-reception RSVP handled on-site too? (Not in current site; out of scope unless requested.)

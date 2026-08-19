@@ -29,6 +29,18 @@ pest()->extend(TestCase::class)
     ->in('Feature');
 
 /*
+| The Unit suite gets the application and a database too, but NOT the
+| permission sync. Model tests exercise casts, scopes and relationships, all of
+| which need real tables; none of them touch a Gate, so paying for the sync on
+| every one of them buys nothing. A unit test that does need permissions is a
+| feature test wearing the wrong hat.
+*/
+
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Unit');
+
+/*
 |--------------------------------------------------------------------------
 | Expectations
 |--------------------------------------------------------------------------

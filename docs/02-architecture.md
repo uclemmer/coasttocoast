@@ -72,15 +72,23 @@ No app code, packages, or migrations beyond the skeleton exist yet.
 5. Schedule `core:prune-email-logs` (+ our pruning) in `routes/console.php`; wire `core:doctor` into CI/deploy.
 6. Record the resolved laravel-core + Filament versions in this file.
 
-**Status (2026-08-16, card 1.1):** steps 1 and 3–5 are written into the repo; steps 2 and 6 need a shell on
-the Windows host. `config/core.php` was published **by hand** (a copy of the package's file with the fair's
-values) — do not `vendor:publish` it again. Migrations still need publishing and running; the commands, and
-the table of what was changed, are in [08-install-runbook.md](08-install-runbook.md).
+**Status (2026-08-18):** all six steps are done. `config/core.php` was published **by hand** (a copy of the
+package's file with the fair's values) — do not `vendor:publish` it again. The migrations are published and
+run; the commands, and the table of what was changed, are in [08-install-runbook.md](08-install-runbook.md).
+Step 1's path repository was replaced by a tagged VCS release on 2026-08-16 — see
+[09-package-wiring.md](09-package-wiring.md) for why and how to upgrade.
+
+**Resolved versions** (read from `vendor/composer/installed.json` on 2026-08-18 — this is card 1.1's
+remaining deliverable):
 
 | Package | Constraint | Resolved version |
 |---|---|---|
-| `uclemmer/laravel-core` | `@dev` (path repo `../laravel-core`) | _pending `composer update` on the host_ |
-| `filament/filament` | `^5.0` (via laravel-core) | _pending_ |
+| `uclemmer/laravel-core` | `^0.2` (vcs `github.com/uclemmer/laravel-core.git`) | **v0.2.0** |
+| `filament/filament` | `^5.0` (transitive, via laravel-core) | **v5.7.6** |
+| `laravel/framework` | `^13.8` | **v13.24.0** |
+| `livewire/livewire` | `^4.3` (direct; Filament v5 requires `^4.1`) | **v4.4.0** |
+| `pestphp/pest` | `^5.0` | **v5.0.4** |
+| PHP | `^8.4` | **8.4.24** (Herd) |
 
 **Panels as built:**
 
@@ -98,7 +106,8 @@ Standard Laravel conventions plus:
 
 ```
 app/
-  Enums/                    RegistrationStatus, PaymentMethod, PaymentStatus, MessageChannel
+  Enums/                    MembershipStatus, RegistrationStatus, PaymentMethod, PaymentStatus,
+                            GrantStatus, GrantBenefit, MessageChannel, Audience, DeliveryStatus
   Models/
   Policies/                 used by Filament resources for authorization
   Filament/

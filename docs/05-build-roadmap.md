@@ -15,7 +15,7 @@
 
 ## Phase checklist
 
-- [ ] Phase 1 — Foundation (cards 1.1–1.4) — **1.1 done 2026-08-16**
+- [ ] Phase 1 — Foundation (cards 1.1–1.4) — **1.1 done 2026-08-16; 1.2 done 2026-08-18**
 - [ ] Phase 2 — Domain & admin core (cards 2.1–2.6)
 - [ ] Phase 3 — Rep portal & registration (cards 3.0–3.5)
 - [ ] Phase 4 — Payments (cards 4.1–4.3)
@@ -55,6 +55,24 @@ the identical `admin.access` Gate check for the `core` panel and requires a veri
 **Depends on:** 1.1.
 **Do:** Create everything in doc 03: enums (incl. `MembershipStatus`, `GrantStatus`, `GrantBenefit`); models + migrations + factories for organizations, events, registrations, grants, payments, stripe_webhook_events, event_interests, sponsors, sponsor_staff, faq_items, messages, message_recipients; users membership columns (organization_id, membership_status, retired_at/by). (No contact_submissions / content_blocks — laravel-core provides those.) Relationships + casts. Event helpers `isRegistrationOpen()`, `isFull()`, `previousPublished()` scope, and **`priceFor(Organization)`** (grant-aware pricing — doc 03). User scopes `activeReps()`/`pendingReps()`.
 **Tests:** unit tests per model — relationships resolve, casts work, `isRegistrationOpen()` truth table (before open, open, after close, null window, unpublished), `isFull()` with/without capacity, `priceFor()` truth table (no grant / free / custom price / percent-off rounding / denied-revoked-pending grants ignored).
+
+**Status: done (2026-08-18).** Shipped: nine enums in `app/Enums` (the six planned plus
+`MessageChannel`, `Audience` and `DeliveryStatus` — see doc 03 and decision D-1.2-a); twelve
+migrations `2026_08_18_0001xx`–`0012xx`; models `Organization`, `Event`, `Registration`, `Grant`,
+`Payment`, `StripeWebhookEvent`, `EventInterest`, `Sponsor`, `SponsorStaff`, `FaqItem`, `Message`,
+`MessageRecipient`; membership columns, relationships and `activeReps()` / `pendingReps()` /
+`actsForOrganization()` on `User`; a factory for every model with the states the later cards need;
+`Event::priceFor()` / `isRegistrationOpen()` / `isFull()` / `previousPublished()` / `active()`.
+112 unit tests in `tests/Unit/Models/` (144 suite-wide), Pint clean.
+
+**Deviations, all recorded with reasoning in [10-implementation-decisions.md](10-implementation-decisions.md):**
+capacity counts awaiting-payment registrations as well as confirmed (D-1.2-b); `priceFor()` charges
+list price for an approved grant with no benefit recorded (D-1.2-c); percentage discounts round down
+(D-1.2-d); the duplicate and one-grant-per-event rules stay at service level rather than becoming
+partial unique indexes, which SQLite/MySQL/Postgres do not express portably (D-1.2-e);
+`message_recipients.email_log_id` carries no foreign key so `core:prune-email-logs` cannot take
+campaign history with it (D-1.2-g); `tests/Pest.php` now gives the Unit suite an application and a
+database (D-1.2-h).
 
 ### Card 1.3 — Seeders
 **Depends on:** 1.2.

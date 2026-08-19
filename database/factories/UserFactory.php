@@ -2,8 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Enums\MembershipStatus;
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use UClemmer\LaravelCore\Admin\Permissions as AdminPermissions;
@@ -78,6 +81,47 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'phone' => '+1'.fake()->numerify('##########'),
             'sms_opt_in' => true,
+        ]);
+    }
+
+    /**
+     * An active representative of a school (card 1.2, D9).
+     *
+     * Pass an organization to put several reps in the same one; omit it and
+     * the factory makes a school for this rep alone.
+     */
+    public function rep(?Organization $organization = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'organization_id' => $organization?->getKey() ?? Organization::factory(),
+            'membership_status' => MembershipStatus::Active,
+            'membership_approved_at' => Carbon::now(),
+            'retired_at' => null,
+            'retired_by' => null,
+        ]);
+    }
+
+    /**
+     * A rep whose claim on an existing school is still waiting on a
+     * coordinator. Can log in and browse, can do nothing on the org's behalf.
+     */
+    public function pendingRep(?Organization $organization = null): static
+    {
+        return $this->rep($organization)->state(fn (array $attributes) => [
+            'membership_status' => MembershipStatus::Pending,
+            'membership_approved_at' => null,
+        ]);
+    }
+
+    /**
+     * A rep who has moved on. Keeps the account and the history, loses every
+     * org right, and is excluded from campaign audiences (R2.10, doc 07 §2).
+     */
+    public function retiredRep(?Organization $organization = null): static
+    {
+        return $this->rep($organization)->state(fn (array $attributes) => [
+            'membership_status' => MembershipStatus::Retired,
+            'retired_at' => Carbon::now(),
         ]);
     }
 }

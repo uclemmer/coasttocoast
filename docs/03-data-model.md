@@ -199,11 +199,38 @@ timestamps.
 
 ## Enums (`app/Enums`)
 
+Built by card 1.2. All are backed by strings and implement Filament's `HasLabel` / `HasColor`
+contracts (doc 02 convention 4), so tables and infolists render them without a mapping array.
+
 ```php
+MembershipStatus:   Pending | Active | Retired
 RegistrationStatus: PendingPayment | Confirmed | Cancelled | Refunded
 PaymentMethod:      Stripe | Check
 PaymentStatus:      Pending | Succeeded | Failed | Refunded
+GrantStatus:        Pending | Approved | Denied | Revoked | Withdrawn
+GrantBenefit:       Free | CustomPrice | PercentOff
+MessageChannel:     Email | Sms
+Audience:           ThisEventConfirmed | ThisEventPendingCheck | ThisEventAll | LastEvent
+                    | LapsedLastEvent | AnyPreviousEvent | LapsedAnyPrevious | InterestList
+DeliveryStatus:     Pending | Sending | Sent | Failed | Skipped
 ```
+
+Several carry a behaviour method so a rule lives in exactly one place rather than being re-derived
+by every caller:
+
+| Method | What it decides |
+|---|---|
+| `MembershipStatus::actsForOrganization()` | whether this rep may register, apply for a grant, or edit the org profile |
+| `RegistrationStatus::occupying()` / `occupiesASeat()` | the set that blocks a duplicate, counts against `capacity`, and pins a grant as used |
+| `GrantStatus::discountsPrice()` | only `Approved` ever changes what a school pays |
+| `GrantStatus::blockingReapplication()` | every status except `Withdrawn` — a denial is final for that fair |
+| `Audience::lapsed()` / `isEmailOnly()` | which cases subtract this event's registrants; which resolve to bare addresses |
+| `DeliveryStatus::fromEmailLog()` | translates laravel-core's `sending\|sent\|failed`, degrading unknown values to `Pending` rather than throwing |
+
+`DeliveryStatus` was added beyond the doc's original list: `message_recipients.email_status` and
+`sms_status` needed a vocabulary, and matching core's three EmailLog values (plus `Skipped`, for a
+recipient we deliberately did not text) lets the derived accessor read local column and log row as
+one type.
 
 ## Factories & seeders
 

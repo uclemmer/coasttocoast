@@ -256,6 +256,58 @@ describe('scopes and the active event', function () {
     });
 });
 
+describe('two fairs in one calendar year', function () {
+    // The fair is annual today, but the owner has flagged that it may not stay
+    // that way. Nothing in the app groups fairs by year -- every "which fair"
+    // question is answered by ordering on starts_at -- so this is a property
+    // worth pinning rather than a change worth making.
+
+    beforeEach(function () {
+        $this->spring = Event::factory()->published()->create([
+            'name' => 'College Fair Spring 2030',
+            'slug' => 'college-fair-spring-2030',
+            'starts_at' => Carbon::parse('2030-04-23 18:30'),
+            'ends_at' => Carbon::parse('2030-04-23 20:00'),
+        ]);
+
+        $this->fall = Event::factory()->published()->create([
+            'name' => 'College Fair Fall 2030',
+            'slug' => 'college-fair-fall-2030',
+            'starts_at' => Carbon::parse('2030-10-15 18:30'),
+            'ends_at' => Carbon::parse('2030-10-15 20:00'),
+        ]);
+    });
+
+    it('treats the nearer one as active, then hands over to the later one', function () {
+        Carbon::setTestNow('2030-01-10');
+        expect(Event::active()?->id)->toBe($this->spring->id);
+
+        // The evening after the spring fair. The site must move on to the fall
+        // fair rather than to next April.
+        Carbon::setTestNow('2030-04-24');
+        expect(Event::active()?->id)->toBe($this->fall->id);
+
+        Carbon::setTestNow(null);
+    });
+
+    it('makes the spring fair the previous one for the fall fair', function () {
+        // "Previous" means the previous *fair*, not the previous year -- which
+        // is what the Last Year roster and every cross-year campaign audience
+        // read. With two fairs in a year the spring one is what a fall
+        // attendee saw last, and a win-back list that skipped it would be
+        // mailing people who came six months ago.
+        expect(Event::query()->previousPublished($this->fall->starts_at)->first()?->id)
+            ->toBe($this->spring->id);
+    });
+
+    it('keeps both fairs, because the slug is per fair and not per year', function () {
+        // The seeder writes slugs out explicitly for exactly this reason. A
+        // scheme that derived `college-fair-{year}` would have collided here,
+        // and the unique index would have made it a hard failure at seed time.
+        expect(Event::query()->whereYear('starts_at', 2030)->count())->toBe(2);
+    });
+});
+
 describe('relationships', function () {
     it('resolves registrations, grants and interests', function () {
         $event = Event::factory()->create();

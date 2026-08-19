@@ -1047,3 +1047,43 @@ from the live site, and the production seed both say "1150 Carter Street".
 **Why.** A wrong address on a page whose purpose is getting people to a building is worse than a
 stale one, and the live site is the better evidence of what the Convention Center's address actually
 is. This is content, so correcting it is an admin-panel edit, not a deploy.
+
+---
+
+### D-9-a — Five past fairs, and the seeder stopped deriving slugs from years
+
+**Owner request, 2026-08-19.** "The fair needs to be a database record. There needs to be a fair for
+the last 5 years. I will import previous year registrations later. There might come a time where we
+have two fairs a year."
+
+**What was already true.** The fair has always been a database record — `App\Models\Event`, one row
+per fair. `EventSeeder` seeded three of them (2025, 2026, 2027).
+
+**Decision.** Extended `EventSeeder` rather than adding a second seeder. It is already the one thing
+that owns the fair calendar, and it is idempotent by slug; a parallel seeder writing to the same
+table would have been two places to look and a way to double-seed. It now writes six fairs — 2022
+through 2026 published and past, 2027 unpublished as before.
+
+**Why the back catalogue matters.** `fair:import-roster` resolves each CSV row by `event_slug` and
+**skips** rows naming a fair that does not exist. Without a 2023 fair there is nowhere to put a 2023
+roster, and the skip is a warning rather than an error — so the import would look like it worked.
+Seeding the history is a precondition of the import the owner has planned, not decoration.
+
+**On the reconstructed figures.** Only 2026 is confirmed (Tuesday 21 April 2026, $215, from the live
+site); 2022–2025 are plausible reconstructions on the same fourth-Tuesday-of-April pattern with the
+fee stepping down. This is deliberately tolerable, because **nothing downstream reads a past fair's
+`price_cents`** — a registration snapshots what it actually paid, and the import CSV carries a
+per-row `price_cents`. A past fair's list price is a record, not an input, and it is an admin edit.
+
+**Two fairs a year: supported already, and now proven.** No code changed. Nothing in the application
+groups fairs by year — `Event::active()`, the `previousPublished()` scope behind the Last Year
+roster, and every cross-year audience all order on `starts_at`. The one thing a year bought was the
+slug, so the seeder now writes each slug and name out per fair instead of deriving
+`college-fair-{year}`, which would have collided on the unique index the day a year held two. Three
+tests in `EventTest` pin it: handover from a spring fair to a fall fair, "previous" meaning the
+previous *fair* rather than the previous year, and two fairs coexisting in one calendar year.
+
+**Not done, deliberately:** the public roster page stays routed at `/last-year` and labelled "Last
+year". Its logic is `previousPublished()`, which already means "the previous fair" and stays correct
+with two fairs a year — only the wording would read oddly. Renaming it breaks a public URL, so it is
+the owner's call rather than a tidy-up.

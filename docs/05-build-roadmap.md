@@ -84,7 +84,7 @@ database (D-1.2-h).
 
 **Status: done (2026-08-18).** Shipped: `RoleSeeder` (already present), `CoordinatorSeeder`,
 `ContentBlockSeeder` (nine core `block` rows from doc 00's copy), `SponsorSeeder` (the four schools),
-`FaqSeeder` (eleven questions), `EventSeeder` (2025, 2026, 2027), `FairFixtureSeeder` (dev-only), and
+`FaqSeeder` (eleven questions), `EventSeeder` (2022–2027; extended from three fairs to six on 2026-08-19, see doc 03), `FairFixtureSeeder` (dev-only), and
 `ProductionSeeder` alongside the dev `DatabaseSeeder`. New `config/fair.php` holds the contact block,
 coordinator identity, brand tokens and admin-alert settings — one source for values that must match
 across a Filament panel, a public page and an email. 20 Pest tests in

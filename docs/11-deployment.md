@@ -209,7 +209,14 @@ rep_name,rep_email,rep_phone,event_slug,price_cents,confirmed_on
 ```
 
 Only `organization_name` and `event_slug` are required; `event_slug` must match a fair that already
-exists (`college-fair-2025`, `college-fair-2026`). Everything else is optional.
+exists. `EventSeeder` seeds five past fairs for this purpose — `college-fair-2022` through
+`college-fair-2026` — so there is somewhere to put each year's roster. **A row naming a fair that is
+not in the database is skipped with a warning, not created**, so check the summary line rather than
+assuming a clean run imported everything. Everything else is optional.
+
+`price_cents` is per row on purpose: what a school actually paid in 2023 is a fact about that
+registration, not about the 2023 fair, whose seeded list price is a reconstruction (doc 03). Supply
+it where the history knows it.
 
 ```bash
 php artisan fair:import-roster storage/app/roster-2026.csv --dry-run

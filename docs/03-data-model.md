@@ -246,8 +246,52 @@ re-running never overwrites edited copy:
 | `ContentBlockSeeder` | 9 core `block` rows — home, about, roster intros, sponsors, contact, refund policy, check instructions | both |
 | `SponsorSeeder` | the 4 sponsor schools + Meg Conner | both |
 | `FaqSeeder` | 11 questions from doc 00 | both |
-| `EventSeeder` | fairs 2025, 2026, 2027 | both |
+| `EventSeeder` | the fair calendar: 2022–2026 published and past, 2027 unpublished | both |
 | `FairFixtureSeeder` | schools, reps, three years of registrations, grants in every status, the awkward cases | **dev only** |
+
+### The fair calendar
+
+`EventSeeder` writes six fairs: **five past ones (2022–2026) and the next (2027)**. The five past
+fairs exist so there is somewhere to import history into — `fair:import-roster` (doc 11) resolves
+each CSV row by `event_slug` and skips any row naming a fair that is not in the database, so seeding
+the back catalogue is a precondition of the import rather than decoration. The depth also matters to
+the cross-year audiences: every win-back list is a set difference over the fair history (doc 07 §2),
+and its reach is however far back the fairs go.
+
+**Only the 2026 fair's date and price are confirmed** (Tuesday 21 April 2026, $215, from the live
+site). The venue is confirmed throughout. The 2022–2025 dates and prices are plausible
+reconstructions — the fourth-ish Tuesday of April, with the fee stepping down into the past.
+
+That is tolerable rather than sloppy: **nothing downstream reads a past fair's `price_cents`**. A
+registration snapshots what it actually paid into `registrations.price_cents`, and the import CSV
+carries a per-row `price_cents` for exactly this reason. A past fair's list price is a record, not an
+input, and it is editable in the admin panel.
+
+2027 is seeded **unpublished** — an unpublished event can never take money, so a placeholder date and
+price cannot quietly charge a school the wrong fee. `FairFixtureSeeder` publishes and opens it in
+development only, because a workable current fair beats a faithful one locally.
+
+### Two fairs in one year
+
+**Supported today; no schema or code change needed.** Nothing in the application groups fairs by
+year. Every "which fair" question is answered by ordering on `starts_at` — `Event::active()`, the
+`previousPublished()` scope behind the Last Year roster, and every cross-year campaign audience. A
+second fair in a year is one more row.
+
+The only thing a year buys is the naming convention, which is why `EventSeeder` writes each slug and
+name out per fair instead of deriving them from a year: a derived `college-fair-{year}` would collide
+on the unique index the day a year held two. While the fair is annual `college-fair-2026` reads best;
+the day it is not, the pair become `college-fair-spring-2030` and `college-fair-fall-2030`.
+**Existing slugs must not be renamed to match** — they are public URLs and the import CSV's join key.
+
+Three tests in `tests/Unit/Models/EventTest.php` pin the behaviour: which fair is active either side
+of a spring fair that has a fall fair behind it, that "previous" means the previous *fair* rather
+than the previous year, and that two fairs coexist in one calendar year.
+
+One cosmetic loose end if that day comes: the public page is routed at `/last-year` and labelled
+"Last year". The logic behind it is `previousPublished()`, which is already "the previous fair" and
+stays correct — only the wording would read oddly. Renaming the route would break a public URL, so
+it is a deliberate decision rather than a tidy-up.
 
 `DatabaseSeeder` (dev) calls all seven; `ProductionSeeder` calls the first six. Note that
 `DatabaseSeeder` does **not** use `WithoutModelEvents` — `Organization` derives `normalized_name`

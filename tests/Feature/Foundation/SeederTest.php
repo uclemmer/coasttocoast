@@ -63,12 +63,30 @@ describe('the production seed', function () {
         expect(FaqItem::query()->published()->count())->toBeGreaterThanOrEqual(10);
     });
 
-    it('seeds two past fairs and one upcoming one', function () {
-        expect(Event::query()->pluck('slug')->all())
-            ->toBe(['college-fair-2025', 'college-fair-2026', 'college-fair-2027'])
-            // Two past years, not one: LastEvent and AnyPreviousEvent are
-            // indistinguishable with a single year of history (doc 07 §2).
-            ->and(Event::query()->previousPublished()->count())->toBe(2);
+    it('seeds five past fairs and one upcoming one', function () {
+        expect(Event::query()->orderBy('starts_at')->pluck('slug')->all())->toBe([
+            'college-fair-2022',
+            'college-fair-2023',
+            'college-fair-2024',
+            'college-fair-2025',
+            'college-fair-2026',
+            'college-fair-2027',
+        ])
+            // Five past fairs, not one: LastEvent and AnyPreviousEvent are
+            // indistinguishable with a single year of history (doc 07 §2), and
+            // the historical roster import has nowhere to put a 2023 roster if
+            // the 2023 fair is not a row.
+            ->and(Event::query()->previousPublished()->count())->toBe(5);
+    });
+
+    it('leaves every past fair published, so its roster can be shown', function () {
+        // A past fair that is unpublished is invisible to previousPublished(),
+        // which means invisible to the Last Year roster and to every cross-year
+        // campaign audience -- so importing a roster into it would be silent.
+        $past = Event::query()->where('starts_at', '<', now())->get();
+
+        expect($past)->toHaveCount(5)
+            ->and($past->every(fn (Event $fair): bool => $fair->is_published))->toBeTrue();
     });
 
     it('leaves the 2027 fair unpublished because its date and price are placeholders', function () {
@@ -93,7 +111,7 @@ describe('the production seed', function () {
 
         expect(User::query()->count())->toBe(1)
             ->and(Sponsor::query()->count())->toBe(4)
-            ->and(Event::query()->count())->toBe(3)
+            ->and(Event::query()->count())->toBe(6)
             ->and(Content::query()->ofType(ContentType::Block)->count())->toBe(9);
     });
 

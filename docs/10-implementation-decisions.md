@@ -613,3 +613,121 @@ Small harm, free to close.
 **Decision.** `EventPage::mount()` aborts 404, not 403, on an unpublished event. A 403 confirms the
 draft exists; the next fair's date leaking before the coordinator announces it is a real, if minor,
 disclosure.
+
+### D-6.0-a — Email components sit flat beside the layout, not in a subdirectory
+
+**Context.** Doc 07 §1 names `emails/components/button.blade.php`. The theme is registered as an
+anonymous component path with an `emails` prefix, so the layout is `<x-emails::layout>`.
+
+**Decision.** The components live at `emails/panel.blade.php`, `emails/button.blade.php`,
+`emails/roster-line.blade.php` — referenced as `<x-emails::panel>`. A prefixed anonymous path
+resolves `<x-emails::layout>` but **not** a nested `<x-emails::components.panel>`: Blade leaves the
+latter uncompiled and prints the raw tag into the email. That is exactly as visible as it sounds and
+exactly as easy to miss until somebody reads a receipt — it survived a first test run because the
+assertions were on the layout, not the panel.
+
+### D-6.0-b — Component row arrays are built in `@php`, never in the tag attribute
+
+**Decision.** Every view that passes a `:rows` array assembles it in a `@php` block first. Blade
+parses component tags with a regex over the raw attribute text, so a double quote inside a PHP
+expression — `$a."\n".$b` — closes the attribute early and the whole tag is left uncompiled. The
+same class of bug as D-6.0-a and just as silent. Called out in the views themselves so the next
+person does not reintroduce it.
+
+### D-6.0-c — Package mail is themed by overriding core's layout view
+
+**Decision.** `resources/views/vendor/core/components/mail/contact/layout.blade.php` is a four-line
+shim that delegates to `<x-emails::layout>`. Laravel resolves the app's `vendor/core/…` copy before
+the package's own, so it needs no registration. Doc 07 §1's "one theme, two entry points" — a
+contact receipt and a registration receipt look like the same organization sent them.
+
+### D-6.1-a — One `AdminAlert` class, not five
+
+**Decision.** Every coordinator alert has the same shape — something happened, here are the facts,
+here is where to look — so there is one class taking a headline, a rows array, a link and an
+optional SMS body. Five classes differing by a subject line would be five places to keep in step.
+
+SMS is opt-in per alert: a new registration is good news that can wait for morning, and passes
+`smsBody: null`; money arriving passes one. `AdminAlerts::send()` is the single place that answers
+"who is the coordinator", falls back to `mail.from.address` rather than losing an alert, and honours
+the `fair.alerts.enabled` switch — the one to flip for a bulk import or a holiday.
+
+### D-6.1-b — Consent lives on the notifiable, not at the call site
+
+**Decision.** `User::routeNotificationForSms()` returns null unless `sms_opt_in` is true **and**
+there is a number. `SmsChannel` asks Laravel's own routing API, so no notification can text somebody
+by forgetting to check (N3, D4). Adding a channel to a message is permission to try, never a promise
+that a given recipient receives one.
+
+### D-6.1-c — Registration mail goes to the fair contact, not the account holder
+
+**Decision.** The listeners mail `registrations.rep_email`. They are usually the same person and
+sometimes deliberately not — the wizard asks who is staffing the table precisely so a registration
+made by a director for a colleague reaches the colleague.
+
+Grant decisions go to **every active rep**, not only the applicant: the applicant may have left by
+the time a decision lands, and a grant nobody knows about is a discount nobody claims.
+
+### D-6.3-a — `AudienceBuilder` returns DTOs, and dedupes on account before address
+
+**Decision.** `RecipientDto` rather than models or arrays, because a recipient is sometimes a user,
+sometimes a school's `admissions_email` with nobody behind it, and sometimes a bare address off the
+interest list. `dedupeKey()` prefers the account id and falls back to a lowercased address, so a rep
+active across three past years qualifies three times and is mailed once.
+
+The `generic` flag is surfaced in the composer's preview, so a coordinator can see how much of a
+send is going to nobody in particular. A school with neither an active rep nor an admissions email
+is dropped **and logged** — doc 07's "no silent caps": a school vanishing from a win-back list
+without a trace is how it stops being invited.
+
+### D-6.4-a — `sent_at` is stamped before the fan-out
+
+**Decision.** `SendEventBroadcast` marks the message sent, then loops. If the process dies halfway
+through a hundred notifications, a retry that re-resolved the audience and re-sent would be far
+worse than one that stops. The job also no-ops entirely on an already-sent message, so a queue
+retrying after a timeout cannot mail a hundred schools twice.
+
+A sent campaign is then immutable: no edit, no delete, both in the policy and in the resource. It is
+the record of what a hundred schools were told, and the delivery table beneath it only means
+anything if the message has not changed since.
+
+### D-6.4-b — The test send uses a throwaway recipient row
+
+**Decision.** "Send a test to me" builds an unsaved `MessageRecipient` with a generated ULID rather
+than persisting one. The email is identical, header and all, but rehearsals do not pollute the real
+delivery table.
+
+### D-6.5-a — The announcement stamps each row as it sends
+
+**Decision.** Not a bulk update afterwards. If the loop dies halfway, the people already mailed are
+marked and a re-run picks up where it stopped. Combined with sending only to `unnotified()`, this
+makes the button safe to press twice — which matters, because the realistic mistake is a coordinator
+unsure whether the first press worked.
+
+### D-6.6-a — The import bypasses `RegistrationService` deliberately
+
+**Decision.** `fair:import-roster` writes through the model. The service's rules are about *taking* a
+registration — the window is open, the rep is active, the price comes from the current grant — and
+none of them apply to recording something that happened in 2025.
+
+It matches schools on the **normalized name**, so "The Ohio State University" in a fifteen-year-old
+export lands on the "Ohio State University" already in the directory. It fills gaps in an existing
+profile but never overwrites one. It refuses to invent a fair from a spreadsheet cell — an event with
+no date, venue or price would leave the roster and the audiences to cope. And it is idempotent by
+(event, organization), so the owner fixes a column and runs it again.
+
+Only `organization_name` and `event_slug` are required. Everything else is optional because a
+fifteen-year-old export will be missing things, and a partial record of a school that attended is
+worth far more than no record. Every lookup uses `?? null` for the same reason — a CSV with just the
+two required columns must not take the import down on row one.
+
+### D-6.x-a — The test suite needs a 512M memory limit
+
+**Context.** `phpunit.xml` now sets `memory_limit` to 512M.
+
+**Decision.** dompdf is memory-hungry and the suite renders a receipt or a check form in a couple of
+dozen tests. Each render is comfortably within the 128M default alone; a whole suite in one process
+is not. Raised rather than trimming the PDF assertions, which are worth having.
+
+**Worth watching in production:** a long-lived queue worker rendering many PDFs may want the same
+treatment. Noted for the deployment runbook (card 7.3).

@@ -20,7 +20,7 @@
 - [x] Phase 3 — Rep portal & registration (cards 3.0–3.5) — **complete 2026-08-18**
 - [x] Phase 4 — Payments (cards 4.1–4.3) — **complete 2026-08-18**
 - [x] Phase 5 — Public site (cards 5.1–5.4) — **complete 2026-08-19**
-- [ ] Phase 6 — Communications (cards 6.0–6.6)
+- [x] Phase 6 — Communications (cards 6.0–6.6) — **complete 2026-08-19**
 - [ ] Phase 7 — Launch hardening (cards 7.1–7.3)
 
 ---
@@ -360,6 +360,30 @@ the map URL and the signed PDF — and the FAQ rows carrying `TODO-OWNER` are wh
 ### Card 6.6 — Historical roster import
 **Depends on:** 1.2. Import the 2025/2026 organizations + rep emails from the owner's ISPEUS/site export (format TBD — doc 01 open question) as organizations (+ admissions contacts where known) + manual registrations on past events, so cross-year audiences are real at launch. Artisan command + idempotent re-run.
 **Tests:** import from fixture file; re-run doesn't duplicate; imported reps resolve in `LastEvent`/`LapsedAnyPrevious` audiences.
+
+**Phase 6 status: done (2026-08-19).** Suite 588, Pint clean.
+
+| Card | Shipped |
+|---|---|
+| 6.0 | `resources/views/emails/` theme (layout + button/panel/roster-line), `core::` layout override, `RendersThemedMail` trait |
+| 6.1 | `PaymentReceipt`, `RegistrationCheckInstructions`, `GrantDecided`, `MembershipDecided`, `RegistrationOpenAnnouncement`, `AdminAlert`, `SmsChannel`, and the listeners wired in `EventServiceProvider` |
+| 6.2 | `AdminAlerts` (one place answering "who is the coordinator"), email + opt-in SMS |
+| 6.3 | `AudienceBuilder` + `RecipientDto` — all eight cases, filters, dedupe, generic fallback |
+| 6.4 | `MessageResource` composer (live preview count, recipient list, test send, send/schedule), `SendEventBroadcast`, `LinkEmailLogToRecipient`, delivery relation manager, `fair:send-scheduled-campaigns` |
+| 6.5 | "Tell the interest list" action on the fair page |
+| 6.6 | `fair:import-roster` + the documented CSV schema (owner has no export yet — standing answer A3) |
+
+**Two Blade traps found the hard way, both now commented in the views (doc 10, D-6.0-a/b):** a
+prefixed anonymous component path does not resolve a nested `<x-emails::components.panel>`, and a
+double quote inside a PHP expression in a component attribute closes the attribute early. Both leave
+the tag uncompiled and print raw Blade into the email, silently.
+
+**Also:** `phpunit.xml` now sets `memory_limit` to 512M — dompdf renders in a couple of dozen tests
+exhaust the 128M default in one process. Worth carrying into the queue worker's configuration
+(card 7.3).
+
+**Owner queue:** the ISPEUS export for card 6.6, and the brand colour and logo URL in
+`config/fair.php` (the layout falls back to the app name in text until then).
 
 ## Phase 7 — Launch hardening
 

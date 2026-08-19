@@ -131,6 +131,18 @@ class User extends Authenticatable implements FilamentUser, HasRoles, MustVerify
     }
 
     /**
+     * Where `SmsChannel` sends, or null.
+     *
+     * Consent is enforced here rather than at each call site: a number with no
+     * opt-in returns null, so no notification can text somebody by forgetting
+     * to check (privacy N3, decision D4).
+     */
+    public function routeNotificationForSms(): ?string
+    {
+        return $this->sms_opt_in && filled($this->phone) ? $this->phone : null;
+    }
+
+    /**
      * Panel access.
      *
      * This is deliberately NOT laravel-core's `CanAccessCorePanel` trait: that

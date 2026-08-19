@@ -7,6 +7,7 @@ use App\Services\Payments\StripeCheckoutService;
 use App\Services\Sms\NullSms;
 use App\Services\Sms\SmsService;
 use App\Services\Sms\TwilioSms;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Stripe\StripeClient;
 use Twilio\Rest\Client as TwilioClient;
@@ -45,8 +46,23 @@ class AppServiceProvider extends ServiceProvider
         ));
     }
 
+    /**
+     * Register the email theme's components under an `emails::` prefix.
+     *
+     * They live in `resources/views/emails/` rather than
+     * `resources/views/components/` because doc 07 §1 names that path and
+     * because keeping the whole theme in one directory is worth more than
+     * Laravel's default component convention.
+     *
+     * The components sit flat beside the layout — `emails/panel.blade.php`,
+     * not `emails/components/panel.blade.php`. A prefixed anonymous path
+     * resolves `<x-emails::layout>` but NOT a nested `<x-emails::components.panel>`:
+     * Blade leaves the latter uncompiled and prints the raw tag into the
+     * email, which is exactly as visible as it sounds and exactly as easy to
+     * miss until somebody reads a receipt.
+     */
     public function boot(): void
     {
-        //
+        Blade::anonymousComponentPath(resource_path('views/emails'), 'emails');
     }
 }

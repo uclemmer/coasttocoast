@@ -157,9 +157,31 @@ component rather than through page-class hooks (D-2.1-a); slug suggestion runs o
 **Depends on:** 1.4, 2.1. `create()` (duplicate rules R2.7: hard-block same organization+event non-cancelled; acting rep must be an ACTIVE member; warning flag on normalized-name match at org creation), price snapshot via `Event::priceFor()`, **free-grant path confirms immediately with no payment**, `confirmPayment()`, `cancel()`, capacity enforcement.
 **Tests:** unit — duplicate block, pending/retired rep rejected, capacity full rejection, free-grant immediate confirm (no payment row, receipt queued), discounted price snapshotted, confirm transitions + confirmed_at, cancel rules, event-closed rejection.
 
+**Status: done (2026-08-18).** `App\Services\RegistrationService` with `create()`,
+`createManualEntry()`, `confirmPayment()`, `cancel()` and `alreadyRegistered()`;
+`App\Exceptions\RegistrationNotAllowed`; three domain events. 41 tests in
+`tests/Unit/Services/RegistrationServiceTest.php`; suite 281, Pint clean.
+
+**Decisions (doc 10):** the services fire domain events instead of sending mail, and card 6.1 hangs
+the comms matrix off them (D-2.3-a); `createManualEntry()` is a separate method rather than a
+nullable actor, so skipping the membership gate has to be asked for by name (D-2.3-b);
+`confirmPayment()` is idempotent, because Stripe redelivers and a second receipt is what schools
+notice (D-2.3-c); creation runs in a transaction so two reps registering in the same second cannot
+both win (D-2.3-d).
+
 ### Card 2.6 — GrantService + Grants resource (admin)
 **Depends on:** 1.2, 2.1. `GrantService`: `apply()` (active rep, one non-withdrawn application per org+event, only while event registration is open or upcoming), `approve()` (coordinator picks benefit: free / custom price / percent off), `deny()` (reason required), `revoke()` (only while unused). Filament Grants resource (R3.3b): review queue filtered by event/status, approve/deny/revoke actions, usage indicator. Decision notifications (R4).
 **Tests:** application rules; approve sets benefit + queues rep email; deny requires reason; revoke blocked once used; permissions.
+
+**Status: service done (2026-08-18); the Filament resource is still to come.** `App\Services\GrantService`
+implements apply / approve / deny / revoke / withdraw plus `hasLiveApplication()` and
+`currentApplication()`, with `App\Exceptions\GrantNotAllowed` and five domain events. 41 tests in
+`tests/Unit/Services/GrantServiceTest.php`.
+
+**Decisions:** applications close when the fair happens, not when registration does — a school
+lining funding up early is the point (D-2.6-a); `approve()` validates the benefit parameters rather
+than trusting the form, because an incomplete benefit silently falls through to list price
+(D-2.6-b); only withdrawal frees the one-per-fair slot (D-2.6-c).
 
 ### Card 2.4 — Sponsors & FAQ resources (admin)
 **Depends on:** 1.2. CRUD + `sort_order` reordering. (Content blocks and the contact inbox are laravel-core resources — configure/verify, don't build.)

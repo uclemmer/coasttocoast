@@ -232,3 +232,69 @@ it, so a factory that produced a coordinator holding one permission was modellin
 exist — and made every admin resource test fail as a 403 indistinguishable from a policy bug. The
 feature suite syncs permissions before each test, so the table is populated by the time this reads it;
 `admin.access` is still granted by name as a fallback for the unit suite, which does not sync.
+
+### D-2.3-a — Services fire domain events; card 6.1 hangs the mail off them
+
+**Context.** Card 2.3's DoD says a free registration must queue a receipt, and card 2.6's says a
+grant decision must queue an email — but the notification classes and the themed layout they render
+in are cards 6.0/6.1, several phases later.
+
+**Decision.** `RegistrationService` and `GrantService` send no mail. They fire domain events
+(`RegistrationCreated`, `RegistrationConfirmed`, `RegistrationCancelled`, `GrantApplied`,
+`GrantApproved`, `GrantDenied`, `GrantRevoked`, `GrantWithdrawn`) and card 6.1 attaches listeners.
+
+This is not only sequencing convenience. It keeps comms out of the services entirely, which is what
+lets one `confirmPayment()` serve the Stripe webhook, the check action and the free path without any
+of them knowing what gets sent. It also makes the "exactly one receipt" rule testable now, with
+`Event::assertDispatchedTimes(..., 1)`, instead of waiting for Phase 6.
+
+**What card 6.1 must do:** register listeners for these events. Nothing else needs to change.
+
+### D-2.3-b — `createManualEntry()` is a separate method, not a nullable actor
+
+**Context.** The coordinator can enter a registration with no acting rep, past capacity, and after
+registration has closed.
+
+**Decision.** Two entry points rather than one with a nullable `$rep`. "Skip the membership check" is
+something a caller has to ask for by name; it must not be what happens when an argument is null.
+The manual path still refuses duplicates and still snapshots the grant-aware price — those two
+protect the *data*, whereas the membership and window gates protect the *process*, and only the
+latter is the coordinator's to override.
+
+### D-2.3-c — `confirmPayment()` is idempotent
+
+**Decision.** An already-confirmed registration returns unchanged and fires nothing. Stripe
+redelivers a webhook until it gets a 2xx, and a second `RegistrationConfirmed` means a second
+receipt — which schools notice and the coordinator has to apologise for. Pinned by a test that calls
+it twice and asserts one dispatch.
+
+### D-2.3-d — Registration creation runs inside a transaction
+
+**Decision.** The duplicate check, the capacity check and the insert share one `DB::transaction`.
+Two reps of the same school pressing register in the same second would otherwise both read "no
+existing registration" and both write one, and the resulting pair of invoices is exactly the
+situation R2.7 exists to prevent.
+
+### D-2.6-a — Grant applications close when the fair happens, not when registration does
+
+**Context.** Card 2.6 says applications are allowed "only while the event registration is open or
+upcoming".
+
+**Decision.** `GrantService::apply()` refuses only once `starts_at` is in the past. A school lining
+its funding up *before* registration opens is the normal case and the whole point of applying early,
+so gating on the registration window would block the most legitimate applicant.
+
+### D-2.6-b — `approve()` validates the benefit parameters rather than trusting the form
+
+**Decision.** A `custom_price` grant with no price, or a `percent_off` grant with no percentage (or
+one outside 1-100), is refused. Left unchecked, `Event::priceFor()` falls through to list price: the
+school would be told in writing that it had a grant and then charged in full. The method also clears
+the parameters that do not belong to the chosen benefit, so a grant cannot carry contradictory
+figures.
+
+### D-2.6-c — Withdrawal is the only status that frees the one-per-fair slot
+
+**Decision.** `GrantStatus::blockingReapplication()` covers pending, approved, denied **and**
+revoked. A school that changes its mind may apply again with a better case; a school that was denied
+may not reapply for the same fair, because that decision is the coordinator's and reapplying would be
+a way around it.

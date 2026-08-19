@@ -40,6 +40,13 @@
 
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
 
+    {{-- @fonts before @vite, so the @font-face rules are parsed before the
+         stylesheet that uses them. laravel-vite-plugin downloads the three
+         families at build time and writes public/build/fonts-manifest.json;
+         nothing links that CSS unless this directive is here, and the failure
+         is silent -- the page renders correctly in the fallback stack. --}}
+    @fonts
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-white font-sans text-ink-800 antialiased">

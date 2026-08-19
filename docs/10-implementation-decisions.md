@@ -943,8 +943,16 @@ this site's visitors are largely high school students and their parents. And a c
 request costs a DNS lookup, a TLS handshake and a render-blocking round trip to an origin we do not
 control; self-hosting removes all three. The visual result is identical.
 
-**To reverse:** drop the `bunny()` calls from `vite.config.js` and put the handoff's `<link>` tags in
-`components/layouts/app.blade.php`.
+**The trap this hid.** Configuring `fonts:` in `vite.config.js` downloads the faces and writes
+`public/build/fonts-manifest.json`, but **nothing reaches the page unless the layout calls `@fonts`**.
+The layout shipped without it, and the failure is completely silent — the build succeeds, every test
+passes, every page renders, just in the fallback system stack. The only way to see it is to look.
+`@fonts` goes *before* `@vite`, so the `@font-face` rules are parsed before the stylesheet that uses
+them, and it inlines the declarations rather than linking a second CSS file. Two tests in
+`FrontendWiringTest` now pin it, including one asserting no `fonts.googleapis.com` reference.
+
+**To reverse:** drop the `bunny()` calls from `vite.config.js` and the `@fonts` directive from
+`components/layouts/app.blade.php`, and put the handoff's `<link>` tags there instead.
 
 ### D-8.4-a — The countdown does not poll
 

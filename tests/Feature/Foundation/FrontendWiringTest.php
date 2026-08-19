@@ -66,6 +66,37 @@ describe('the Livewire page layout', function () {
     });
 });
 
+describe('the self-hosted fonts', function () {
+    it('emits the face declarations the build produced', function () {
+        // laravel-vite-plugin downloads Montserrat, Caveat and Source Sans 3 at
+        // build time and writes public/build/fonts-manifest.json. Nothing
+        // reaches the page unless the layout calls @fonts -- and the failure is
+        // completely silent: every test passes, every page renders, just in the
+        // fallback stack. The layout shipped without it once already.
+        expect(file_exists(public_path('build/fonts-manifest.json')))->toBeTrue();
+
+        $rendered = Blade::render('<x-layouts.app>x</x-layouts.app>');
+
+        // @fonts inlines the @font-face rules rather than linking the CSS file,
+        // and preloads the woff2 of each variant -- so assert on what actually
+        // lands in the document, not on the manifest's filename.
+        expect($rendered)->toContain('@font-face')
+            ->toContain('font-family: "Montserrat"')
+            ->toContain('font-family: "Caveat"')
+            ->toContain('font-family: "Source Sans 3"')
+            ->toContain('rel="preload" as="font"');
+    });
+
+    it('serves them from this origin, not from Google', function () {
+        // Doc 10, D-8.1-a. The design handoff links Google Fonts; a public site
+        // whose visitors are high schoolers and their parents should not
+        // announce them to a third party before it paints.
+        expect(Blade::render('<x-layouts.app>x</x-layouts.app>'))
+            ->not->toContain('fonts.googleapis.com')
+            ->not->toContain('fonts.gstatic.com');
+    });
+});
+
 describe('the Flowbite wiring', function () {
     it('declares flowbite as a runtime dependency, not a dev one', function () {
         // It ships to the browser, so a production `npm ci --omit=dev` must

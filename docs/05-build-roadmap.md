@@ -15,7 +15,7 @@
 
 ## Phase checklist
 
-- [ ] Phase 1 — Foundation (cards 1.1–1.4) — **1.1 done 2026-08-16; 1.2 done 2026-08-18**
+- [x] Phase 1 — Foundation (cards 1.1–1.4) — **complete 2026-08-18**
 - [ ] Phase 2 — Domain & admin core (cards 2.1–2.6)
 - [ ] Phase 3 — Rep portal & registration (cards 3.0–3.5)
 - [ ] Phase 4 — Payments (cards 4.1–4.3)
@@ -103,6 +103,23 @@ the real 2027 date and price. All are editable in the admin panel; none need a d
 **Depends on:** 1.2.
 **Do:** `SmsService` interface + `TwilioSms` + `NullSms`; `PaymentGateway` interface + empty `StripeCheckoutService`; `RegistrationService`, `RosterService` shells; container bindings (env-dependent); add all env keys from doc 02 to `.env.example`; `config/services.php` entries; install `stripe/stripe-php`, `twilio/sdk`, `barryvdh/laravel-dompdf`.
 **Tests:** container resolves interfaces to correct implementations per env config; `NullSms` records/logs.
+
+**Status: done (2026-08-18).** Shipped: `App\Services\Sms\{SmsService, SmsResult, TwilioSms, NullSms}`;
+`App\Services\Payments\{PaymentGateway, CheckoutSession, StripeCheckoutService}`;
+`App\Services\{RegistrationService, RosterService}`; container bindings in `AppServiceProvider`;
+`config/services.php` entries for Stripe, Twilio and the two Postmark streams; the full env key set in
+`.env.example`; `Tests\Fakes\FakePaymentGateway`. Installed `stripe/stripe-php ^21.2`,
+`twilio/sdk ^8.12`, `barryvdh/laravel-dompdf ^3.1` (owner approved, standing answer A1).
+17 tests in `tests/Feature/Foundation/ServiceBindingTest.php`; suite 181, Pint clean.
+
+**Decisions (detail in [10-implementation-decisions.md](10-implementation-decisions.md)):** the SMS
+binding is keyed on *complete* credentials, so a half-configured Twilio account degrades to `NullSms`
+rather than to a client that throws inside a queued notification (D-1.4-a). The Stripe binding is
+**not** conditional — there is no safe silent fallback for taking money (D-1.4-b). The unbuilt
+`StripeCheckoutService` methods throw naming their card rather than returning something plausible
+(D-1.4-c). `RosterService` is fully implemented already, because it is only model scopes composed
+(D-1.4-d). The stale `services.postmark.key` entry was replaced with `token`, which is the key
+Laravel's transport actually reads first (D-1.4-e).
 
 ## Phase 2 — Domain & admin core
 

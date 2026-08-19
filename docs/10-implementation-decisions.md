@@ -143,3 +143,45 @@ which doc 01 lists as an open question — it is a content block so it can be fi
 were needed by the seeders, and the contact block is the same data the public footer, the email
 footer and the check PDF all need. Card 6.0 fills in the real brand colour and logo URL; the keys
 are already there.
+
+### D-1.4-a — The SMS binding requires *complete* credentials
+
+**Decision.** `AppServiceProvider` binds `TwilioSms` only when `sid`, `token` and `from` are all
+present; anything less binds `NullSms`. A half-configured Twilio account is the realistic failure —
+someone sets the SID and forgets the number — and it must degrade to no SMS rather than to a client
+that throws on first use inside a queued notification, where the exception lands nowhere useful.
+This also means the whole test suite gets `NullSms` for free: no test can send a real message by
+forgetting to fake something.
+
+### D-1.4-b — The Stripe binding is not conditional
+
+**Decision.** `PaymentGateway` always resolves to `StripeCheckoutService`, configured or not. There
+is no safe silent fallback for taking money: a `NullPaymentGateway` that "succeeded" would confirm
+registrations nobody paid for. A missing secret therefore fails loudly at the point of use, and
+payment tests bind `Tests\Fakes\FakePaymentGateway` explicitly.
+
+### D-1.4-c — Unbuilt service methods throw, naming their card
+
+**Decision.** `StripeCheckoutService::createSession()` / `refund()` and
+`RegistrationService::cancel()` throw `RuntimeException` messages that name the card that will
+implement them, rather than returning a plausible empty value. A half-built payment path must fail
+in development, not confirm a registration quietly. A test pins the message.
+
+### D-1.4-d — `RosterService` is implemented, not stubbed
+
+**Context.** Card 1.4 asked for a "shell"; card 5.3 owns the page.
+
+**Decision.** Implemented both query methods now, because they are the model scopes composed and
+nothing about them waits on Phase 5. `forPreviousEvent()` reads the same `previousPublished()` scope
+the audience builder will, which is the fix for doc 00's recorded bug — the live site's Last Year
+page was showing the *current* roster, which is what happens when the two pages are two pieces of
+code. Card 5.3 still owns logos and the initial-letter placeholder.
+
+### D-1.4-e — `services.postmark.key` replaced with `token`
+
+**Context.** The Laravel skeleton ships `'postmark' => ['key' => env('POSTMARK_API_KEY')]`, while
+doc 02 and `.env.example` use `POSTMARK_TOKEN`.
+
+**Decision.** Replaced the entry rather than adding a second one — two `'postmark'` keys in the same
+array is a silent overwrite. `MailManager` reads `services.postmark.token` before
+`services.postmark.key`, so `token` is the correct name, and the stream ids sit alongside it.

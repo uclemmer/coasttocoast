@@ -46,9 +46,12 @@ return [
     |
     */
 
+    // `?:` rather than an env() default: .env.example ships these keys blank,
+    // and a blank value must fall through to the default rather than produce a
+    // coordinator with no email address.
     'coordinator' => [
-        'name' => env('COORDINATOR_NAME', 'Fair Coordinator'),
-        'email' => env('COORDINATOR_EMAIL', 'admin@example.com'),
+        'name' => env('COORDINATOR_NAME') ?: 'Fair Coordinator',
+        'email' => env('COORDINATOR_EMAIL') ?: 'admin@example.com',
     ],
 
     /*

@@ -127,6 +127,28 @@ Laravel's transport actually reads first (D-1.4-e).
 **Depends on:** 1.2. Filament resource: CRUD per R3.2, slug auto-generation, money input (dollars ↔ cents), registration window pickers, publish toggle. Policy: admin only.
 **Tests:** create/edit via Livewire resource tests; validation (closes_at after opens_at, price ≥ 0); policy enforcement.
 
+**Status: done (2026-08-18).** Shipped: `App\Filament\Admin\Resources\EventResource` with its four
+pages, `App\Policies\EventPolicy`, and `App\Support\Money` (the one place dollars become cents and
+back). 18 tests in `tests/Feature/Admin/EventResourceTest.php`; suite 199, Pint clean.
+
+**Two pieces of test infrastructure landed with this card, and every later Filament test needs them:**
+
+- `livewire()` in `tests/Pest.php`. `pestphp/pest-plugin-livewire` has no Pest 5 release, so the
+  helper doc 06's examples assume is defined by hand over `Livewire::test()`.
+- `usingAdminPanel()` / `usingRepPanel()`. Neither panel is marked `->default()` — this app has an
+  admin panel and a rep portal and neither outranks the other — so mounting a Filament page directly
+  in a test dies with "No default Filament panel is set". At runtime the panel middleware sets it
+  from the route; in a test these do.
+
+**Also fixed here:** `UserFactory::coordinator()` granted only `admin.access`, not the app's own
+permissions. Every admin resource test would have failed as a 403 that looked exactly like a policy
+bug. It now syncs the full permission set, which is what `RoleSeeder` does and what production
+therefore looks like.
+
+**Decisions:** the fee field converts through `formatStateUsing`/`dehydrateStateUsing` on the
+component rather than through page-class hooks (D-2.1-a); slug suggestion runs on create only
+(D-2.1-b); a fair with registrations against it cannot be deleted (D-2.1-c).
+
 ### Card 2.2 — Organization & Registration resources (admin)
 **Depends on:** 2.1. Organizations (R3.3a): CRUD incl. profile fields + logo upload, rep list with membership statuses, approve/deny pending claims, retire reps, **merge-duplicates action** (repoints users/registrations/grants). Registrations: list with filters (event, status, method), search, detail view showing grant/price snapshot, `show_on_roster` toggle, notes, cancel action, resend-confirmation action (queues notification), CSV export. Manual-entry creation (user_id null).
 **Tests:** filters/search return expected rows; claim approve/deny transitions + notifications queued; retire; merge repoints all relations; cancel sets status+timestamp; export contains expected columns; policies.

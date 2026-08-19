@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use UClemmer\LaravelCore\Admin\Permissions as AdminPermissions;
+use UClemmer\LaravelCore\Auth\Permission;
 use UClemmer\LaravelCore\Auth\Role;
 
 /**
@@ -54,10 +55,17 @@ class UserFactory extends Factory
      * A fair coordinator: holds the `coordinator` role, which carries
      * `admin.access` and therefore the admin panel.
      *
-     * The role and the permission are created if they are missing, so a test
-     * can ask for a coordinator without seeding first. `RoleSeeder` grants the
-     * role the full synced permission set; this state guarantees only the one
-     * permission that opens the panel.
+     * The role is created if it is missing, so a test can ask for a
+     * coordinator without seeding first, and it is granted **every synced
+     * permission** — exactly what `RoleSeeder` does, because there is one fair
+     * coordinator and she runs all of it.
+     *
+     * Granting only `admin.access` here (as this state did until 2026-08-18)
+     * made every admin resource test fail as a 403 that looked like a policy
+     * bug, because the app's own permissions were never on the role. The suite
+     * runs `core:sync-permissions` before each feature test, so the table this
+     * reads is populated by then. `admin.access` is still granted by name as a
+     * belt-and-braces fallback for the unit suite, which does not sync.
      */
     public function coordinator(): static
     {
@@ -68,6 +76,7 @@ class UserFactory extends Factory
             );
 
             $role->givePermissionTo(AdminPermissions::ACCESS);
+            $role->permissions()->syncWithoutDetaching(Permission::query()->pluck('id')->all());
 
             $user->assignRole($role)->forgetCoreRoleCache();
         });

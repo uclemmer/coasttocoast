@@ -185,3 +185,50 @@ doc 02 and `.env.example` use `POSTMARK_TOKEN`.
 **Decision.** Replaced the entry rather than adding a second one — two `'postmark'` keys in the same
 array is a silent overwrite. `MailManager` reads `services.postmark.token` before
 `services.postmark.key`, so `token` is the correct name, and the stream ids sit alongside it.
+
+### D-2.1-a — Dollars/cents conversion lives on the form component, not the page classes
+
+**Context.** The first attempt used a `price_dollars` field marked `dehydrated(false)` plus
+`mutateFormDataBeforeCreate()` / `mutateFormDataBeforeSave()` on the two page classes.
+
+**Decision.** Moved to `formatStateUsing()` / `dehydrateStateUsing()` on the `price_cents` component
+itself. The original approach did not merely look worse — it silently saved **every fair at zero**,
+because a field marked `dehydrated(false)` is stripped from the form data before the mutation hook
+ever sees it. Keeping the conversion on the component also means create and edit cannot drift apart:
+there is one place, not two. `App\Support\Money` owns the arithmetic, and rounds rather than
+truncating — `215.10 * 100` is `21509.999999999996` in IEEE 754, and a cast would charge a school a
+cent less than it agreed to, forever.
+
+### D-2.1-b — The slug is suggested on create only
+
+**Decision.** `afterStateUpdated` on the name field sets the slug only when `$operation === 'create'`.
+A fair's slug is in its public URL and in whatever emails and links have already gone out; renaming
+the fair must not silently break them. Pinned by a test.
+
+### D-2.1-c — A fair with registrations cannot be deleted
+
+**Decision.** `EventPolicy::delete()` returns false once any registration references the event, and
+`deleteAny()` is always false. The foreign keys cascade, so deleting a fair would take real financial
+history with it. Unpublishing is the reversible equivalent and is what the UI steers toward.
+
+### D-2.1-d — Test infrastructure: `livewire()` and the panel helpers
+
+**Context.** `pestphp/pest-plugin-livewire` has no Pest 5 release, and neither panel in this app is
+marked `->default()`.
+
+**Decision.** `tests/Pest.php` defines `livewire()` over `Livewire::test()` — the name doc 06's
+examples already use — plus `usingAdminPanel()` / `usingRepPanel()`, which set the current panel the
+way the route middleware does at runtime. Marking one panel `->default()` instead would have been a
+production change made for a test's convenience, and would have picked a winner between two panels
+that are genuinely peers.
+
+### D-2.1-e — `UserFactory::coordinator()` now grants every synced permission
+
+**Context.** The state granted only `admin.access`, matching card 1.1's intent ("guarantees only the
+one permission that opens the panel"). `RoleSeeder` grants the full set.
+
+**Decision.** The factory now mirrors `RoleSeeder`. There is one coordinator role and she runs all of
+it, so a factory that produced a coordinator holding one permission was modelling a user who does not
+exist — and made every admin resource test fail as a 403 indistinguishable from a policy bug. The
+feature suite syncs permissions before each test, so the table is populated by the time this reads it;
+`admin.access` is still granted by name as a fallback for the unit suite, which does not sync.

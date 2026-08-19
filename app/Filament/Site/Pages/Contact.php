@@ -4,36 +4,63 @@ namespace App\Filament\Site\Pages;
 
 use App\Filament\Site\Concerns\RendersContentBlocks;
 use App\Support\Phone;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\EmbeddedSchema;
+use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Text;
-use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\RateLimiter;
+use UClemmer\LaravelCore\Contact\ContactService;
 
 /**
  * The contact page (card 5.4).
  *
- * The form itself is laravel-core's — `<x-core::contact-form />`, embedded
- * here rather than rebuilt. Core owns the honeypot, the time-trap, the
- * throttle, storage in `core_contact_submissions`, the organizer alert and the
- * sender's receipt (`core.contact.*` in `config/core.php`, with
- * `routes.page => false` so this page is the only one).
+ * The **form is ours; the work is laravel-core's.** Submitting calls
+ * `ContactService::submit()`, which owns storage in `core_contact_submissions`,
+ * user attribution, the `ContactSubmitted` event, the sender's receipt and the
+ * organizer alert. Nothing about that logic is reimplemented here.
  *
- * **Consent (doc 10, D-5.4-a).** Doc 02 asks for a consent checkbox on our
- * side. Core's controller validates only its own fields, so an extra checkbox
- * would be unvalidated — theatre rather than consent — and adding one properly
- * means a change in the `laravel-core` repo, which is out of scope for this
- * app (workspace rule: never edit a sibling project). The privacy notice is
- * therefore stated plainly above the form, where it is read before sending.
- * Flagged for the owner.
+ * What is not core's is the presentation. The package ships its form
+ * "deliberately unstyled beyond structure" — its own words — which is right for
+ * a package and wrong on a public page: embedded raw, it rendered as unbordered
+ * inputs and a submit button that looked like plain text. Rebuilding it as a
+ * Filament schema puts it in the same visual language as the rest of the site.
+ *
+ * **This also makes the consent checkbox real** (doc 10, D-5.4-a, now
+ * resolved). Embedding core's form meant any checkbox we added would go
+ * unvalidated, because core's controller validates only its own fields —
+ * theatre rather than consent. Our form validates it before the service is ever
+ * called.
+ *
+ * The abuse defences core's route provided are reimplemented here for the same
+ * reason: a Livewire submit never touches that route, so its honeypot and
+ * throttle would not have applied.
  */
 class Contact extends Page
 {
     use RendersContentBlocks;
 
+    /**
+     * The honeypot field. Rendered hidden; a human never sees it, and a naive
+     * bot fills anything that looks like an input.
+     */
+    public const HONEYPOT = 'website';
+
     protected static ?int $navigationSort = 7;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
+
+    /**
+     * @var array<string, mixed>|null
+     */
+    public ?array $data = [];
 
     public static function getNavigationLabel(): string
     {
@@ -45,46 +72,169 @@ class Contact extends Page
         return __('Contact us');
     }
 
+    public function mount(): void
+    {
+        $this->form->fill();
+    }
+
     public function content(Schema $schema): Schema
     {
         return $schema->components([
             ...$this->blocks(['contact.intro']),
 
             Section::make(__('The fair coordinator'))
-                ->schema([Text::make($this->coordinatorBlock())]),
+                ->schema([static::prose($this->coordinatorBlock())]),
 
             Section::make(__('Send us a message'))
-                ->description(__(
-                    'We store your message so we can reply to it, and we keep it for as long as we need '
-                    .'to. We do not share it with anyone, and we will not add you to a mailing list.',
-                ))
                 ->schema([
-                    View::make('core::components.contact-form'),
+                    Form::make([EmbeddedSchema::make('form')])
+                        ->id('contact')
+                        ->livewireSubmitHandler('submitContactForm')
+                        ->footer([
+                            Actions::make([
+                                Action::make('send')
+                                    ->label(__('Send message'))
+                                    ->submit('submitContactForm'),
+                            ]),
+                        ]),
                 ]),
         ]);
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->statePath('data')
+            ->components([
+                TextInput::make('name')
+                    ->label(__('Your name'))
+                    ->required()
+                    ->maxLength(255),
+
+                TextInput::make('email')
+                    ->label(__('Your email'))
+                    ->email()
+                    ->required()
+                    ->maxLength(255),
+
+                TextInput::make('subject')
+                    ->label(__('Subject'))
+                    ->maxLength(255),
+
+                Textarea::make('message')
+                    ->label(__('Message'))
+                    ->required()
+                    ->rows(6)
+                    ->maxLength(5000)
+                    ->columnSpanFull(),
+
+                Checkbox::make('consent')
+                    ->label(__('I understand that my message will be stored so the fair can reply to it.'))
+                    // Validated, so it means something. This is the whole
+                    // reason the form is ours rather than the package's.
+                    ->accepted()
+                    ->required()
+                    ->validationMessages([
+                        'accepted' => __('Please confirm this so we can reply to you.'),
+                    ])
+                    ->columnSpanFull(),
+
+                Hidden::make(self::HONEYPOT),
+            ])
+            ->columns(2);
+    }
+
+    public function submitContactForm(): void
+    {
+        $data = $this->form->getState();
+
+        if (filled($data[self::HONEYPOT] ?? null)) {
+            // Deliberately vague, so a bot cannot learn which field caught it.
+            $this->refuse();
+
+            return;
+        }
+
+        // Core's own route carries a throttle; a Livewire submit never reaches
+        // it, so the same limit is applied here. Five an hour is far more than
+        // any person needs and far fewer than a script wants.
+        $key = 'contact:'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($key, maxAttempts: 5)) {
+            Notification::make()
+                ->title(__('You have sent us several messages already. Please try again later.'))
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        RateLimiter::hit($key, decaySeconds: 3600);
+
+        app(ContactService::class)->submit(
+            attributes: [
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'subject' => $data['subject'] ?? null,
+                'message' => $data['message'],
+            ],
+            context: [
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ],
+        );
+
+        $this->form->fill();
+
+        Notification::make()
+            ->title(__('Thanks — your message is with us.'))
+            ->body(__('You should have a confirmation by email, and the coordinator will reply.'))
+            ->success()
+            ->send();
+    }
+
+    protected function refuse(): void
+    {
+        Notification::make()
+            ->title(__('Something went wrong. Please try again.'))
+            ->danger()
+            ->send();
     }
 
     /**
      * The contact block from `config/fair.php` — the same values the public
      * footer, the email footer and the check form use, so a change of address
      * lands everywhere at once.
+     *
+     * Returns HTML rather than newline-joined text: newlines inside a rendered
+     * span collapse to spaces, which ran the whole address onto one line.
      */
     protected function coordinatorBlock(): string
     {
         $contact = (array) config('fair.contact');
 
-        return implode("\n", array_filter([
-            $contact['name'] ?? null,
-            $contact['address_line1'] ?? null,
-            $contact['address_line2'] ?: null,
-            trim(implode(' ', array_filter([
+        $lines = array_filter([
+            e($contact['name'] ?? ''),
+            e($contact['address_line1'] ?? ''),
+            e($contact['address_line2'] ?: ''),
+            e(trim(implode(' ', array_filter([
                 ($contact['city'] ?? null) ? $contact['city'].',' : null,
                 $contact['state'] ?? null,
                 $contact['postal_code'] ?? null,
-            ]))) ?: null,
-            $contact['phone'] ?? null,
-            $contact['email'] ?? null,
-        ]));
+            ])))),
+        ]);
+
+        $links = array_filter([
+            filled($contact['phone'] ?? null)
+                ? '<a href="tel:'.e(preg_replace('/\D/', '', (string) $contact['phone']) ?? '').'">'.e($contact['phone']).'</a>'
+                : null,
+            filled($contact['email'] ?? null)
+                ? '<a href="mailto:'.e($contact['email']).'">'.e($contact['email']).'</a>'
+                : null,
+        ]);
+
+        return '<p>'.implode('<br>', $lines).'</p>'
+            .($links === [] ? '' : '<p>'.implode(' · ', $links).'</p>');
     }
 
     /**

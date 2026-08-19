@@ -624,8 +624,9 @@ would be unvalidated — a control that can be skipped is theatre rather than co
 saying the thing plainly. Making it real means a change in the `laravel-core` repo, and the workspace
 rule is explicit that this app must not edit a sibling project.
 
-**Owner decision:** if you want a hard checkbox, it is a small addition to core's contact controller
-and form (an optional, host-configurable required field), and then two lines here.
+**RESOLVED 2026-08-19 — see D-8-d.** The form was rebuilt as a Filament schema on our page,
+calling `ContactService::submit()` for the work. Our form validates the consent checkbox before the
+service is called, so it is now a real control rather than theatre. No owner decision needed.
 
 ### D-5.4-b — The interest capture exists twice, deliberately
 
@@ -810,3 +811,68 @@ the card was written.
 **Decision.** [11-deployment.md](11-deployment.md). Doc numbers are load-bearing — code comments
 cite them (workspace `CLAUDE.md`) — so renumbering an existing file to free 07 would have been the
 worse trade. The note is at the top of the new file too.
+
+---
+
+## Fixes after the first look in a real browser (2026-08-19)
+
+The build was verified by 609 passing tests and never opened in a browser. Four things were wrong
+that no HTTP test could have caught, because every one of them is about *rendering* rather than
+about status codes or content. Recorded here because the lesson generalises: an HTTP smoke proves a
+page is served, not that it is legible.
+
+### D-8-a — Filament's assets were never published
+
+**Symptom.** Every page served a 200 and looked like unstyled HTML: `/css/filament/…`,
+`/js/filament/…` and `/fonts/filament/…` all 404ed.
+
+**Cause.** Filament arrived *transitively* through `uclemmer/laravel-core`, so its installer never
+ran, and nothing ever copied its assets into `public/`. `composer.json` had no
+`@php artisan filament:upgrade` in `post-autoload-dump` — the hook Filament's own installer adds.
+
+**Fix.** Ran `filament:assets` and `storage:link`, and added the hook so a fresh `composer install`
+does it automatically. **Any app in this workspace that picks Filament up through `core` rather than
+requiring it directly has the same hole.**
+
+### D-8-b — Rendered markdown needs `fi-prose`
+
+**Symptom.** Content blocks and FAQ answers rendered as a wall of identically-sized lines. The
+`<h2>` and `<p>` were in the HTML and correct; they simply had no styling.
+
+**Cause.** Filament's stylesheet is a Tailwind build with preflight, so bare `h2`/`p` carry no
+typography at all. `Schemas\Components\Text` also renders a `<span>`, which is invalid around block
+elements and collapses their spacing.
+
+**Fix.** `RendersContentBlocks::prose()` wraps trusted HTML in `<div class="fi-prose">` — Filament's
+own typography class — and uses `Schemas\Components\Html`, which emits raw HTML with no wrapper. The
+FAQ page uses the same helper, so the two cannot drift.
+
+### D-8-c — Newline-joined text collapses
+
+**Symptom.** The coordinator's postal address ran onto one line; a sponsor's staff list ran its four
+names together.
+
+**Cause.** `Text::make("a\nb")` renders inside a span. HTML collapses the newline to a space.
+
+**Fix.** The address is built as HTML with `<br>` and rendered through `prose()`; the staff list is a
+real `UnorderedList`. The rule to remember: **if it has more than one line, it is not a `Text`.**
+
+### D-8-d — The contact form is now ours, which resolves D-5.4-a
+
+**Symptom.** The embedded `<x-core::contact-form />` rendered as borderless inputs and a submit
+button that looked like plain text, in the middle of an otherwise styled page.
+
+**Cause.** Not a bug. laravel-core ships it "deliberately unstyled beyond structure" — its own
+docblock — precisely so a host can style it. That is right for a package and wrong on a public page.
+
+**Fix.** The form is a Filament schema on our page; submitting calls `ContactService::submit()`,
+which still owns storage, attribution, the `ContactSubmitted` event, the receipt and the organizer
+alert. Presentation ours, logic the package's, and no fork of core's markup.
+
+**This resolves D-5.4-a.** The consent checkbox is now real: our form validates it with `accepted()`
+before the service is ever called. The reason it could not be real before was that core's controller
+validates only its own fields — an unvalidated checkbox is theatre. The honeypot and an IP throttle
+are reimplemented on our submit handler, because a Livewire submit never reaches core's throttled
+route and would otherwise have had neither.
+
+**No longer needs an owner decision.**

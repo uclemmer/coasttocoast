@@ -1,5 +1,6 @@
 <?php
 
+use App\Filament\Site\Pages\Contact;
 use App\Filament\Site\Pages\EventPage;
 use App\Filament\Site\Pages\Home;
 use App\Filament\Site\Pages\LastYear;
@@ -12,8 +13,17 @@ use App\Models\Registration;
 use App\Models\Sponsor;
 use App\Models\SponsorStaff;
 use Database\Seeders\ContentBlockSeeder;
+use Illuminate\Support\Facades\RateLimiter;
+use UClemmer\LaravelCore\Contact\ContactSubmission;
 
-beforeEach(fn () => usingSitePanel());
+beforeEach(function () {
+    usingSitePanel();
+
+    // The contact throttle is keyed by IP and the limiter outlives a single
+    // test, so it has to be cleared or the fifth test in a file inherits the
+    // fourth's attempts.
+    RateLimiter::clear('contact:127.0.0.1');
+});
 
 describe('every page is reachable without an account', function () {
     // The public site must never ask a visitor to become somebody. There is
@@ -168,22 +178,87 @@ describe('the FAQ page', function () {
 });
 
 describe('the contact page', function () {
-    it('embeds laravel-core\'s form rather than a rebuilt one', function () {
-        $this->get('/contact')
-            ->assertOk()
-            ->assertSee('core-contact-form', escape: false)
-            ->assertSee(route('core.contact.store'), escape: false);
+    it('renders our own form rather than embedding the package\'s unstyled one', function () {
+        // Core ships its form "deliberately unstyled beyond structure" — right
+        // for a package, wrong on a public page.
+        livewire(Contact::class)
+            ->assertSuccessful()
+            ->assertFormFieldExists('name')
+            ->assertFormFieldExists('email')
+            ->assertFormFieldExists('message')
+            ->assertFormFieldExists('consent');
     });
 
-    it('states the privacy notice before the form', function () {
-        $this->get('/contact')->assertOk()->assertSee('We do not share it with anyone');
+    it('stores a submission through laravel-core, which owns the receipt and the alert', function () {
+        livewire(Contact::class)
+            ->fillForm([
+                'name' => 'Dana Whitfield',
+                'email' => 'dana@kenyon.example',
+                'subject' => 'A question about parking',
+                'message' => 'Where do we unload?',
+                'consent' => true,
+            ])
+            ->call('submitContactForm')
+            ->assertNotified();
+
+        expect(ContactSubmission::query()->first())
+            ->name->toBe('Dana Whitfield')
+            ->email->toBe('dana@kenyon.example')
+            ->message->toBe('Where do we unload?');
     });
 
-    it('shows the coordinator\'s address from config, the same source the emails use', function () {
+    it('validates the consent checkbox, so it means something', function () {
+        // The reason the form is ours: embedding core's meant any checkbox we
+        // added would go unvalidated (doc 10, D-5.4-a).
+        livewire(Contact::class)
+            ->fillForm([
+                'name' => 'Dana',
+                'email' => 'dana@kenyon.example',
+                'message' => 'Hello.',
+                'consent' => false,
+            ])
+            ->call('submitContactForm')
+            ->assertHasFormErrors(['consent']);
+
+        expect(ContactSubmission::query()->count())->toBe(0);
+    });
+
+    it('drops a submission that filled in the honeypot', function () {
+        livewire(Contact::class)
+            ->fillForm([
+                'name' => 'Bot',
+                'email' => 'bot@example.com',
+                'message' => 'Buy things.',
+                'consent' => true,
+                Contact::HONEYPOT => 'https://spam.example',
+            ])
+            ->call('submitContactForm');
+
+        expect(ContactSubmission::query()->count())->toBe(0);
+    });
+
+    it('rate-limits by IP, because a Livewire submit never touches core\'s throttled route', function () {
+        foreach (range(1, 6) as $i) {
+            livewire(Contact::class)
+                ->fillForm([
+                    'name' => "Person {$i}",
+                    'email' => "person{$i}@example.edu",
+                    'message' => 'Hello.',
+                    'consent' => true,
+                ])
+                ->call('submitContactForm');
+        }
+
+        expect(ContactSubmission::query()->count())->toBe(5);
+    });
+
+    it('shows the coordinator\'s address across lines, not run together', function () {
         $this->get('/contact')
             ->assertOk()
             ->assertSee(config('fair.contact.name'))
-            ->assertSee(config('fair.contact.email'));
+            ->assertSee(config('fair.contact.email'))
+            // It was collapsing to one line inside a span.
+            ->assertSee('<br>', escape: false);
     });
 });
 

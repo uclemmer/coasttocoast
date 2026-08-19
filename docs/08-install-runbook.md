@@ -43,6 +43,25 @@ That creates `core_roles`, `core_permissions`, `core_role_user`, `core_permissio
 > `php artisan vendor:publish --provider="UClemmer\LaravelCore\LaravelCoreServiceProvider"` and record the
 > real tag here.
 
+### Publish Filament's assets
+
+```bash
+php artisan filament:assets
+php artisan storage:link
+```
+
+**This is easy to miss and the symptom is alarming out of proportion to the cause.** Filament arrives
+*transitively* through `uclemmer/laravel-core`, so its installer never runs here and nothing copies
+its CSS and JS into `public/`. Every page then serves a 200 and renders as unstyled HTML, with
+`/css/filament/...` and `/js/filament/...` 404ing in the network tab.
+
+`composer.json` now runs `filament:upgrade` in `post-autoload-dump`, so a fresh `composer install`
+does this for you. The commands above are for a checkout that predates that hook. `storage:link` is
+separate and still manual: organization and sponsor logos are on the public disk.
+
+**Any app in this workspace that picks Filament up through `core` rather than requiring it directly
+has the same hole.**
+
 ### Permissions, roles and a coordinator account
 
 ```bash

@@ -27,6 +27,19 @@ return Application::configure(basePath: dirname(__DIR__))
          * there is no Content-Security-Policy (card 7.1, doc 10 D-7.1-a).
          */
         $middleware->append(SecurityHeaders::class);
+
+        /*
+         * Where the framework sends people when the middleware turns them away.
+         *
+         * Both are spelled out because laravel-core names its routes
+         * `core.login` and `core.register`, not `login` and `register` - and
+         * Laravel's `auth` middleware looks for a route literally named
+         * `login`. Without this a guest hitting a protected page gets a
+         * RouteNotFoundException rather than a login form, which is a 500 where
+         * a redirect belongs. See docs/12.
+         */
+        $middleware->redirectGuestsTo('/login');
+        $middleware->redirectUsersTo('/portal');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

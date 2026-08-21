@@ -39,19 +39,38 @@ return [
         'super_admin_role' => 'super-admin',
 
         /*
-         * The package's own login/register/password-reset routes. Off by
-         * default: most host apps already have their own.
+         * The package's own login / logout / password-reset / two-factor
+         * routes. ON here, and that is the whole reason the rep portal can
+         * stop being a Filament panel: Filament owned every authenticated
+         * surface in this app, with no Fortify or Breeze behind it (docs/12).
+         *
+         * No prefix, so these land at /login, /forgot-password and so on. The
+         * package's default 'core' prefix is meant for an app that already has
+         * its own auth and needs the package's to sit out of the way; this app
+         * has none, so these ARE its auth.
+         *
+         * The route NAMES are still prefixed - `core.login`, `core.logout` -
+         * because the package sets that and it is not configurable. Anything
+         * linking to them uses those names; see the `login` alias in
+         * routes/web.php for the one place that matters.
          */
         'routes' => [
-            'enabled' => false,
-            'prefix' => 'core',
+            'enabled' => true,
+            'prefix' => '',
             'middleware' => ['web'],
 
-            // Where to send a user after logging in / registering, and after logging out.
-            'redirect_to' => '/',
+            // Reps land in the portal; logging out returns them to the site.
+            'redirect_to' => '/portal',
             'redirect_after_logout' => '/',
         ],
 
+        /*
+         * Core's own registration stays OFF, deliberately. Signing up here is
+         * not "create a user": it claims or creates a school, and which of
+         * those it is decides whether the account is active immediately or
+         * waits on a coordinator (D9). That logic is this application's, so
+         * registration is app-owned - see routes/web.php and docs/12.
+         */
         'registration' => [
             'enabled' => false,
         ],

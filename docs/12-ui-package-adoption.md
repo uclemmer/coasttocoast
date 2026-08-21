@@ -122,18 +122,75 @@ The two coexist cleanly: different class vocabularies, neither aware of the
 other. When Flowbite does go, the recipe is in laravel-ui's
 `docs/03-host-integration.md`.
 
+## Auth — done 2026-08-21
+
+**Core's half.** `core.auth.routes.enabled` is on with an empty prefix, so log
+in is at `/login`, not behind the package's default `core` prefix — that prefix
+is for apps whose own auth already occupies those paths, and this one had none.
+Signing in lands in `/portal`; signing out returns to the site. Two-factor comes
+along for free and is not wired to anything yet.
+
+`bootstrap/app.php` names both redirect targets explicitly, because core names
+its route `core.login` and Laravel's `auth` middleware looks for one named
+literally `login`. Without it a guest hitting a protected page gets a
+`RouteNotFoundException` — a 500 where a redirect belongs.
+
+**The views.** Core ships its auth views deliberately unstyled and
+dependency-free so a host can restyle them, which is what happened: log in,
+forgot password and reset password are published and rebuilt on laravel-ui.
+Only `auth/` was kept — `vendor:publish --tag=core-views` copies everything the
+package has, and each published file stops receiving updates.
+
+**Registration is app-owned**, in `App\Livewire\Auth\Register`, because signing
+up claims or creates a school and that decides whether the account is active
+immediately (D9). The component collects fields and calls
+`OrganizationService::claim()` / `::createWithFounder()` — which path makes
+somebody active stays one decision in one place, exactly as it was under
+Filament.
+
+Two things it does differently from the Filament page, both forced:
+
+- **The school picker is a search box and a list, not a select.** Filament gave
+  this a server-searching select for free. A plain `<select>` would render every
+  school in the country into the page, and a `datalist` cannot report *which*
+  row was chosen — only what was typed, which is not an id.
+- **Validation is built in `rules()` rather than `#[Validate]` attributes.** An
+  attribute cannot be conditional, and requiring both `organization_id` and
+  `organization_name` would make each path fail on the other's field.
+
+The honeypot and rate limit live in the component for the same reason
+`ContactForm`'s do: a Livewire submit never touches a throttled route.
+
+**Email verification is app-owned too**, and it turned out to be required
+immediately rather than later: firing `Registered` triggers Laravel's
+verification-notification listener, which needs a `verification.verify` route to
+build a URL against. Without it, registration itself throws. Three routes over
+Laravel's own machinery, in `EmailVerificationController`.
+
+The security property worth knowing: `EmailVerificationRequest` checks that the
+id and hash in the signed URL match the *signed-in* user. Without that a valid
+link would verify whoever happened to be logged in, which is how one person
+verifies another's address. Pinned by a test.
+
+**One shared layout**, `components/layouts/auth.blade.php`, used both by the
+Livewire sign-up page (via `#[Layout]`) and by core's published Blade views
+(via a thin `core::auth.layout` wrapper). A sign-up page that does not match the
+log-in page beside it looks like a different site.
+
 ## What comes next, in order
 
-1. **Auth.** Enable `core.auth.routes.enabled`, wire the app's own registration
-   (D9 claim/create) and email verification, and give both a Blade/Livewire
-   surface built on laravel-ui.
-2. **Portal screens.** Dashboard, registrations list/create/view, grants list,
+1. **Portal screens.** Dashboard, registrations list/create/view, grants list,
    organization profile — Livewire full-page components under `/portal`.
-3. **Delete `app/Filament/Rep/` and `RepPanelProvider`**, with a test asserting
+2. **Delete `app/Filament/Rep/` and `RepPanelProvider`**, with a test asserting
    the panel cannot come back unnoticed — the same guard Phase 8 left behind for
    `SitePanelProvider`.
 
-Filament does **not** leave the application at step 3. `/admin` is still core's
+Until step 2, **both `/login` and `/portal/login` work**. A test in
+`tests/Feature/Auth/CoreAuthSurfaceTest.php` asserts `/portal` still belongs to
+Filament, so finishing the migration cannot quietly leave two login pages
+behind.
+
+Filament does **not** leave the application at step 2. `/admin` is still core's
 panel, and core still hard-requires `filament/filament`; that is steps 3 and 4
 of the workspace order and a later change.
 

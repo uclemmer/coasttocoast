@@ -58,13 +58,22 @@ function panelUrls(string $prefix, array $bindings): array
             || str_contains($uri, 'sanctum')
             || str_starts_with($uri, 'up')
             || str_starts_with($uri, 'storage')
-            // Filament's own auth surface. Its behaviour for an
+            // The auth surface, whoever owns it. Behaviour for an
             // already-signed-in visitor (redirect, or refuse a reset link) is
-            // the package's business and is covered by the panel access tests.
+            // covered by the panel access tests and tests/Feature/Auth.
+            //
+            // Two spellings for most of these: Filament's, and the ones this
+            // app and laravel-core use now that auth is leaving the panel
+            // (docs/12). `email/verify` in particular sits behind `auth`, so a
+            // guest gets a redirect and this test would read it as a broken
+            // public page.
             || str_contains($uri, 'login')
             || str_contains($uri, 'register')
             || str_contains($uri, 'password-reset')
-            || str_contains($uri, 'email-verification'))
+            || str_contains($uri, 'forgot-password')
+            || str_contains($uri, 'reset-password')
+            || str_contains($uri, 'email-verification')
+            || str_starts_with($uri, 'email/verify'))
         ->mapWithKeys(function (string $uri) use ($bindings): array {
             $filled = $uri;
 

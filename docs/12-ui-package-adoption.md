@@ -177,10 +177,53 @@ Livewire sign-up page (via `#[Layout]`) and by core's published Blade views
 (via a thin `core::auth.layout` wrapper). A sign-up page that does not match the
 log-in page beside it looks like a different site.
 
+## Portal screens — four of six built 2026-08-21, none wired yet
+
+Built and passing lint, **not yet routed**: `Portal\Dashboard`, `Portal\Grants`,
+`Portal\Profile`, `Portal\OrganizationProfile`, plus the shared
+`Portal\Concerns\ActsForAnOrganization` and a `components/layouts/portal`
+shell.
+
+**Why nothing is routed yet.** Filament's rep panel owns `/portal` and every
+path under it. Registering competing routes is not a thing Laravel resolves
+sensibly, so the routes and the panel's deletion have to land in one change —
+which means every screen has to exist first. Until then these components are
+unreferenced files and the suite is unaffected.
+
+What carried over unchanged, because they are product rules rather than panel
+mechanics: the membership gate (pending and retired reps browse but cannot act),
+`membershipNotice()`'s copy verbatim, and Appendix A's grant status sentences.
+Actions call `GrantService` / `OrganizationService` exactly as the Filament
+pages did — which path makes somebody active, and what withdrawing means, stay
+one decision in one place.
+
+Two things worth knowing about the port:
+
+- **`actsForOrganization()` is checked inside every action, not only in the
+  view.** A hidden button is a UI convenience, not a guard.
+- **`withdraw()` scopes its lookup to the school's own grants** rather than
+  `find()`. The id arrives from the browser, and a confirmation dialog is not
+  authorization.
+
+### Still to build: registrations
+
+`Portal\Registrations` (list), the create flow, and the detail page. This is the
+largest piece by a distance and the only one touching money:
+
+- the create page is a **multi-step wizard** ending in a **Stripe handoff**;
+- pricing is grant-aware and comes from `Event::priceFor($organization)`,
+  server-side, snapshotted onto the row;
+- a gateway failure must leave a recoverable `pending_payment` registration
+  rather than losing the whole thing, with a retry button on the detail page;
+- the detail page also carries the check-payment form and the receipt.
+
+laravel-ui has **no stepper or wizard component** — it was never built, for the
+same reason as the accordion. Whether the create flow needs one, or works as a
+single page with sections, is the first decision that phase faces.
+
 ## What comes next, in order
 
-1. **Portal screens.** Dashboard, registrations list/create/view, grants list,
-   organization profile — Livewire full-page components under `/portal`.
+1. **The registration screens**, above.
 2. **Delete `app/Filament/Rep/` and `RepPanelProvider`**, with a test asserting
    the panel cannot come back unnoticed — the same guard Phase 8 left behind for
    `SitePanelProvider`.

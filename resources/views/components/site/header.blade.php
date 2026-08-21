@@ -18,8 +18,14 @@
          confirmed 2026-08-19.
 
     The mobile drawer is ours: the handoff says mobile was not explicitly
-    designed and assumes a hamburger. It uses Flowbite's `data-collapse-toggle`,
-    so no bespoke JavaScript.
+    designed and assumes a hamburger. It used Flowbite's `data-collapse-toggle`
+    until 2026-08-21 and is inline Alpine now — still no bespoke JavaScript,
+    and Livewire brings the Alpine.
+
+    The drawer is a SEPARATE element from the desktop links, which is what makes
+    `x-show` safe here: it writes an inline `display: none`, and an inline style
+    would beat a `lg:` variant if the two shared one element. They do not — the
+    desktop row is `hidden lg:flex` and the drawer is `lg:hidden`.
 --}}
 @php
     $links = [
@@ -32,7 +38,8 @@
     ];
 @endphp
 
-<nav class="border-b border-line bg-white">
+<nav x-data="{ menu: false }" x-on:keydown.escape.window="menu = false"
+     class="border-b border-line bg-white">
     <div class="mx-auto flex max-w-site items-center gap-7 px-6 py-3.5">
         <a href="{{ route('site.home') }}" class="flex items-center" aria-label="{{ config('app.name') }}">
             <img src="{{ asset('images/wordmark.jpg') }}"
@@ -67,9 +74,9 @@
             </a>
 
             <button type="button"
-                    data-collapse-toggle="site-nav"
+                    x-on:click="menu = ! menu"
+                    x-bind:aria-expanded="menu"
                     aria-controls="site-nav"
-                    aria-expanded="false"
                     class="inline-flex items-center rounded-md p-2 text-ink-600 hover:bg-brand-50 hover:text-brand-600 lg:hidden">
                 <span class="sr-only">{{ __('Open the menu') }}</span>
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -79,8 +86,9 @@
         </div>
     </div>
 
-    {{-- Mobile drawer. Flowbite toggles `hidden` on this element. --}}
-    <div id="site-nav" class="hidden border-t border-line lg:hidden">
+    {{-- Mobile drawer. `x-cloak` keeps it closed on first paint, before
+         Alpine has initialised; the rule for it is in resources/css/app.css. --}}
+    <div id="site-nav" x-show="menu" x-cloak class="border-t border-line lg:hidden">
         <div class="mx-auto max-w-site space-y-1 px-6 py-3">
             @foreach ($links as $link)
                 <a href="{{ route($link['route']) }}"

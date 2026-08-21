@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "36d192534c04ed427fc749528cbef361",
+    "content-hash": "047de30cce6502121836cca32b95948e",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -8697,16 +8697,16 @@
         },
         {
             "name": "uclemmer/laravel-ui",
-            "version": "v0.4.0",
+            "version": "v0.5.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-ui.git",
-                "reference": "96d11dbd2e5f8503c1fe09caef456927f3470784"
+                "reference": "e3cf13d83b87132d8114306b98cba21b4d86c861"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-ui/zipball/96d11dbd2e5f8503c1fe09caef456927f3470784",
-                "reference": "96d11dbd2e5f8503c1fe09caef456927f3470784",
+                "url": "https://api.github.com/repos/uclemmer/laravel-ui/zipball/e3cf13d83b87132d8114306b98cba21b4d86c861",
+                "reference": "e3cf13d83b87132d8114306b98cba21b4d86c861",
                 "shasum": ""
             },
             "require": {
@@ -8798,7 +8798,7 @@
                 "ui"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-ui/tree/v0.4.0",
+                "source": "https://github.com/uclemmer/laravel-ui/tree/v0.5.0",
                 "issues": "https://github.com/uclemmer/laravel-ui/issues"
             },
             "funding": [
@@ -8807,7 +8807,7 @@
                     "url": "https://github.com/:vendor_name"
                 }
             ],
-            "time": "2026-08-21T11:55:01+00:00"
+            "time": "2026-08-21T18:47:16+00:00"
         },
         {
             "name": "ueberdosis/tiptap-php",

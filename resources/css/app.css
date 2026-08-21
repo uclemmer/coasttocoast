@@ -16,24 +16,25 @@
 @import './vendor/ui/theme.css';
 
 /*
- * Flowbite is the component library for the public site (owner directive,
- * 2026-08-19: frontend is Blade + Livewire + Flowbite, Filament is the admin
- * backend only). `ckbs` is the reference wiring in this workspace.
+ * Flowbite left on 2026-08-21, under the owner directive of 2026-08-20: the UI
+ * stack is Tailwind CSS, Alpine and Livewire, with shared components from
+ * `uclemmer/laravel-ui` and nothing else. Its plugin and its @source line both
+ * went. The note below this one used to explain why it was still here; the
+ * reason it gave — that laravel-ui had no accordion — stopped being true when
+ * the package shipped one in v0.5.0, on the evidence of this site's FAQ.
  *
- * The admin panel and the rep portal do NOT use this stylesheet — Filament
- * ships its own compiled CSS, published into `public/css/filament/`. Nothing
- * here can affect them.
+ * The admin panel does NOT use this stylesheet — Filament ships its own
+ * compiled CSS, published into `public/css/filament/`. Nothing here can affect
+ * it, and removing it is a separate and much larger job.
  */
-@plugin 'flowbite/plugin';
 
 /*
  * Tailwind v4 auto-detects sources but skips .gitignore'd directories, so the
- * three that matter have to be named:
+ * ones that matter have to be named: the package's Blade, the framework's
+ * pagination views, and Livewire's own markup.
  *
- *   - Flowbite's own JS injects classes at runtime that never appear in a
- *     template, so they would otherwise be purged;
- *   - the framework's pagination views;
- *   - Livewire's own markup.
+ * There used to be a fourth, `node_modules/flowbite`, for classes Flowbite's
+ * JS injected at runtime and no template ever contained. It went with Flowbite.
  */
 /*
  * laravel-ui's Blade lives in vendor/, which is gitignored and therefore
@@ -43,14 +44,6 @@
  */
 @source '../../vendor/uclemmer/laravel-ui/resources/views';
 
-/*
- * Flowbite is still here, and deliberately so. The public site's mobile nav and
- * FAQ accordion are the only two things using it, and laravel-ui has no
- * accordion to replace the second - so removing Flowbite is its own change,
- * not a side effect of adopting the package. The two coexist: different class
- * vocabularies, neither aware of the other.
- */
-@source '../../node_modules/flowbite';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views';
 @source '../../vendor/livewire/livewire/src';
 @source '../../storage/framework/views/*.php';
@@ -76,7 +69,7 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Alpine-cloaked elements (the mobile nav, Flowbite dropdowns) stay hidden
+/* Alpine-cloaked elements (the mobile nav, the FAQ's collapsed panels) stay hidden
    until Alpine initialises, so nothing flashes open on load. */
 [x-cloak] {
     display: none !important;

@@ -27,7 +27,7 @@
         "stripe/stripe-php": "^21.2",
         "twilio/sdk": "^8.12",
         "uclemmer/laravel-core": "^0.2",
-        "uclemmer/laravel-ui": "^0.4"
+        "uclemmer/laravel-ui": "^0.5"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

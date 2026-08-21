@@ -18,7 +18,14 @@ No app code, packages, or migrations beyond the skeleton exist yet.
 
 ## Stack decisions
 
-> **Owner directive (2026-08-19) — supersedes the 2026-08-16 "all UI is Filament" directive.**
+> **Superseded by the owner directive of 2026-08-20**, which puts the UI stack on Tailwind CSS,
+> Alpine and Livewire with shared components from `uclemmer/laravel-ui`, and removes both Filament
+> and Flowbite from the workspace. Flowbite left this app on 2026-08-21 (doc 12); the `/admin`
+> Filament panel is still here and is a later, larger change. The directive below is kept because
+> its public/admin split and its reasoning about panels are unchanged — only the names of the tools
+> have moved.
+
+> **Owner directive (2026-08-19) — superseded, see above. Supersedes the 2026-08-16 "all UI is Filament" directive.**
 > The two UI surfaces are built with different tools:
 >
 > - **Public site — Blade + Livewire + Flowbite.** Tailwind CSS 4 for styling, **Flowbite** as the
@@ -47,9 +54,9 @@ No app code, packages, or migrations beyond the skeleton exist yet.
 | Foundation | **`uclemmer/laravel-core`** (owner's package, sibling repo at `C:\Users\uriah\Herd\laravel-core`) | Decision D6. Provides admin panel shell, roles/permissions, email logging, contact, content blocks, queue metrics, profiles, `core:doctor`. Install via a composer **path repository** in dev (`"repositories": [{"type": "path", "url": "../laravel-core"}]`); switch to VCS/Packagist for deployment. Read its `/docs` before building on it. |
 | Database | SQLite in dev (as scaffolded); MySQL/Postgres in production | Keep migrations portable — no driver-specific SQL |
 | Admin UI | **Filament v5** — settled: laravel-core pins `filament/filament ^5.0` | Backend only, per the directive above |
-| Public UI | **Blade + Livewire + Flowbite** on Tailwind CSS 4 | Owner directive 2026-08-19. `flowbite` npm package, `@plugin 'flowbite/plugin'` in `resources/css/app.css`, `import 'flowbite'` in `resources/js/app.js` — `ckbs` is the reference wiring |
+| Public UI | **Blade + Livewire + Alpine** on Tailwind CSS 4, components from `uclemmer/laravel-ui` | Owner directive 2026-08-20; Flowbite removed 2026-08-21 (doc 12). The package's theme sheet is published and owned at `resources/css/vendor/ui/theme.css`; `resources/js/app.js` imports nothing, because Livewire bundles Alpine |
 | Panels | **Admin** = laravel-core's prebuilt panel (`core.admin.enabled = true`, path `/admin`, branded via `core.admin.brand`), with the app's resources attached as a Filament plugin class registered in `core.admin.plugins` (the same seam `uclemmer/laravel-tickets` uses). **Rep** = app-owned `RepPanelProvider` (`/portal`). | App plugin: `App\Filament\FairPlugin` registering Events, Registrations, Payments, Organizations, Grants, Sponsors, FAQ, Messages resources + dashboard widgets |
-| Public pages | **Blade route views + Livewire components, styled with Flowbite** on a shared public layout | Owner directive 2026-08-19, built in Phase 8. `SiteController` renders `resources/views/site/*`; `app/Livewire/*` holds the rosters, the countdown and the two forms. Keep public UI thin — the rules stay in the services |
+| Public pages | **Blade route views + Livewire components** on a shared public layout | Owner directive 2026-08-19, built in Phase 8. `SiteController` renders `resources/views/site/*`; `app/Livewire/*` holds the rosters, the countdown and the two forms. Keep public UI thin — the rules stay in the services |
 | Auth | Filament's built-in auth (login, registration, email verification, password reset) on the Rep panel. Admin access via **laravel-core roles/permissions** (`HasCoreRoles` trait on User; coordinator role holding app permissions; core's panel-access check). No `is_admin` boolean, no spatie/laravel-permission, no Fortify/Breeze/Jetstream. | Register app permissions through `core.permission_providers` so `core:sync-permissions` picks them up |
 | Payments | `stripe/stripe-php` + Stripe Checkout (hosted) + webhooks | Never render card fields ourselves |
 | Email | Postmark via Laravel's `postmark` mail transport (`symfony/postmark-mailer`); **all mail renders in the themed HTML template**; **all sends logged** via laravel-core's EmailLog (`core.email_log.enabled = true` — READ AT BOOT, restart workers after toggling) | Streams: `outbound` (transactional), `broadcast` (campaigns). Full email design: [07-email-design.md](07-email-design.md) |
@@ -74,8 +81,10 @@ No app code, packages, or migrations beyond the skeleton exist yet.
   to Stripe Checkout, the check-instructions flow, or immediate confirmation when free, receipt downloads,
   profile/SMS opt-in management, and self-retire.
 - **Public site** — Home, About, Representatives roster, Last Year, Sponsors, FAQ, Contact, and event pages.
-  **Not Filament** (owner directive 2026-08-19): controllers or Livewire full-page components rendering Blade
-  views on a shared public layout, styled with Tailwind 4 + **Flowbite** components and the fair's branding.
+  **Not Filament**: controllers or Livewire full-page components rendering Blade views on a shared public
+  layout, styled with Tailwind 4, made interactive with Alpine, and drawing shared components from
+  `uclemmer/laravel-ui` — the fair's branding reaches those components through the published theme sheet
+  rather than through classes at each call site.
   The roster and event listings are the natural Livewire candidates; the rest are plain Blade.
   Page copy (Home/About blocks) comes from laravel-core's Content module (type `block`); the contact page uses
   its contact component/routes (`core.contact.*` config: recipients, receipt, honeypot, throttle).

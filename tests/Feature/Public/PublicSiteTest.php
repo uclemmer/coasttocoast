@@ -257,10 +257,36 @@ describe('the FAQ page', function () {
             ->assertSee('list-disc', escape: false);
     });
 
-    it('uses Flowbite\'s accordion rather than bespoke JavaScript', function () {
-        FaqItem::factory()->create(['question' => 'Anything?', 'answer' => 'Yes.']);
+    /*
+     * The FAQ is `x-ui::accordion` from `uclemmer/laravel-ui` as of 2026-08-21.
+     * It was Flowbite's before that, and this test asserted `data-accordion`.
+     *
+     * The component is the one the package struck from its roadmap for want of
+     * a second application wanting one, and built when this FAQ and kerdoos's
+     * became that second application. What is asserted here is the contract it
+     * promises, not its class strings — those belong to the package and would
+     * make this fail on a cosmetic upgrade.
+     */
+    it('renders the ui package accordion, one panel open at a time', function () {
+        FaqItem::factory()->create(['question' => 'First?', 'answer' => 'Yes.']);
+        FaqItem::factory()->create(['question' => 'Second?', 'answer' => 'Also yes.']);
 
-        $this->get('/faq')->assertSee('data-accordion', escape: false);
+        $html = $this->get('/faq')->assertOk()->getContent();
+
+        expect($html)
+            // One scope owns the open state; the items number themselves into it.
+            ->toContain('x-data="{ open: null, count: 0 }"')
+            // Bound to the live state, never written once as a literal.
+            ->toContain('x-bind:aria-expanded="open === index"')
+            ->toContain('role="region"')
+            // h2, because the page title is the h1 and these are its sections.
+            ->toContain('<h2>')
+            ->not->toContain('data-accordion')
+            ->not->toContain('aria-expanded="false"');
+
+        // Both questions registered, and the first one starts open.
+        expect(substr_count($html, 'index = count++'))->toBe(2);
+        expect($html)->toContain('true && (open = index)');
     });
 });
 

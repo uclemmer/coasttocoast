@@ -97,29 +97,77 @@ describe('the self-hosted fonts', function () {
     });
 });
 
-describe('the Flowbite wiring', function () {
-    it('declares flowbite as a runtime dependency, not a dev one', function () {
-        // It ships to the browser, so a production `npm ci --omit=dev` must
-        // still install it.
+/*
+ * These three used to assert that Flowbite WAS wired — in package.json, in the
+ * CSS entrypoint, in the JS entrypoint. It left on 2026-08-21 under the
+ * 2026-08-20 directive, so each is inverted rather than deleted: the wiring
+ * they described is exactly the wiring that must not come back.
+ */
+describe('the Flowbite removal', function () {
+    it('declares no flowbite dependency', function () {
         $package = json_decode((string) file_get_contents(base_path('package.json')), true);
 
-        expect($package['dependencies'] ?? [])->toHaveKey('flowbite');
+        $offenders = array_values(array_filter(
+            array_keys(($package['dependencies'] ?? []) + ($package['devDependencies'] ?? [])),
+            fn (string $name) => str_contains($name, 'flowbite'),
+        ));
+
+        expect($offenders)->toBe([], 'package.json still requires: '.implode(', ', $offenders));
     });
 
-    it('registers the plugin and the sources Tailwind cannot auto-detect', function () {
-        // Tailwind v4 skips .gitignore'd directories, so Flowbite's own JS —
-        // which injects classes that appear in no template — would be purged
-        // out of the build without an explicit @source.
+    it('registers the sources Tailwind cannot auto-detect, and no longer flowbite', function () {
+        // Tailwind v4 skips .gitignore'd directories, so these have to be
+        // named. The package's Blade is the one whose absence is silent: its
+        // components would render with a full class attribute and no styling.
         $css = (string) file_get_contents(resource_path('css/app.css'));
 
-        expect($css)->toContain("@plugin 'flowbite/plugin'")
-            ->toContain('node_modules/flowbite')
+        /*
+         * Comments have to come out before the negative half. That file carries
+         * a note saying which @source line went and why, and a check that reads
+         * the note as a leak is reading the wrong thing — it flagged exactly
+         * that on the first run.
+         */
+        $rules = preg_replace('#/\*.*?\*/#s', '', $css);
+
+        expect($css)->toContain('vendor/uclemmer/laravel-ui/resources/views')
             ->toContain('vendor/livewire/livewire/src');
+
+        expect($rules)
+            ->not->toContain('flowbite');
     });
 
-    it('imports Flowbite in the JS entrypoint', function () {
-        expect((string) file_get_contents(resource_path('js/app.js')))
-            ->toContain("import 'flowbite'");
+    it('imports nothing in the JS entrypoint', function () {
+        // The file is a comment now. Flowbite was its only import, and Alpine
+        // must NOT replace it: Livewire bundles Alpine, so a direct import
+        // would start a second one and double every handler.
+        $js = (string) file_get_contents(resource_path('js/app.js'));
+
+        // Strip the comment body before looking for statements, or the note
+        // explaining all this reads as code.
+        $statements = preg_replace('#/\\*.*?\\*/|//[^\n]*#s', '', $js);
+
+        expect(trim((string) $statements))->toBe('');
+        expect($js)->toContain('Alpine comes bundled with it');
+    });
+
+    it('emits livewireScripts, because most public pages render no component', function () {
+        /*
+         * The trap this whole change nearly fell into. Livewire injects its
+         * assets only on a page that renders a component, and Alpine ships
+         * inside that bundle. Most of this site is static Blade served by
+         * SiteController, so without this line the FAQ accordion and the
+         * hamburger render perfectly and do nothing at all — no console error,
+         * and every markup assertion still passing.
+         */
+        $layout = (string) file_get_contents(resource_path('views/components/layouts/app.blade.php'));
+
+        expect($layout)->toMatch('/^\s*@livewireScripts$/m');
+    });
+
+    it('actually puts alpine on a page that renders no livewire component', function () {
+        // The assertion above reads the source; this one reads the response,
+        // which is the thing that has to be true.
+        $this->get('/faq')->assertOk()->assertSee('livewire.js', escape: false);
     });
 });
 

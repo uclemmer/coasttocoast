@@ -64,5 +64,25 @@
     </main>
 
     <x-site.footer />
+
+    {{--
+        @livewireScripts, and this layout genuinely needs it.
+
+        Livewire injects its assets only on a page where it actually renders a
+        component. This layout serves both kinds of page: a full-page Livewire
+        component gets the scripts on its own, but a static page written as
+        `<x-layouts.app>` renders no component and gets nothing — and the site's
+        FAQ and mobile nav are on those pages.
+
+        Alpine ships inside Livewire's bundle, so without this line the FAQ
+        accordion and the hamburger render correctly, look right, and do
+        absolutely nothing when clicked. No console error, no failing test that
+        reads markup. Found on 2026-08-21 while removing Flowbite, which had
+        been loading through @vite and covering for the omission.
+
+        Do not replace this with a direct `alpinejs` import: that would start a
+        second Alpine on every Livewire page and double every handler.
+    --}}
+    @livewireScripts
 </body>
 </html>

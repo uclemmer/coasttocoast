@@ -1,9 +1,20 @@
 {{--
     The FAQ (card 8.2).
 
-    Flowbite's accordion, so the open/close behaviour is `data-*` attributes
-    rather than bespoke JavaScript. Single-open with the first row expanded,
-    matching the design; clicking the open row collapses it.
+    `x-ui::accordion` from `uclemmer/laravel-ui`. Single-open with the first row
+    expanded, matching the design; clicking the open row collapses it.
+
+    This was Flowbite's accordion until 2026-08-21. The component did not exist
+    when this page was built — it had been struck from the package's roadmap for
+    want of a second application wanting one — and this FAQ, with kerdoos's, is
+    what put it back. app.css said as much at the time: "laravel-ui has no
+    accordion to replace the second, so removing Flowbite is its own change".
+    This is that change.
+
+    No styling is passed here. The package emits token names and this app owns
+    the sheet those tokens come from (resources/css/vendor/ui/theme.css, doc 12),
+    repointed at the handoff's green — so the accordion arrives in the site's
+    voice with no class strings at the call site.
 
     Answers are markdown written in the admin panel, rendered through
     `<x-ui.prose>` — Tailwind's preflight strips list and heading styling, so
@@ -22,36 +33,19 @@
         @if ($items->isEmpty())
             <p class="text-[17px] text-ink-500">{{ __('Nothing here yet.') }}</p>
         @else
-            <div id="faq-accordion"
-                 data-accordion="collapse"
-                 data-active-classes="text-ink-900"
-                 data-inactive-classes="text-ink-900"
-                 class="max-w-[70ch] overflow-hidden rounded-[10px] border border-line">
-                @foreach ($items as $index => $item)
-                    <h2 id="faq-heading-{{ $item->getKey() }}"
-                        @class(['border-b border-line-soft' => ! $loop->last])>
-                        <button type="button"
-                                data-accordion-target="#faq-body-{{ $item->getKey() }}"
-                                aria-expanded="{{ $index === 0 ? 'true' : 'false' }}"
-                                aria-controls="faq-body-{{ $item->getKey() }}"
-                                class="flex w-full items-center justify-between gap-4 px-[18px] py-4 text-start font-display text-[16px] font-bold text-ink-900 transition-colors hover:bg-brand-50">
-                            <span>{{ $item->question }}</span>
-                            <svg data-accordion-icon class="h-5 w-5 shrink-0 rotate-180 text-brand-600 transition-transform"
-                                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                    </h2>
-
-                    <div id="faq-body-{{ $item->getKey() }}"
-                         class="{{ $index === 0 ? '' : 'hidden' }}"
-                         aria-labelledby="faq-heading-{{ $item->getKey() }}">
-                        <div @class(['px-[18px] pb-[18px]', 'border-b border-line-soft' => ! $loop->last])>
-                            <x-ui.prose :html="Str::markdown($item->answer)" class="text-[16px] leading-[1.7]" />
-                        </div>
-                    </div>
+            {{-- `level="h2"` because the page title above is the h1 and these
+                 questions are the page's top-level sections. The component
+                 defaults to h3; getting this wrong costs nothing visually and
+                 breaks the heading list a screen reader skims the page with. --}}
+            <x-ui::accordion class="max-w-[70ch]">
+                @foreach ($items as $item)
+                    <x-ui::accordion.item level="h2"
+                                          :heading="$item->question"
+                                          :open="$loop->first">
+                        <x-ui.prose :html="Str::markdown($item->answer)" class="text-[16px] leading-[1.7]" />
+                    </x-ui::accordion.item>
                 @endforeach
-            </div>
+            </x-ui::accordion>
         @endif
     </x-site.container>
 </x-layouts.app>

@@ -263,12 +263,52 @@ string-matching HTML was testing the wrong thing.
 - A typed `string` property cannot be `set(..., null)` in a test; the empty
   string is the "not filled" state.
 
+## Flowbite removed 2026-08-21
+
+The two things holding it here were the public site's mobile nav and the FAQ
+accordion, and `app.css` said so in as many words: *"laravel-ui has no accordion
+to replace the second, so removing Flowbite is its own change."*
+
+That stopped being true. `accordion` had been **struck** from the package's
+roadmap for failing its two-or-more-applications bar; this FAQ and `kerdoos`'s
+landing page were the two that cleared it, and the package shipped one in
+`v0.5.0`. So:
+
+- The FAQ is `x-ui::accordion`, at `level="h2"` because the page title is the h1
+  and the questions are its sections. No styling at the call site — the package
+  emits token names and this app already owns the sheet they come from.
+- The mobile drawer is inline Alpine. `x-show` is safe there because the drawer
+  is a *separate* element from the desktop links; on a shared element an inline
+  `display: none` would beat the `lg:` variant and take the desktop nav with it.
+- `resources/js/app.js` is now a comment. Flowbite's only real cost was that its
+  initialisers bound once on load, so anything replacing DOM afterwards needed
+  `initFlowbite()` again — Alpine re-initialises across a Livewire morph, so
+  that whole class of bug left with it.
+- Constraint bumped to `uclemmer/laravel-ui: ^0.5`.
+
+### And the thing below was skipped, exactly as predicted
+
+The section that follows this one has warned since it was written that a plain
+Blade page gets no Livewire assets and therefore no Alpine. **This layout did
+not emit `@livewireScripts`, and nobody had noticed**, because Flowbite was
+arriving through `@vite` and covering for it. Removing Flowbite without adding
+that line would have shipped an FAQ accordion and a hamburger that render
+perfectly, pass every markup assertion, and do nothing at all when clicked.
+
+It is now in `resources/views/components/layouts/app.blade.php`, and two tests
+in `FrontendWiringTest` hold it there: one reads the layout source, and one
+fetches `/faq` and asserts `livewire.js` is in the response. The second exists
+because the first would keep passing if the directive were moved somewhere it
+never runs.
+
+The lesson is not "read the docs" — the warning was read. It is that a hazard
+which fails silently needs a test, not a paragraph.
+
 ## What comes next
 
-Nothing in this app blocks on the portal any more. Remaining Filament here is
-`app/Filament/Admin/` and `FairPlugin` on core's `/admin` panel — steps 3 and 4
-of the workspace order, and a later change. Flowbite is also still installed for
-the public site's mobile nav and FAQ accordion.
+Nothing in this app blocks on the portal any more, and Flowbite is gone.
+Remaining Filament here is `app/Filament/Admin/` and `FairPlugin` on core's
+`/admin` panel — steps 3 and 4 of the workspace order, and a later change.
 2. **Delete `app/Filament/Rep/` and `RepPanelProvider`**, with a test asserting
    the panel cannot come back unnoticed — the same guard Phase 8 left behind for
    `SitePanelProvider`.

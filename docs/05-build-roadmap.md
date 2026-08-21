@@ -417,7 +417,14 @@ launch is on doc 11's go-live checklist.
 
 ---
 
-## Phase 8 — Rebuild the public site in Blade + Livewire + Flowbite
+## Phase 8 — Rebuild the public site in Blade + Livewire
+
+*(Titled "… + Flowbite" when it was built. **Flowbite was removed on 2026-08-21** under the
+2026-08-20 directive — see doc 12. This phase log is left as the record of what was done at the
+time, so read every mention of Flowbite below as history: the mobile drawer is inline Alpine now,
+the FAQ is `x-ui::accordion`, and `resources/js/app.js` imports nothing. The one live consequence
+worth carrying forward is at the end of this phase's notes about `initFlowbite()` — Alpine
+re-initialises itself across a Livewire morph, so that re-run is no longer needed at all.)*
 
 **Owner directive, 2026-08-19.** Frontend UI is Blade + Livewire + Flowbite on Tailwind 4; Filament
 is the admin backend only. This supersedes the 2026-08-16 "all UI is Filament" directive that

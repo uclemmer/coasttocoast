@@ -3,14 +3,13 @@
 use App\Enums\MembershipStatus;
 use App\Events\MembershipClaimed;
 use App\Events\OrganizationCreated;
-use App\Filament\Rep\Pages\Auth\Register;
+use App\Livewire\Auth\Register;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
-    usingRepPanel();
     Notification::fake();
 });
 
@@ -19,18 +18,9 @@ describe('adding a school that is not in the directory', function () {
         // Nobody can vouch for a school only this person knows about, so
         // making them wait would mean waiting on nothing (D9).
         livewire(Register::class)
-            ->fillForm([
-                'name' => 'Dana Whitfield',
-                'email' => 'dana@newschool.example',
-                'password' => 'password-that-is-long',
-                'passwordConfirmation' => 'password-that-is-long',
-                'organization_choice' => 'create',
-                'organization_name' => 'Newschool University',
-                'organization_website' => 'https://newschool.example',
-                'organization_admissions_email' => 'admissions@newschool.example',
-            ])
+            ->set('name', 'Dana Whitfield')->set('email', 'dana@newschool.example')->set('password', 'password-that-is-long')->set('password_confirmation', 'password-that-is-long')->set('organization_choice', 'create')->set('organization_name', 'Newschool University')->set('organization_website', 'https://newschool.example')->set('organization_admissions_email', 'admissions@newschool.example')
             ->call('register')
-            ->assertHasNoFormErrors();
+            ->assertHasNoErrors();
 
         $rep = User::query()->where('email', 'dana@newschool.example')->firstOrFail();
         $school = Organization::query()->where('name', 'Newschool University')->firstOrFail();
@@ -49,16 +39,9 @@ describe('adding a school that is not in the directory', function () {
         Organization::factory()->named('The Example College')->create();
 
         livewire(Register::class)
-            ->fillForm([
-                'name' => 'Dana',
-                'email' => 'dana@example.edu',
-                'password' => 'password-that-is-long',
-                'passwordConfirmation' => 'password-that-is-long',
-                'organization_choice' => 'create',
-                'organization_name' => 'Example College',
-            ])
+            ->set('name', 'Dana')->set('email', 'dana@example.edu')->set('password', 'password-that-is-long')->set('password_confirmation', 'password-that-is-long')->set('organization_choice', 'create')->set('organization_name', 'Example College')
             ->call('register')
-            ->assertHasNoFormErrors();
+            ->assertHasNoErrors();
 
         Event::assertDispatched(
             OrganizationCreated::class,
@@ -72,7 +55,8 @@ describe('adding a school that is not in the directory', function () {
         Organization::factory()->named('The Example College')->create();
 
         livewire(Register::class)
-            ->fillForm(['organization_choice' => 'create', 'organization_name' => 'example college'])
+            ->set('organization_choice', 'create')
+            ->set('organization_name', 'example college')
             ->assertSuccessful();
 
         expect(Organization::query()->matchingName('Example College')->count())->toBe(1);
@@ -80,16 +64,9 @@ describe('adding a school that is not in the directory', function () {
 
     it('requires a school name on this path', function () {
         livewire(Register::class)
-            ->fillForm([
-                'name' => 'Dana',
-                'email' => 'dana@example.edu',
-                'password' => 'password-that-is-long',
-                'passwordConfirmation' => 'password-that-is-long',
-                'organization_choice' => 'create',
-                'organization_name' => null,
-            ])
+            ->set('name', 'Dana')->set('email', 'dana@example.edu')->set('password', 'password-that-is-long')->set('password_confirmation', 'password-that-is-long')->set('organization_choice', 'create')->set('organization_name', '')
             ->call('register')
-            ->assertHasFormErrors(['organization_name']);
+            ->assertHasErrors(['organization_name']);
     });
 });
 
@@ -100,16 +77,9 @@ describe('claiming a school that already exists', function () {
         $school = Organization::factory()->named('Vanderbilt University')->create();
 
         livewire(Register::class)
-            ->fillForm([
-                'name' => 'Jamie Okafor',
-                'email' => 'jamie@vanderbilt.example',
-                'password' => 'password-that-is-long',
-                'passwordConfirmation' => 'password-that-is-long',
-                'organization_choice' => 'claim',
-                'organization_id' => $school->id,
-            ])
+            ->set('name', 'Jamie Okafor')->set('email', 'jamie@vanderbilt.example')->set('password', 'password-that-is-long')->set('password_confirmation', 'password-that-is-long')->set('organization_choice', 'claim')->set('organization_id', $school->id)
             ->call('register')
-            ->assertHasNoFormErrors();
+            ->assertHasNoErrors();
 
         $rep = User::query()->where('email', 'jamie@vanderbilt.example')->firstOrFail();
 
@@ -123,16 +93,9 @@ describe('claiming a school that already exists', function () {
         $school = Organization::factory()->create();
 
         livewire(Register::class)
-            ->fillForm([
-                'name' => 'Jamie',
-                'email' => 'jamie@example.edu',
-                'password' => 'password-that-is-long',
-                'passwordConfirmation' => 'password-that-is-long',
-                'organization_choice' => 'claim',
-                'organization_id' => $school->id,
-            ])
+            ->set('name', 'Jamie')->set('email', 'jamie@example.edu')->set('password', 'password-that-is-long')->set('password_confirmation', 'password-that-is-long')->set('organization_choice', 'claim')->set('organization_id', $school->id)
             ->call('register')
-            ->assertHasNoFormErrors();
+            ->assertHasNoErrors();
 
         Event::assertDispatched(
             MembershipClaimed::class,
@@ -142,16 +105,9 @@ describe('claiming a school that already exists', function () {
 
     it('requires a school to be chosen on this path', function () {
         livewire(Register::class)
-            ->fillForm([
-                'name' => 'Jamie',
-                'email' => 'jamie@example.edu',
-                'password' => 'password-that-is-long',
-                'passwordConfirmation' => 'password-that-is-long',
-                'organization_choice' => 'claim',
-                'organization_id' => null,
-            ])
+            ->set('name', 'Jamie')->set('email', 'jamie@example.edu')->set('password', 'password-that-is-long')->set('password_confirmation', 'password-that-is-long')->set('organization_choice', 'claim')->set('organization_id', null)
             ->call('register')
-            ->assertHasFormErrors(['organization_id']);
+            ->assertHasErrors(['organization_id']);
     });
 });
 
@@ -162,17 +118,9 @@ describe('the account itself', function () {
         $school = Organization::factory()->create();
 
         livewire(Register::class)
-            ->fillForm([
-                'name' => 'Jamie',
-                'email' => 'jamie@example.edu',
-                'phone' => '+15551234567',
-                'password' => 'password-that-is-long',
-                'passwordConfirmation' => 'password-that-is-long',
-                'organization_choice' => 'claim',
-                'organization_id' => $school->id,
-            ])
+            ->set('name', 'Jamie')->set('email', 'jamie@example.edu')->set('phone', '+15551234567')->set('password', 'password-that-is-long')->set('password_confirmation', 'password-that-is-long')->set('organization_choice', 'claim')->set('organization_id', $school->id)
             ->call('register')
-            ->assertHasNoFormErrors();
+            ->assertHasNoErrors();
 
         expect(User::query()->where('email', 'jamie@example.edu')->first())
             ->phone->toBe('+15551234567')
@@ -184,15 +132,8 @@ describe('the account itself', function () {
         $school = Organization::factory()->create();
 
         livewire(Register::class)
-            ->fillForm([
-                'name' => 'Jamie',
-                'email' => 'taken@example.edu',
-                'password' => 'password-that-is-long',
-                'passwordConfirmation' => 'password-that-is-long',
-                'organization_choice' => 'claim',
-                'organization_id' => $school->id,
-            ])
+            ->set('name', 'Jamie')->set('email', 'taken@example.edu')->set('password', 'password-that-is-long')->set('password_confirmation', 'password-that-is-long')->set('organization_choice', 'claim')->set('organization_id', $school->id)
             ->call('register')
-            ->assertHasFormErrors(['email']);
+            ->assertHasErrors(['email']);
     });
 });

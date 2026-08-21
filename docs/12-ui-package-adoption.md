@@ -1,6 +1,6 @@
 # 12 — Adopting `uclemmer/laravel-ui`, and retiring the rep panel
 
-**Status: groundwork complete 2026-08-21. The panel itself is not yet removed.**
+**Status: complete 2026-08-21. The Filament rep panel is gone.**
 
 This doc covers the workspace's 2026-08-20 directive as it lands here: the UI
 stack is Tailwind + Alpine + Livewire, Filament and Flowbite both leave, and
@@ -221,9 +221,54 @@ laravel-ui has **no stepper or wizard component** — it was never built, for th
 same reason as the accordion. Whether the create flow needs one, or works as a
 single page with sections, is the first decision that phase faces.
 
-## What comes next, in order
+## Done 2026-08-21 — the panel is deleted
 
-1. **The registration screens**, above.
+All six screens are Livewire, routed at `/portal` **at the URLs Filament
+served**, so bookmarks and emailed links still land. `app/Filament/Rep/` and
+`RepPanelProvider` are deleted; 668 tests green.
+
+The registration flow is **one page with three sections, not a wizard** (owner
+decision). laravel-ui has no stepper, and a form that ends in a payment is
+better showing the whole commitment at once. **A wizard component is still owed
+to laravel-ui's roadmap** for whatever genuinely needs one.
+
+### What the port taught
+
+**The old tests were kept and ported, not replaced.** They cover product
+behaviour — who sees whose registrations, what a grant does to a price, what
+happens when Stripe is down — and only the harness was Filament's. One file,
+`RepPanelAccessTest`, was briefly deleted and then restored: its subject was
+gone but every rule it pinned still holds.
+
+**Two scoping guarantees were strengthened rather than merely preserved.**
+`ShowRegistration` re-resolves through a scoped `findOrFail` instead of checking
+the bound model, so a foreign registration is *not found* rather than
+found-and-refused — the second answer is an oracle confirming the id is real.
+`Grants::withdraw()` scopes the same way: the id arrives from the browser, and a
+confirmation dialog is not authorization.
+
+**Scoping tests now assert against the component's collection, not the page.**
+A fair's *name* can legitimately appear on a portal page without that school's
+record being visible — the grants page lists every fair you could apply for — so
+string-matching HTML was testing the wrong thing.
+
+**Three traps worth carrying forward:**
+
+- `@disabled(...)` **inside a component tag** emits its own `endif` into the
+  component's compiled wrapper and breaks the file. Same family as Blade's
+  nested-comment trap.
+- In a Livewire view, `$this->foo` resolves **computed properties only**. A
+  plain trait method needs `$this->foo()`, and getting it wrong is a 500 that
+  only shows on the page using it.
+- A typed `string` property cannot be `set(..., null)` in a test; the empty
+  string is the "not filled" state.
+
+## What comes next
+
+Nothing in this app blocks on the portal any more. Remaining Filament here is
+`app/Filament/Admin/` and `FairPlugin` on core's `/admin` panel — steps 3 and 4
+of the workspace order, and a later change. Flowbite is also still installed for
+the public site's mobile nav and FAQ accordion.
 2. **Delete `app/Filament/Rep/` and `RepPanelProvider`**, with a test asserting
    the panel cannot come back unnoticed — the same guard Phase 8 left behind for
    `SitePanelProvider`.

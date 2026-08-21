@@ -14,9 +14,14 @@ use UClemmer\LaravelCore\Auth\Role;
  * step is skipped, rather than quietly removing a feature from the panel.
  */
 
-it('registers both panels', function () {
+/*
+ * One panel now. The rep portal was Filament's until 2026-08-21 and is
+ * Livewire; /admin is the only panel left, and it goes too when core is
+ * decoupled. See docs/12.
+ */
+it('registers the admin panel, and only that one', function () {
     expect(Filament::getPanel('core')->getPath())->toBe('admin')
-        ->and(Filament::getPanel('rep')->getPath())->toBe('portal');
+        ->and(collect(Filament::getPanels())->keys()->all())->toBe(['core']);
 });
 
 it('attaches the fair plugin to the core panel', function () {

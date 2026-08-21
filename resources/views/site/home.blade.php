@@ -95,7 +95,7 @@
                     $notYet = $fair?->registrationNotYetOpen() ?? false;
 
                     $cta = match (true) {
-                        $isOpen => [route('filament.rep.auth.register'), __('Begin registration')],
+                        $isOpen => [route('register'), __('Begin registration')],
                         $fair !== null => [route('site.event', $fair), __('Join the mailing list')],
                         default => [route('site.contact'), __('Ask us about next year')],
                     };

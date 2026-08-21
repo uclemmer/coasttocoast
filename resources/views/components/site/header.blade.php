@@ -56,12 +56,12 @@
         </div>
 
         <div class="ms-auto flex items-center gap-3.5">
-            <a href="{{ route('filament.rep.auth.login') }}"
+            <a href="{{ route('core.login') }}"
                class="hidden whitespace-nowrap text-[14.5px] font-semibold text-ink-800 transition-colors hover:text-brand-600 sm:inline">
                 {{ __('Log in') }}
             </a>
 
-            <a href="{{ route('filament.rep.auth.register') }}"
+            <a href="{{ route('register') }}"
                class="whitespace-nowrap rounded-md bg-brand-600 px-[22px] py-3 font-display text-[13.5px] font-bold uppercase tracking-[0.04em] text-white transition-colors hover:bg-brand-700">
                 {{ __('Register') }}
             </a>
@@ -93,7 +93,7 @@
                 </a>
             @endforeach
 
-            <a href="{{ route('filament.rep.auth.login') }}"
+            <a href="{{ route('core.login') }}"
                class="block rounded-md px-2 py-2.5 text-[15px] font-semibold text-ink-800 transition-colors hover:bg-brand-50 sm:hidden">
                 {{ __('Log in') }}
             </a>

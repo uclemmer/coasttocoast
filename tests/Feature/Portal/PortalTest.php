@@ -4,13 +4,12 @@ use App\Enums\GrantStatus;
 use App\Enums\MembershipStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\RegistrationStatus;
-use App\Filament\Rep\Pages\Auth\EditProfile;
-use App\Filament\Rep\Pages\OrganizationProfile;
-use App\Filament\Rep\Resources\GrantResource;
-use App\Filament\Rep\Resources\GrantResource\Pages\ListGrants;
-use App\Filament\Rep\Resources\RegistrationResource\Pages\CreateRegistration;
-use App\Filament\Rep\Resources\RegistrationResource\Pages\ListRegistrations;
-use App\Filament\Rep\Resources\RegistrationResource\Pages\ViewRegistration;
+use App\Livewire\Portal\CreateRegistration;
+use App\Livewire\Portal\Grants as ListGrants;
+use App\Livewire\Portal\OrganizationProfile;
+use App\Livewire\Portal\Profile as EditProfile;
+use App\Livewire\Portal\Registrations as ListRegistrations;
+use App\Livewire\Portal\ShowRegistration as ViewRegistration;
 use App\Models\Event as Fair;
 use App\Models\Grant;
 use App\Models\Organization;
@@ -19,7 +18,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 beforeEach(function () {
-    usingRepPanel();
 
     $this->school = Organization::factory()->named('Kenyon College')->create();
     $this->rep = User::factory()->rep($this->school)->create();
@@ -39,16 +37,24 @@ describe('the registrations list', function () {
             ->create(['user_id' => $this->rep->id]);
 
         livewire(ListRegistrations::class)
-            ->assertCanSeeTableRecords([$theirs, $mine]);
+            ->assertSee($theirs->event->name)
+            ->assertSee($mine->event->name);
     });
 
     it('never shows another school\'s registrations', function () {
         $mine = Registration::factory()->forOrganization($this->school)->create();
         $theirs = Registration::factory()->create();
 
-        livewire(ListRegistrations::class)
-            ->assertCanSeeTableRecords([$mine])
-            ->assertCanNotSeeTableRecords([$theirs]);
+        /*
+         * Asserted against the scoped collection rather than the rendered page.
+         * A fair's NAME can legitimately appear on a portal page without that
+         * school's record being visible - the grants page lists every fair you
+         * could apply for - so string-matching the HTML tests the wrong thing.
+         */
+        $listed = livewire(ListRegistrations::class)->instance()->registrations();
+
+        expect($listed->pluck('id'))->toContain($mine->id)
+            ->not->toContain($theirs->id);
     });
 
     it('refuses the page outright to a user with no school', function () {
@@ -64,7 +70,7 @@ describe('the registrations list', function () {
         $pending = User::factory()->pendingRep($this->school)->create();
         $this->actingAs($pending);
 
-        $subheading = livewire(ListRegistrations::class)->instance()->getSubheading();
+        $subheading = livewire(ListRegistrations::class)->html();
 
         expect($subheading)->toContain('confirming that you work at')
             ->toContain('Kenyon College');
@@ -73,7 +79,7 @@ describe('the registrations list', function () {
     it('says what a retired rep can and cannot still do', function () {
         $this->actingAs(User::factory()->retiredRep($this->school)->create());
 
-        expect(livewire(ListRegistrations::class)->instance()->getSubheading())
+        expect(livewire(ListRegistrations::class)->html())
             ->toContain('retired')
             ->toContain('history is still here');
     });
@@ -84,7 +90,7 @@ describe('viewing one registration', function () {
         $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)
             ->create(['price_cents' => 21500, 'rep_name' => 'Dana Whitfield']);
 
-        livewire(ViewRegistration::class, ['record' => $registration->getRouteKey()])
+        livewire(ViewRegistration::class, ['registration' => $registration])
             ->assertSuccessful()
             ->assertSee('Dana Whitfield')
             ->assertSee('$215.00');
@@ -96,7 +102,7 @@ describe('viewing one registration', function () {
         // confirms a registration with that id exists.
         $theirs = Registration::factory()->create();
 
-        expect(fn () => livewire(ViewRegistration::class, ['record' => $theirs->getRouteKey()]))
+        expect(fn () => livewire(ViewRegistration::class, ['registration' => $theirs]))
             ->toThrow(ModelNotFoundException::class);
     });
 });
@@ -104,15 +110,9 @@ describe('viewing one registration', function () {
 describe('the registration wizard', function () {
     it('registers the school and holds the place pending payment', function () {
         livewire(CreateRegistration::class)
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'rep_name' => 'Dana Whitfield',
-                'rep_email' => 'dana@kenyon.example',
-                'rep_phone' => '(423) 757-2845',
-                'payment_method' => PaymentMethod::Check->value,
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors();
+            ->set('event_id', $this->fair->id)->set('rep_name', 'Dana Whitfield')->set('rep_email', 'dana@kenyon.example')->set('rep_phone', '(423) 757-2845')->set('payment_method', PaymentMethod::Check->value)
+            ->call('submit')
+            ->assertHasNoErrors();
 
         $registration = Registration::query()->latest('id')->firstOrFail();
 
@@ -130,14 +130,9 @@ describe('the registration wizard', function () {
         Grant::factory()->percentOff(50)->for($this->fair)->for($this->school)->create();
 
         livewire(CreateRegistration::class)
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'rep_name' => 'Dana',
-                'rep_email' => 'dana@kenyon.example',
-                'payment_method' => PaymentMethod::Stripe->value,
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors();
+            ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')->set('payment_method', PaymentMethod::Stripe->value)
+            ->call('submit')
+            ->assertHasNoErrors();
 
         expect(Registration::query()->latest('id')->first()->price_cents)->toBe(10750);
     });
@@ -146,13 +141,9 @@ describe('the registration wizard', function () {
         Grant::factory()->free()->for($this->fair)->for($this->school)->create();
 
         livewire(CreateRegistration::class)
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'rep_name' => 'Dana',
-                'rep_email' => 'dana@kenyon.example',
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors();
+            ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')
+            ->call('submit')
+            ->assertHasNoErrors();
 
         $registration = Registration::query()->latest('id')->firstOrFail();
 
@@ -163,28 +154,18 @@ describe('the registration wizard', function () {
 
     it('demands a payment method when there is something to pay', function () {
         livewire(CreateRegistration::class)
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'rep_name' => 'Dana',
-                'rep_email' => 'dana@kenyon.example',
-                'payment_method' => null,
-            ])
-            ->call('create')
-            ->assertHasFormErrors(['payment_method']);
+            ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')->set('payment_method', null)
+            ->call('submit')
+            ->assertHasErrors(['payment_method']);
     });
 
     it('refuses a duplicate at the first step, not after the whole wizard', function () {
         Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
 
         livewire(CreateRegistration::class)
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'rep_name' => 'Dana',
-                'rep_email' => 'dana@kenyon.example',
-                'payment_method' => PaymentMethod::Check->value,
-            ])
-            ->call('create')
-            ->assertHasFormErrors(['event_id']);
+            ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')->set('payment_method', PaymentMethod::Check->value)
+            ->call('submit')
+            ->assertHasErrors(['event_id']);
     });
 
     it('offers only fairs that are open', function () {
@@ -193,7 +174,9 @@ describe('the registration wizard', function () {
         Fair::factory()->create(); // unpublished
 
         $page = livewire(CreateRegistration::class)->instance();
-        $options = (fn (): array => $this->openFairs())->call($page);
+        $options = $page->openFairs()->mapWithKeys(
+            fn ($fair): array => [$fair->getKey() => $page->fairLabel($fair)],
+        )->all();
 
         expect(array_keys($options))->toBe([$this->fair->id]);
     });
@@ -203,9 +186,10 @@ describe('the registration wizard', function () {
         Grant::factory()->percentOff(50)->for($this->fair)->for($this->school)->create();
 
         $fairId = $this->fair->id;
-        $page = livewire(CreateRegistration::class)->fillForm(['event_id' => $fairId])->instance();
-
-        $summary = (fn (): string => $this->priceSummary($fairId))->call($page);
+        $summary = livewire(CreateRegistration::class)
+            ->set('event_id', $fairId)
+            ->instance()
+            ->priceSummary();
 
         expect($summary)->toContain('$215.00')->toContain('$107.50')->toContain('50% off');
     });
@@ -226,12 +210,7 @@ describe('the registration wizard', function () {
 describe('the organization profile', function () {
     it('saves the school\'s details and normalizes the phone', function () {
         livewire(OrganizationProfile::class)
-            ->fillForm([
-                'name' => 'Kenyon College',
-                'website' => 'https://kenyon.example',
-                'admissions_email' => 'admissions@kenyon.example',
-                'admissions_phone' => '(423) 757-2845',
-            ])
+            ->set('name', 'Kenyon College')->set('website', 'https://kenyon.example')->set('admissions_email', 'admissions@kenyon.example')->set('admissions_phone', '(423) 757-2845')
             ->call('save');
 
         expect($this->school->refresh()->admissions_email)->toBe('admissions@kenyon.example')
@@ -240,7 +219,7 @@ describe('the organization profile', function () {
 
     it('re-derives the matching name when a school rebrands', function () {
         livewire(OrganizationProfile::class)
-            ->fillForm(['name' => 'The Kenyon University'])
+            ->set('name', 'The Kenyon University')
             ->call('save');
 
         expect($this->school->refresh()->normalized_name)->toBe('kenyon university');
@@ -248,9 +227,10 @@ describe('the organization profile', function () {
 
     it('rejects a phone number nobody could dial', function () {
         livewire(OrganizationProfile::class)
-            ->fillForm(['name' => 'Kenyon College', 'admissions_phone' => '12'])
+            ->set('name', 'Kenyon College')
+            ->set('admissions_phone', '12')
             ->call('save')
-            ->assertHasFormErrors(['admissions_phone']);
+            ->assertHasErrors(['admissions_phone']);
     });
 
     it('bars pending and retired reps', function (string $state) {
@@ -263,11 +243,7 @@ describe('the organization profile', function () {
 describe('the personal profile', function () {
     it('saves a phone in E.164 without opting anyone in', function () {
         livewire(EditProfile::class)
-            ->fillForm([
-                'name' => $this->rep->name,
-                'email' => $this->rep->email,
-                'phone' => '423-757-2845',
-            ])
+            ->set('name', $this->rep->name)->set('email', $this->rep->email)->set('phone', '423-757-2845')
             ->call('save');
 
         expect($this->rep->refresh()->phone)->toBe('+14237572845')
@@ -277,12 +253,7 @@ describe('the personal profile', function () {
 
     it('records an explicit SMS opt-in', function () {
         livewire(EditProfile::class)
-            ->fillForm([
-                'name' => $this->rep->name,
-                'email' => $this->rep->email,
-                'phone' => '+14237572845',
-                'sms_opt_in' => true,
-            ])
+            ->set('name', $this->rep->name)->set('email', $this->rep->email)->set('phone', '+14237572845')->set('sms_opt_in', true)
             ->call('save');
 
         expect($this->rep->refresh()->sms_opt_in)->toBeTrue();
@@ -290,15 +261,16 @@ describe('the personal profile', function () {
 
     it('rejects a phone number nobody could dial', function () {
         livewire(EditProfile::class)
-            ->fillForm(['name' => $this->rep->name, 'email' => $this->rep->email, 'phone' => 'nope'])
+            ->set('name', $this->rep->name)->set('email', $this->rep->email)
+            ->set('phone', '12')
             ->call('save')
-            ->assertHasFormErrors(['phone']);
+            ->assertHasErrors(['phone']);
     });
 
     it('lets a rep step down, keeping the account and the history', function () {
         Registration::factory()->forOrganization($this->school)->create(['user_id' => $this->rep->id]);
 
-        livewire(EditProfile::class)->callAction('retire');
+        livewire(EditProfile::class)->call('retire');
 
         expect($this->rep->refresh()->membership_status)->toBe(MembershipStatus::Retired)
             ->and($this->rep->retired_by)->toBe($this->rep->id)
@@ -309,18 +281,18 @@ describe('the personal profile', function () {
     it('hides stepping down from somebody who has already stepped down', function () {
         $this->actingAs(User::factory()->retiredRep($this->school)->create());
 
-        livewire(EditProfile::class)->assertActionHidden('retire');
+        expect(livewire(EditProfile::class)->instance()->actsForOrganization())->toBeFalse();
     });
 });
 
 describe('fee assistance', function () {
     it('submits a request with the owner-approved copy', function () {
         livewire(ListGrants::class)
-            ->callAction('apply', [
-                'event_id' => $this->fair->id,
-                'justification' => 'Our travel budget was cut this year.',
-            ])
-            ->assertNotified("Request submitted — we'll email you when it's been reviewed.");
+            ->set('event_id', $this->fair->id)->set('justification', 'Our travel budget was cut this year.')->call('apply')
+            ->assertDispatched(
+                'ui-toast',
+                message: "Request submitted — we'll email you when it's been reviewed.",
+            );
 
         expect(Grant::query()->where('organization_id', $this->school->id)->first())
             ->justification->toBe('Our travel budget was cut this year.')
@@ -328,14 +300,14 @@ describe('fee assistance', function () {
     });
 
     it('shows the intro that stops a school waiting instead of registering', function () {
-        expect(livewire(ListGrants::class)->instance()->getSubheading())
+        expect(livewire(ListGrants::class)->html())
             ->toContain('does not register you for the fair');
     });
 
     it('renders the approved sentence with the actual benefit', function () {
         $grant = Grant::factory()->percentOff(25)->for($this->fair)->for($this->school)->create();
 
-        expect(GrantResource::statusCopy($grant->refresh()))
+        expect(livewire(ListGrants::class)->instance()->statusCopy($grant->refresh()))
             ->toContain('Good news')
             ->toContain('25% off')
             ->toContain($this->fair->name);
@@ -345,7 +317,7 @@ describe('fee assistance', function () {
         $grant = Grant::factory()->denied('Funds for this fair are already committed.')
             ->for($this->fair)->for($this->school)->create();
 
-        expect(GrantResource::statusCopy($grant->refresh()))
+        expect(livewire(ListGrants::class)->instance()->statusCopy($grant->refresh()))
             ->toContain('Funds for this fair are already committed.')
             ->toContain('Standard registration is still open');
     });
@@ -354,14 +326,16 @@ describe('fee assistance', function () {
         $grant = Grant::factory()->for($this->fair)->for($this->school)
             ->create(['requested_by' => $this->rep->id]);
 
-        livewire(ListGrants::class)->callTableAction('withdraw', $grant);
+        livewire(ListGrants::class)
+            ->call('confirmWithdraw', $grant->id)
+            ->call('withdraw');
 
         expect($grant->refresh()->status)->toBe(GrantStatus::Withdrawn);
 
-        livewire(ListGrants::class)->callAction('apply', [
-            'event_id' => $this->fair->id,
-            'justification' => 'Second attempt, with figures.',
-        ]);
+        livewire(ListGrants::class)
+            ->set('event_id', $this->fair->id)
+            ->set('justification', 'Second attempt, with figures.')
+            ->call('apply');
 
         expect(Grant::query()->where('status', GrantStatus::Pending)->count())->toBe(1);
     });
@@ -369,13 +343,13 @@ describe('fee assistance', function () {
     it('hides the apply action from pending and retired reps', function (string $state) {
         $this->actingAs(User::factory()->{$state}($this->school)->create());
 
-        livewire(ListGrants::class)->assertActionHidden('apply');
+        expect(livewire(ListGrants::class)->instance()->canApply())->toBeFalse();
     })->with(['pendingRep', 'retiredRep']);
 
     it('hides the apply action when there is no fair left to apply for', function () {
         Grant::factory()->for($this->fair)->for($this->school)->create();
 
-        livewire(ListGrants::class)->assertActionHidden('apply');
+        expect(livewire(ListGrants::class)->instance()->canApply())->toBeFalse();
     });
 
     it('never shows another school\'s requests', function () {
@@ -383,7 +357,10 @@ describe('fee assistance', function () {
         $theirs = Grant::factory()->for($this->fair)->create();
 
         livewire(ListGrants::class)
-            ->assertCanSeeTableRecords([$mine])
-            ->assertCanNotSeeTableRecords([$theirs]);
+            ->assertSee($mine->event->name);
+
+        expect(livewire(ListGrants::class)->instance()->grants()->pluck('id'))
+            ->toContain($mine->id)
+            ->not->toContain($theirs->id);
     });
 });

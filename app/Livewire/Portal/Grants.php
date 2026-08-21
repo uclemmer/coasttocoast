@@ -52,6 +52,11 @@ class Grants extends Component
     /** The request the withdraw dialog is asking about. */
     public ?int $withdrawing = null;
 
+    public function mount(): void
+    {
+        $this->abortUnlessAttachedToOrganization();
+    }
+
     /**
      * This school's requests, newest first.
      *

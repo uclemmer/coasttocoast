@@ -74,7 +74,7 @@
                             @endif
                         </p>
 
-                        <x-ui.button class="mt-5" :href="route('filament.rep.auth.register')">
+                        <x-ui.button class="mt-5" :href="route('register')">
                             {{ __('Register your institution') }}
                         </x-ui.button>
                     </div>

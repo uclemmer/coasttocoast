@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\Rep\Resources\RegistrationResource\Pages\ViewRegistration;
+use App\Livewire\Portal\ShowRegistration as ViewRegistration;
 use App\Models\Event as Fair;
 use App\Models\Grant;
 use App\Models\Organization;
@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Services\ReceiptPdf;
 
 beforeEach(function () {
-    usingRepPanel();
 
     $this->school = Organization::factory()->named('Kenyon College')->create([
         'address_line1' => '100 College Drive',
@@ -89,18 +88,16 @@ describe('availability', function () {
         $pending = Registration::factory()->pendingCheck()->forEvent($this->fair)
             ->forOrganization($this->school)->create();
 
-        livewire(ViewRegistration::class, ['record' => $confirmed->getRouteKey()])
-            ->assertActionVisible('receipt');
+        expect(livewire(ViewRegistration::class, ['registration' => $confirmed])->instance()->hasReceipt())->toBeTrue();
 
-        livewire(ViewRegistration::class, ['record' => $pending->getRouteKey()])
-            ->assertActionHidden('receipt');
+        expect(livewire(ViewRegistration::class, ['registration' => $pending])->instance()->hasReceipt())->toBeFalse();
     });
 
     it('downloads through the portal', function () {
         $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
 
-        $response = livewire(ViewRegistration::class, ['record' => $registration->getRouteKey()])
-            ->callAction('receipt');
+        $response = livewire(ViewRegistration::class, ['registration' => $registration])
+            ->call('receipt');
 
         expect(downloadedContent($response))->toStartWith('%PDF-');
     });

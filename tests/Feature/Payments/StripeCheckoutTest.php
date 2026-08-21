@@ -2,8 +2,8 @@
 
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
-use App\Filament\Rep\Resources\RegistrationResource\Pages\CreateRegistration;
-use App\Filament\Rep\Resources\RegistrationResource\Pages\ViewRegistration;
+use App\Livewire\Portal\CreateRegistration;
+use App\Livewire\Portal\ShowRegistration as ViewRegistration;
 use App\Models\Event as Fair;
 use App\Models\Grant;
 use App\Models\Organization;
@@ -16,7 +16,6 @@ use Stripe\StripeClient;
 use Tests\Fakes\FakePaymentGateway;
 
 beforeEach(function () {
-    usingRepPanel();
 
     $this->gateway = new FakePaymentGateway;
     $this->app->instance(PaymentGateway::class, $this->gateway);
@@ -32,14 +31,9 @@ describe('the amount handed to the gateway', function () {
     it('is the registration snapshot, never anything the wizard was given', function () {
         // Test-inventory item 1, the most important assertion in the app.
         livewire(CreateRegistration::class)
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'rep_name' => 'Dana',
-                'rep_email' => 'dana@kenyon.example',
-                'payment_method' => PaymentMethod::Stripe->value,
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors();
+            ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')->set('payment_method', PaymentMethod::Stripe->value)
+            ->call('submit')
+            ->assertHasNoErrors();
 
         $registration = Registration::query()->latest('id')->firstOrFail();
 
@@ -52,14 +46,9 @@ describe('the amount handed to the gateway', function () {
         Grant::factory()->percentOff(60)->for($this->fair)->for($this->school)->create();
 
         livewire(CreateRegistration::class)
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'rep_name' => 'Dana',
-                'rep_email' => 'dana@kenyon.example',
-                'payment_method' => PaymentMethod::Stripe->value,
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors();
+            ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')->set('payment_method', PaymentMethod::Stripe->value)
+            ->call('submit')
+            ->assertHasNoErrors();
 
         $registration = Registration::query()->latest('id')->firstOrFail();
 
@@ -72,27 +61,18 @@ describe('the amount handed to the gateway', function () {
         Grant::factory()->free()->for($this->fair)->for($this->school)->create();
 
         livewire(CreateRegistration::class)
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'rep_name' => 'Dana',
-                'rep_email' => 'dana@kenyon.example',
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors();
+            ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')
+            ->call('submit')
+            ->assertHasNoErrors();
 
         expect($this->gateway->sessions)->toBeEmpty();
     });
 
     it('never reaches the gateway on the check path', function () {
         livewire(CreateRegistration::class)
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'rep_name' => 'Dana',
-                'rep_email' => 'dana@kenyon.example',
-                'payment_method' => PaymentMethod::Check->value,
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors();
+            ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')->set('payment_method', PaymentMethod::Check->value)
+            ->call('submit')
+            ->assertHasNoErrors();
 
         expect($this->gateway->sessions)->toBeEmpty();
     });
@@ -145,15 +125,13 @@ describe('retrying a payment', function () {
         $pending = Registration::factory()->pendingStripe()->forEvent($this->fair)
             ->forOrganization($this->school)->create();
 
-        livewire(ViewRegistration::class, ['record' => $pending->getRouteKey()])
-            ->assertActionVisible('pay');
+        expect(livewire(ViewRegistration::class, ['registration' => $pending])->instance()->canPay())->toBeTrue();
     });
 
     it('hides it once the money has arrived', function () {
         $confirmed = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
 
-        livewire(ViewRegistration::class, ['record' => $confirmed->getRouteKey()])
-            ->assertActionHidden('pay');
+        expect(livewire(ViewRegistration::class, ['registration' => $confirmed])->instance()->canPay())->toBeFalse();
     });
 
     it('hides it on the check path and on a free registration', function () {
@@ -162,9 +140,7 @@ describe('retrying a payment', function () {
         $free = Registration::factory()->free()->forEvent($this->fair)
             ->forOrganization($this->school)->create();
 
-        livewire(ViewRegistration::class, ['record' => $check->getRouteKey()])
-            ->assertActionHidden('pay');
-        livewire(ViewRegistration::class, ['record' => $free->getRouteKey()])
-            ->assertActionHidden('pay');
+        expect(livewire(ViewRegistration::class, ['registration' => $check])->instance()->canPay())->toBeFalse();
+        expect(livewire(ViewRegistration::class, ['registration' => $free])->instance()->canPay())->toBeFalse();
     });
 });

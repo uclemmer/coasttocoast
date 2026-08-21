@@ -57,12 +57,16 @@ it('sends a guest to the login page rather than throwing', function () {
 });
 
 /*
- * Documents the state DURING the migration, and fails when it ends: /portal is
- * still Filament's, with its own login. Deliberately a test rather than a
- * comment, so retiring the panel cannot quietly leave two login pages behind.
+ * The migration is over. This asserted, during it, that /portal was still
+ * Filament's - and failed the moment the panel was retired, which is exactly
+ * what it was written to do. It now asserts the opposite: there is one login
+ * page, and /portal sends a guest to it.
  */
-it('still has the filament rep panel answering /portal, for now', function () {
-    get('/portal')->assertRedirect('/portal/login');
+it('has a single login page, with the rep panel retired', function () {
+    get('/portal')->assertRedirect('/login');
+
+    // The panel's own auth routes are gone, not merely unreachable.
+    expect(Route::has('filament.rep.auth.login'))->toBeFalse();
 });
 
 it('sends a signed-in user away from the login page', function () {

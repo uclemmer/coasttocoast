@@ -2,7 +2,6 @@
 
 use App\Providers\AppServiceProvider;
 use App\Providers\EventServiceProvider;
-use App\Providers\Filament\RepPanelProvider;
 
 /*
  * The admin panel is not listed here: laravel-core registers its own
@@ -15,5 +14,4 @@ use App\Providers\Filament\RepPanelProvider;
 return [
     AppServiceProvider::class,
     EventServiceProvider::class,
-    RepPanelProvider::class,
 ];

@@ -44,6 +44,24 @@ trait ActsForAnOrganization
     }
 
     /**
+     * Refuse a user who is attached to no school at all.
+     *
+     * Distinct from the membership gate below, and a different question. A
+     * pending or retired rep HAS a school and may browse its history; somebody
+     * with no school has nothing on these pages to see, and the queries behind
+     * them would return an empty set rather than a refusal. The Filament
+     * resources drew the same line in `canViewAny()`.
+     */
+    protected function abortUnlessAttachedToOrganization(): void
+    {
+        abort_unless(
+            $this->currentUser()->organization_id !== null,
+            403,
+            $this->membershipNotice() ?? __('Not allowed.'),
+        );
+    }
+
+    /**
      * Refuse the page outright. For anything that writes.
      *
      * Called from `mount()` so the refusal happens before anything renders,

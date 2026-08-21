@@ -122,7 +122,12 @@ it('serves every admin page to a coordinator', function () {
 it('serves every portal page to an active representative', function () {
     $this->actingAs($this->rep);
 
-    $urls = panelUrls('portal', ['{record}' => $this->registration->getRouteKey()]);
+    // The portal is Livewire now, so its parameter is {registration} rather
+    // than Filament's {record}.
+    $urls = panelUrls('portal', [
+        '{record}' => $this->registration->getRouteKey(),
+        '{registration}' => $this->registration->getRouteKey(),
+    ]);
 
     expect($urls)->not->toBeEmpty();
 

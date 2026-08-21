@@ -6,7 +6,7 @@ use App\Enums\RegistrationStatus;
 use App\Events\RegistrationConfirmed;
 use App\Exceptions\RegistrationNotAllowed;
 use App\Filament\Admin\Resources\RegistrationResource\Pages\ViewRegistration as AdminViewRegistration;
-use App\Filament\Rep\Resources\RegistrationResource\Pages\ViewRegistration as RepViewRegistration;
+use App\Livewire\Portal\ShowRegistration as RepViewRegistration;
 use App\Models\Event as Fair;
 use App\Models\Grant;
 use App\Models\Organization;
@@ -32,29 +32,24 @@ describe('the printable form', function () {
     });
 
     it('is offered to the rep while the check is outstanding', function () {
-        usingRepPanel();
         $this->actingAs(User::factory()->rep($this->school)->create());
 
-        livewire(RepViewRegistration::class, ['record' => $this->registration->getRouteKey()])
-            ->assertActionVisible('checkForm');
+        expect(livewire(RepViewRegistration::class, ['registration' => $this->registration])->instance()->needsCheckForm())->toBeTrue();
     });
 
     it('disappears once the check has arrived', function () {
-        usingRepPanel();
         $this->actingAs(User::factory()->rep($this->school)->create());
 
         app(CheckPaymentService::class)->markReceived($this->registration, $this->coordinator);
 
-        livewire(RepViewRegistration::class, ['record' => $this->registration->refresh()->getRouteKey()])
-            ->assertActionHidden('checkForm');
+        expect(livewire(RepViewRegistration::class, ['registration' => $this->registration])->instance()->needsCheckForm())->toBeFalse();
     });
 
     it('downloads through the portal', function () {
-        usingRepPanel();
         $this->actingAs(User::factory()->rep($this->school)->create());
 
-        $response = livewire(RepViewRegistration::class, ['record' => $this->registration->getRouteKey()])
-            ->callAction('checkForm');
+        $response = livewire(RepViewRegistration::class, ['registration' => $this->registration])
+            ->call('checkForm');
 
         expect(downloadedContent($response))->toStartWith('%PDF-');
     });

@@ -5,6 +5,13 @@ use App\Http\Controllers\EventInterestController;
 use App\Http\Controllers\SiteController;
 use App\Livewire\Auth\Register;
 use App\Livewire\LastYearRoster;
+use App\Livewire\Portal\CreateRegistration;
+use App\Livewire\Portal\Dashboard;
+use App\Livewire\Portal\Grants;
+use App\Livewire\Portal\OrganizationProfile;
+use App\Livewire\Portal\Profile;
+use App\Livewire\Portal\Registrations;
+use App\Livewire\Portal\ShowRegistration;
 use App\Livewire\RepresentativesRoster;
 use Illuminate\Support\Facades\Route;
 
@@ -14,7 +21,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | Blade and Livewire (owner directive, 2026-08-19). Filament keeps the two
-| authenticated panels — /admin (laravel-core) and /portal (RepPanelProvider) —
+| authenticated surfaces — /admin (laravel-core's Filament panel) and /portal
+| (Livewire, see docs/12) —
 | and registers their routes itself.
 |
 | Route names are prefixed `site.` so the navigation can highlight the current
@@ -38,6 +46,32 @@ use Illuminate\Support\Facades\Route;
  * whether the account is active immediately. See docs/12.
  */
 Route::get('/register', Register::class)->middleware('guest')->name('register');
+
+/*
+ * The representative portal (docs/12).
+ *
+ * Was a Filament panel until 2026-08-21; these are the Livewire components that
+ * replaced it, at the same URLs so every bookmark and emailed link still lands.
+ *
+ * `verified` sits alongside `auth` because the panel enforced it and dropping
+ * it here would quietly widen who can register a school. Membership - pending,
+ * active, retired - is enforced per screen instead, since browsing is allowed
+ * and acting is not; see Portal\Concerns\ActsForAnOrganization.
+ */
+Route::middleware(['auth', 'verified'])->prefix('portal')->name('portal.')->group(function (): void {
+    Route::get('/', Dashboard::class)->name('dashboard');
+
+    Route::get('/registrations', Registrations::class)->name('registrations');
+    Route::get('/registrations/create', CreateRegistration::class)->name('registrations.create');
+    Route::get('/registrations/{registration}', ShowRegistration::class)->name('registrations.show');
+
+    Route::get('/grants', Grants::class)->name('grants');
+    // 'organization-profile', not the tidier 'organization': this is the URL
+    // Filament's panel served, and the route comment above promises bookmarks
+    // still land. A nicer path is not worth breaking that.
+    Route::get('/organization-profile', OrganizationProfile::class)->name('organization');
+    Route::get('/profile', Profile::class)->name('profile');
+});
 
 /*
  * Email verification, app-owned.

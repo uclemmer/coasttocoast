@@ -69,11 +69,6 @@ function usingAdminPanel(): void
     Filament::setCurrentPanel('core');
 }
 
-function usingRepPanel(): void
-{
-    Filament::setCurrentPanel('rep');
-}
-
 function usingSitePanel(): void
 {
     Filament::setCurrentPanel('site');

@@ -1,6 +1,21 @@
 @import 'tailwindcss';
 
 /*
+ * uclemmer/laravel-ui's design tokens, PUBLISHED AND OWNED (docs/12).
+ *
+ * Every semantic utility the package's components emit - bg-brand, text-body,
+ * rounded-base - is generated from this sheet, and this copy is repointed at
+ * the design handoff's palette so they render in the site's green rather than
+ * the package's default blue. Read its header before editing.
+ *
+ * It sits here, at the top, because CSS requires imports before other rules.
+ * The tokens it references are declared in this file's own @theme block much
+ * further down, and that is fine: a custom property resolves when it is used,
+ * not when it is parsed.
+ */
+@import './vendor/ui/theme.css';
+
+/*
  * Flowbite is the component library for the public site (owner directive,
  * 2026-08-19: frontend is Blade + Livewire + Flowbite, Filament is the admin
  * backend only). `ckbs` is the reference wiring in this workspace.
@@ -19,6 +34,21 @@
  *     template, so they would otherwise be purged;
  *   - the framework's pagination views;
  *   - Livewire's own markup.
+ */
+/*
+ * laravel-ui's Blade lives in vendor/, which is gitignored and therefore
+ * skipped by Tailwind's automatic scan. Without this line the package's
+ * components render with a full class attribute and no styling at all, and
+ * nothing reports an error.
+ */
+@source '../../vendor/uclemmer/laravel-ui/resources/views';
+
+/*
+ * Flowbite is still here, and deliberately so. The public site's mobile nav and
+ * FAQ accordion are the only two things using it, and laravel-ui has no
+ * accordion to replace the second - so removing Flowbite is its own change,
+ * not a side effect of adopting the package. The two coexist: different class
+ * vocabularies, neither aware of the other.
  */
 @source '../../node_modules/flowbite';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views';

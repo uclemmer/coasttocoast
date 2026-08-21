@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "57324d56523a3e6725719cc3761135a4",
+    "content-hash": "36d192534c04ed427fc749528cbef361",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -8694,6 +8694,120 @@
                 }
             ],
             "time": "2026-08-17T19:07:23+00:00"
+        },
+        {
+            "name": "uclemmer/laravel-ui",
+            "version": "v0.4.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:uclemmer/laravel-ui.git",
+                "reference": "96d11dbd2e5f8503c1fe09caef456927f3470784"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/uclemmer/laravel-ui/zipball/96d11dbd2e5f8503c1fe09caef456927f3470784",
+                "reference": "96d11dbd2e5f8503c1fe09caef456927f3470784",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^13.0",
+                "php": "^8.4",
+                "spatie/laravel-package-tools": "^1.16"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.14",
+                "nunomaduro/collision": "^8.8",
+                "orchestra/testbench": "^11.0.0",
+                "pestphp/pest": "^4.0",
+                "pestphp/pest-plugin-arch": "^4.0",
+                "pestphp/pest-plugin-laravel": "^4.0",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "spatie/laravel-ray": "^1.35"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "UClemmer\\LaravelUi\\UiServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "UClemmer\\LaravelUi\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "UClemmer\\LaravelUi\\Tests\\": "tests/",
+                    "Workbench\\App\\": "workbench/app/"
+                }
+            },
+            "scripts": {
+                "post-autoload-dump": [
+                    "@composer run prepare"
+                ],
+                "prepare": [
+                    "@php vendor/bin/testbench package:discover --ansi"
+                ],
+                "test": [
+                    "@php -d memory_limit=1G vendor/bin/pest"
+                ],
+                "test-coverage": [
+                    "@php -d memory_limit=1G vendor/bin/pest --coverage"
+                ],
+                "analyse": [
+                    "@prepare",
+                    "vendor/bin/phpstan analyse --memory-limit=1G"
+                ],
+                "analyze": [
+                    "@analyse"
+                ],
+                "format": [
+                    "@format-php",
+                    "@format-blade"
+                ],
+                "format-php": [
+                    "vendor/bin/pint"
+                ],
+                "format-blade": [
+                    "npx blade-formatter --write --end-of-line LF \"resources/views/**/*.blade.php\""
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Uriah M. Clemmer IV",
+                    "email": "uriah@nihil.co",
+                    "role": "Developer"
+                }
+            ],
+            "description": "The uclemmer/* component library: Blade components on Tailwind CSS 4, Alpine and Livewire. No UI frameworks, no Filament, no laravel-core.",
+            "homepage": "https://github.com/uclemmer/laravel-ui",
+            "keywords": [
+                "UClemmer",
+                "blade",
+                "flowbite",
+                "laravel",
+                "tailwind",
+                "ui"
+            ],
+            "support": {
+                "source": "https://github.com/uclemmer/laravel-ui/tree/v0.4.0",
+                "issues": "https://github.com/uclemmer/laravel-ui/issues"
+            },
+            "funding": [
+                {
+                    "type": "github",
+                    "url": "https://github.com/:vendor_name"
+                }
+            ],
+            "time": "2026-08-21T11:55:01+00:00"
         },
         {
             "name": "ueberdosis/tiptap-php",

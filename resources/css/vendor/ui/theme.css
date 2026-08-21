@@ -1,0 +1,211 @@
+/*
+ * uclemmer/laravel-ui — design tokens, REPOINTED AT THIS APP'S BRAND
+ *
+ * Published from the package (vendor:publish --tag=ui-theme) and owned here.
+ * This is the intended workflow, not a fork: laravel-ui's defaults map every
+ * semantic name onto Tailwind's stock palette, where brand is blue — and this
+ * site's brand is the green from the wordmark, declared final by the Claude
+ * Design handoff in docs/design-handoff/. Left at its defaults, every component
+ * the package ships would render blue on a green site.
+ *
+ * Every value below points at one of this app's own design tokens, defined in
+ * resources/css/app.css. Nothing here invents a colour, so the components
+ * inherit the handoff rather than approximating it. Change a colour in app.css
+ * and it flows through to the components.
+ *
+ * TWO CONSEQUENCES OF OWNING THIS FILE:
+ *
+ *  - It no longer receives package updates. A token added by a later
+ *    laravel-ui release will be missing here, and the classes needing it will
+ *    compile to nothing — silently, as ever. When upgrading the package, diff
+ *    this against vendor/uclemmer/laravel-ui/resources/css/theme.css.
+ *  - The .dark block is a deliberate no-op: every dark value mirrors its light
+ *    counterpart, because this site has no dark mode. A half-built one is worse
+ *    than none. Fill it in if the design ever grows one.
+ *
+ * The original package header follows.
+ *
+ * uclemmer/laravel-ui — design tokens
+ *
+ * Every semantic utility this package's components emit — bg-brand, text-body,
+ * text-fg-danger-strong, rounded-base — is generated from the custom properties
+ * below. A host imports this file after Tailwind and gets the whole vocabulary:
+ *
+ *     @import 'tailwindcss';
+ *     @import '../../vendor/uclemmer/laravel-ui/resources/css/theme.css';
+ *
+ * Without it the components render with a full class attribute and no styling,
+ * with no error anywhere. That failure mode is the reason this file exists as
+ * one auditable sheet rather than as classes scattered through the components.
+ *
+ * WHAT IS IN HERE, AND WHY EXACTLY THIS MUCH
+ *
+ * 46 properties, and not one more. They were derived, not chosen: every class
+ * string in resources/ was extracted and partitioned into Tailwind stock
+ * utilities and utilities needing a definition, and this is that second set.
+ * Adding a property is a decision with the same weight as adding a composer
+ * dependency — check first whether an existing token or a stock utility covers
+ * the case. A sheet that grows a token per component has stopped being a design
+ * system.
+ *
+ * NO HARD-CODED COLOURS. Every value resolves to a colour from Tailwind's own
+ * stock palette, so this sheet is a semantic *mapping* rather than a palette of
+ * its own — restyling means repointing a name at a different stock colour, and
+ * an application never has to match hex values by eye.
+ *
+ * PROVENANCE. The mapping reproduces what Flowbite 4's MIT-licensed default
+ * theme rendered, so that applications already built against the package look
+ * unchanged after the Tailwind/Alpine/Livewire rebuild (owner decision,
+ * 2026-08-20; see docs/04-build-plan.md, R0). Flowbite's attribution is carried
+ * in LICENSE.md and stays for as long as this mapping does.
+ *
+ * DARK MODE LIVES HERE, NOT IN THE COMPONENTS. The .dark block below repoints
+ * the same names, which is why no component in this package writes a `dark:`
+ * class and why the test suite asserts that none ever does. A host preferring
+ * prefers-color-scheme publishes this file (vendor:publish --tag=ui-theme) and
+ * swaps the selector for a media query.
+ *
+ * ONE RULE THAT IS NOT A TOKEN, at the bottom: `[x-cloak]`. The interactive
+ * components mark themselves cloaked so they cannot flash open in the moment
+ * between the page painting and Alpine booting. Alpine defines the attribute
+ * but deliberately ships no CSS for it, so every project is told to add this
+ * one line by hand — which makes it exactly the kind of silent host
+ * requirement this package has been removing. It travels with the sheet
+ * instead. See docs/04-build-plan.md, R2.
+ */
+
+@theme {
+    /* Brand — the one colour an application is most likely to change */
+    --color-brand:           var(--color-brand-600);
+    --color-brand-medium:    var(--color-brand-200);
+    --color-brand-soft:      var(--color-brand-100);
+    --color-brand-softer:    var(--color-brand-50);
+    --color-brand-strong:    var(--color-brand-700);
+    --color-brand-subtle:    var(--color-brand-200);
+    --color-fg-brand:        var(--color-brand-650);
+    --color-fg-brand-strong: var(--color-brand-700);
+
+    /* Status: danger, success, warning */
+    --color-danger:            var(--color-danger);
+    --color-danger-medium:     var(--color-danger-200);
+    --color-danger-soft:       var(--color-danger-100);
+    --color-danger-strong:     var(--color-danger-dark);
+    --color-danger-subtle:     var(--color-danger-200);
+    --color-fg-danger-strong:  var(--color-danger-dark);
+    --color-fg-success-strong: var(--color-brand-700);
+    --color-fg-warning:        var(--color-warn-dark);
+    --color-success:           var(--color-brand-600);
+    --color-success-medium:    var(--color-brand-200);
+    --color-success-soft:      var(--color-brand-50);
+    --color-success-strong:    var(--color-brand-700);
+    --color-warning:           var(--color-warn);
+    --color-warning-medium:    var(--color-warn-200);
+    --color-warning-soft:      var(--color-warn-50);
+    --color-warning-strong:    var(--color-warn-dark);
+
+    /* Text */
+    --color-body:        var(--color-ink-700);
+    --color-body-subtle: var(--color-ink-500);
+    --color-heading:     var(--color-ink-900);
+
+    /* Surfaces — page and component backgrounds */
+    --color-buffer:                   #ffffff;
+    --color-dark-backdrop:            var(--color-ink-900);
+    --color-dark:                     var(--color-ink-800);
+    --color-dark-strong:              var(--color-ink-900);
+    --color-light:                    var(--color-line-soft);
+    --color-neutral-primary:          #ffffff;
+    --color-neutral-primary-medium:   #ffffff;
+    --color-neutral-primary-soft:     #ffffff;
+    --color-neutral-quaternary:       var(--color-line);
+    --color-neutral-secondary-medium: var(--color-field-bg);
+    --color-neutral-secondary-soft:   var(--color-brand-100);
+    --color-neutral-tertiary:         var(--color-line-soft);
+    --color-neutral-tertiary-medium:  var(--color-line);
+    --color-neutral-tertiary-soft:    var(--color-line-soft);
+
+    /* Borders and disabled state */
+    --color-default:        var(--color-line);
+    --color-default-medium: var(--color-field-border);
+    --color-disabled:       var(--color-disabled-bg);
+    --color-fg-disabled:    var(--color-ink-300);
+
+    /* Accents used by badge only */
+    --color-pink:   var(--color-pink-600);
+    --color-purple: var(--color-purple-500);
+
+    /* Radii */
+    --radius-base: 12px;
+    --radius-xs:   4px;
+}
+
+.dark {
+    /* Brand — the one colour an application is most likely to change */
+    --color-brand:           var(--color-brand-600);
+    --color-brand-medium:    var(--color-brand-200);
+    --color-brand-soft:      var(--color-brand-100);
+    --color-brand-softer:    var(--color-brand-50);
+    --color-brand-strong:    var(--color-brand-700);
+    --color-brand-subtle:    var(--color-brand-200);
+    --color-fg-brand:        var(--color-brand-650);
+    --color-fg-brand-strong: var(--color-brand-700);
+
+    /* Status: danger, success, warning */
+    --color-danger:            var(--color-danger);
+    --color-danger-medium:     var(--color-danger-200);
+    --color-danger-soft:       var(--color-danger-100);
+    --color-danger-strong:     var(--color-danger-dark);
+    --color-danger-subtle:     var(--color-danger-200);
+    --color-fg-danger-strong:  var(--color-danger-dark);
+    --color-fg-success-strong: var(--color-brand-700);
+    --color-fg-warning:        var(--color-warn-dark);
+    --color-success:           var(--color-brand-600);
+    --color-success-medium:    var(--color-brand-200);
+    --color-success-soft:      var(--color-brand-50);
+    --color-success-strong:    var(--color-brand-700);
+    --color-warning:           var(--color-warn);
+    --color-warning-medium:    var(--color-warn-200);
+    --color-warning-soft:      var(--color-warn-50);
+    --color-warning-strong:    var(--color-warn-dark);
+
+    /* Text */
+    --color-body:        var(--color-ink-700);
+    --color-body-subtle: var(--color-ink-500);
+    --color-heading:     var(--color-ink-900);
+
+    /* Surfaces — page and component backgrounds */
+    --color-buffer:                   #ffffff;
+    --color-dark-backdrop:            var(--color-ink-900);
+    --color-dark:                     var(--color-ink-800);
+    --color-dark-strong:              var(--color-ink-900);
+    --color-light:                    var(--color-line-soft);
+    --color-neutral-primary:          #ffffff;
+    --color-neutral-primary-medium:   #ffffff;
+    --color-neutral-primary-soft:     #ffffff;
+    --color-neutral-quaternary:       var(--color-line);
+    --color-neutral-secondary-medium: var(--color-field-bg);
+    --color-neutral-secondary-soft:   var(--color-brand-100);
+    --color-neutral-tertiary:         var(--color-line-soft);
+    --color-neutral-tertiary-medium:  var(--color-line);
+    --color-neutral-tertiary-soft:    var(--color-line-soft);
+
+    /* Borders and disabled state */
+    --color-default:        var(--color-line);
+    --color-default-medium: var(--color-field-border);
+    --color-disabled:       var(--color-disabled-bg);
+    --color-fg-disabled:    var(--color-ink-300);
+
+    /* Accents used by badge only */
+    --color-pink:   var(--color-pink-500);
+    --color-purple: var(--color-purple-500);
+}
+
+/*
+ * Hide elements marked x-cloak until Alpine initialises and removes the
+ * attribute. Without it a modal or drawer renders open for one frame on every
+ * page load. Not a token, but it belongs to the same contract: import the
+ * sheet and the components work.
+ */
+[x-cloak] {
+    display: none !important;
+}

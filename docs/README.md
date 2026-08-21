@@ -38,14 +38,18 @@ cards from 05 under the rules in 06):
 | [10-implementation-decisions.md](10-implementation-decisions.md) | Every judgement call an implementing session made without the owner present, with its reasoning and how to reverse it — **read this before questioning why something differs from 01–07** |
 | [design-handoff/](design-handoff/) | The Claude Design handoff the public site was built from (2026-08-19) — the landing, interior and maintenance prototypes, and the token/type/spacing reference that declares colours, typography, spacing and copy final. Start at its [PROVENANCE.md](design-handoff/PROVENANCE.md) |
 | [11-deployment.md](11-deployment.md) | Getting it live: host requirements, the deploy sequence, Stripe/Postmark/Twilio setup, backups, the go-live checklist, and the **owner content queue** — the things only Matt can supply |
+| [12-ui-package-adoption.md](12-ui-package-adoption.md) | Adopting `uclemmer/laravel-ui` and retiring the rep panel: what that panel actually owns (all of auth), where each piece goes, and the published theme sheet repointed at the design handoff |
 
 **Golden rules** (duplicated from the docs because they matter):
 
-1. **Frontend is Blade + Livewire + Flowbite; backend is Filament** (owner directive 2026-08-19,
-   superseding the 2026-08-16 "Filament only" rule). Public pages are Blade route views and Livewire
-   components styled with Tailwind 4 + Flowbite. `/admin` stays Filament. Do not build a public-facing
-   Filament panel — the one that existed was deleted in Phase 8. See
-   [02-architecture.md](02-architecture.md).
+1. **The UI stack is Tailwind + Alpine + Livewire, on `uclemmer/laravel-ui`** (owner directive
+   2026-08-20, superseding the 2026-08-19 "Flowbite frontend, Filament backend" rule and the
+   2026-08-16 "Filament only" rule before it). Filament and Flowbite are both being removed —
+   frontend *and* admin. Reach for a `<x-ui::*>` component first; a missing one is a gap in the
+   package, not a reason to open Filament. **Migration is in progress**: the rep portal is the
+   current target and `/admin` is still Filament. Read
+   [12-ui-package-adoption.md](12-ui-package-adoption.md) before touching any UI, and
+   [02-architecture.md](02-architecture.md) for the stack it supersedes.
 2. Build on **laravel-core** — never recreate a module it provides (admin shell, roles/permissions, email log, contact, content blocks); package changes happen in its own repo (owner directive 2026-08-16).
 3. Money is integer cents; price always comes from `Event::priceFor(organization)` (grant-aware, server-side); the Stripe webhook is the source of truth for payment state.
 4. Every vendor SDK call lives behind a service interface (doc 04) so it can be faked in tests.

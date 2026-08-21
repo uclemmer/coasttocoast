@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 
 it('stores a phone number and an sms opt-in', function () {
     $user = User::factory()->smsOptedIn()->create();
@@ -25,5 +26,5 @@ it('finds only opted-in users with a number as sms reachable', function () {
 });
 
 it('has no is_admin column — roles come from laravel-core', function () {
-    expect(Illuminate\Support\Facades\Schema::hasColumn('users', 'is_admin'))->toBeFalse();
+    expect(Schema::hasColumn('users', 'is_admin'))->toBeFalse();
 });

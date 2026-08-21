@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use UClemmer\LaravelCore\Auth\Role;
 
 /*
  * Card 1.1 — /admin is laravel-core's prebuilt panel, gated on `admin.access`.
@@ -36,7 +37,7 @@ it('answers canAccessPanel from the permission, not from a column', function () 
 it('lets a super admin in without the coordinator role', function () {
     $user = User::factory()->create();
     $user->assignRole(
-        UClemmer\LaravelCore\Auth\Role::query()->create(['name' => config('core.auth.super_admin_role')])
+        Role::query()->create(['name' => config('core.auth.super_admin_role')])
     );
 
     $this->actingAs($user->fresh())->get('/admin')->assertOk();

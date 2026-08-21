@@ -1,10 +1,11 @@
 <?php
 
-use App\Filament\FairPlugin;
 use App\Support\Permissions;
 use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
+use UClemmer\LaravelCore\Auth\Permission;
 use UClemmer\LaravelCore\Auth\Role;
 
 /*
@@ -28,13 +29,13 @@ it('brands the admin panel for the fair', function () {
 });
 
 it('published the core migrations', function (string $table) {
-    expect(Illuminate\Support\Facades\Schema::hasTable($table))->toBeTrue();
+    expect(Schema::hasTable($table))->toBeTrue();
 })->with(['core_roles', 'core_permissions', 'core_role_user', 'core_permission_role', 'core_email_logs', 'core_contact_submissions', 'core_contents']);
 
 it('syncs the application permissions alongside the package ones', function () {
     Artisan::call('core:sync-permissions');
 
-    $names = UClemmer\LaravelCore\Auth\Permission::query()->pluck('name');
+    $names = Permission::query()->pluck('name');
 
     expect($names)->toContain('admin.access')
         ->and($names)->toContain(Permissions::EVENTS_MANAGE)
@@ -48,7 +49,7 @@ it('seeds a coordinator role holding every synced permission', function () {
     $role = Role::query()->where('name', 'coordinator')->firstOrFail();
 
     expect($role->permissions()->count())
-        ->toBe(UClemmer\LaravelCore\Auth\Permission::query()->count())
+        ->toBe(Permission::query()->count())
         ->and($role->permissions()->where('name', 'admin.access')->exists())->toBeTrue();
 });
 

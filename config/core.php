@@ -1,5 +1,8 @@
 <?php
 
+use App\Filament\FairPlugin;
+use App\Support\Permissions;
+
 /*
  * Published from uclemmer/laravel-core's config/core.php and edited for Coast to
  * Coast College Fair — see docs/02-architecture.md, "laravel-core integration
@@ -443,7 +446,7 @@ return [
          * BYO-panel hosts ignore this and call ->plugin(...) themselves.
          */
         'plugins' => [
-            App\Filament\FairPlugin::class,
+            FairPlugin::class,
         ],
 
         'modules' => [
@@ -499,7 +502,7 @@ return [
     |
     */
     'permission_providers' => [
-        App\Support\Permissions::class,
+        Permissions::class,
     ],
 
 ];

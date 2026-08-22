@@ -4,7 +4,6 @@ namespace App\Services\Payments;
 
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
-use App\Filament\Rep\Resources\RegistrationResource;
 use App\Models\Payment;
 use App\Models\Registration;
 use RuntimeException;
@@ -111,13 +110,25 @@ class StripeCheckoutService implements PaymentGateway
         // dashboard leave the database in the same state.
     }
 
+    /*
+     * Where Stripe sends the rep back to.
+     *
+     * These were `RegistrationResource::getUrl(..., panel: 'rep')` until
+     * 2026-08-21, when the Filament rep panel was deleted and rebuilt as the
+     * Livewire screens at /portal. The import went stale in that change and
+     * nothing caught it: no test reached either method, so the suite stayed
+     * green while the live "pay by card" path had a fatal in it.
+     *
+     * Hence StripeReturnUrlTest, which calls both. A method that nothing calls
+     * is a method that can be deleted out from under.
+     */
     protected function successUrl(Registration $registration): string
     {
-        return RegistrationResource::getUrl('view', ['record' => $registration], panel: 'rep');
+        return route('portal.registrations.show', $registration);
     }
 
     protected function cancelUrl(): string
     {
-        return RegistrationResource::getUrl('index', panel: 'rep');
+        return route('portal.registrations');
     }
 }

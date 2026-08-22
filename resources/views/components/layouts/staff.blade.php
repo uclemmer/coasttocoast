@@ -97,6 +97,7 @@
             <ul class="space-y-1 font-medium">
                 @foreach ([
         ['staff.events', __('Fairs')],
+        ['staff.organizations', __('Schools')],
         ['staff.grants', __('Fee assistance')],
         ['staff.faq', __('FAQ')],
         ['staff.sponsors', __('Sponsors')],

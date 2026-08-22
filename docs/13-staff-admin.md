@@ -1,7 +1,7 @@
 # 13 — The staff area, and getting the fair's admin off Filament
 
-**Status: in progress. The shell, Sponsors, the FAQ, Grants and Fairs are
-done (2026-08-21); three resources remain.**
+**Status: in progress. The shell, Sponsors, the FAQ, Grants, Fairs and
+Schools are done (2026-08-21); two resources remain.**
 
 This is step 3 of the workspace Filament removal (`CLAUDE.md`). Doc 12 covered
 step 1 — the rep panel at `/portal`. This one covers the fair's own admin
@@ -186,9 +186,33 @@ mail goes out, not in bulk afterwards: if it dies halfway the people already
 told are marked and a re-run continues. A coordinator unsure whether the first
 press worked should be able to press again.
 
+### Schools, and the collision that must not be a toast
+
+`OrganizationService::merge()` repoints representatives, registrations and
+grants and then deletes the husk — a delete could never do this, because the
+foreign keys cascade and would take real financial history with them.
+
+It reports back any fair where the merge has left the school holding **two live
+registrations**, and those are deliberately not resolved automatically: which of
+two paid registrations a school keeps is a decision about money. Filament raised
+a `->persistent()` notification. A toast auto-dismisses, so the rebuild keeps
+the warning in an `x-ui::alert` on the component until somebody dismisses it by
+hand, and a test asserts it survives the next interaction.
+
+Two smaller things:
+
+- **The duplicate warning is surfaced, not blocking** (R2.7), and now updates
+  while the name is typed rather than only on a saved record — "Boston
+  University" and "Boston College" normalize differently on purpose, so a match
+  is worth a second look and never a veto.
+- **Self-merge is refused by the service, not restated as a validation rule
+  here.** The first attempt added `different:merging`, which both duplicated a
+  decision the service already owns and did not actually fire. The service's
+  message is shown verbatim instead.
+
 ## Order of the rest
 
-`Organization` (merge, duplicate detection, a file upload) → `Message` (a live
+`Message` (a live
 `AudienceBuilder` count, channel-conditional fields, send and test-send, a
 read-only recipients table) → `Registration` (largest; the CSV export that must
 honour the active filters).

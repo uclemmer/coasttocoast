@@ -20,6 +20,9 @@ use App\Livewire\Staff\Faq\Edit as EditFaqItem;
 use App\Livewire\Staff\Faq\Index as FaqIndex;
 use App\Livewire\Staff\Grants\Index as GrantIndex;
 use App\Livewire\Staff\Grants\Show as ShowGrant;
+use App\Livewire\Staff\Organizations\Edit as EditOrganization;
+use App\Livewire\Staff\Organizations\Index as OrganizationIndex;
+use App\Livewire\Staff\Organizations\Show as ShowOrganization;
 use App\Livewire\Staff\Sponsors\Edit as EditSponsor;
 use App\Livewire\Staff\Sponsors\Index as SponsorIndex;
 use Illuminate\Support\Facades\Route;
@@ -106,6 +109,11 @@ Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(
     // is never swallowed by `{event}`.
     Route::get('/events/{event}', ShowEvent::class)->name('events.show');
     Route::get('/events/{event}/edit', EditEvent::class)->name('events.edit');
+
+    Route::get('/organizations', OrganizationIndex::class)->name('organizations');
+    Route::get('/organizations/create', EditOrganization::class)->name('organizations.create');
+    Route::get('/organizations/{organization}', ShowOrganization::class)->name('organizations.show');
+    Route::get('/organizations/{organization}/edit', EditOrganization::class)->name('organizations.edit');
 
     Route::get('/sponsors', SponsorIndex::class)->name('sponsors');
     Route::get('/sponsors/create', EditSponsor::class)->name('sponsors.create');

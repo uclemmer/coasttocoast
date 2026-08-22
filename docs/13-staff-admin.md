@@ -1,7 +1,7 @@
 # 13 — The staff area, and getting the fair's admin off Filament
 
-**Status: in progress. The shell, Sponsors and the FAQ are done (2026-08-21);
-five resources remain.**
+**Status: in progress. The shell, Sponsors, the FAQ and Grants are done
+(2026-08-21); four resources remain.**
 
 This is step 3 of the workspace Filament removal (`CLAUDE.md`). Doc 12 covered
 step 1 — the rep panel at `/portal`. This one covers the fair's own admin
@@ -142,15 +142,43 @@ Each of these is now ours, and each has a test because none of them had one:
 policy check inside a shared helper is exactly the wrong place for the thing
 Filament used to do invisibly.
 
+### Grants, and the first real action modals
+
+Three decisions over `GrantService`, shared by the queue and the detail screen
+through `Grants\Concerns\DecidesGrants`. No create or edit, deliberately — an
+edit form could set `status = approved` without a benefit, which
+`Event::priceFor()` reads as "no discount", so the school would be told it had a
+grant and then charged in full.
+
+Four things worth carrying to the remaining four:
+
+- **Conditional fields become conditional RULES.** Filament said `visible()` and
+  `required()` on each amount field; the Livewire version assembles the rule set
+  from the chosen benefit, so the field appearing and its rule applying are one
+  statement instead of two that can disagree.
+- **Service messages are surfaced verbatim** as a danger toast. There is then no
+  second copy of the wording to drift from the rule.
+- **The detail screen re-reads after a decision** rather than trusting the
+  instance it mounted with. Showing "Pending" beside a toast saying "Approved"
+  is how somebody clicks twice.
+- **A `authorize()` no test can reach still needs a test.** `GrantPolicy::update`
+  and `::viewAny` are the same question today, so nobody can pass `mount()` and
+  fail the check inside the decision — deleting that check left all twenty other
+  tests green. It is not redundant: it is where the decision lands, and it is
+  what will enforce `update()` the day that policy grows a condition. The test
+  binds a policy that allows the page and denies the update.
+
 ## Order of the rest
 
-`Grant` (three modal actions over
-`GrantService`, a filter defaulting to Pending, a nav badge) → `Event` (reactive
-slug, dollars↔cents, infolist, the announce action) → `Organization` (merge,
-duplicate detection) → `Message` (live `AudienceBuilder` count,
-channel-conditional fields, send/test) → `Registration` (largest; the filtered
-CSV export). Then the two widgets as `x-ui::stat-group`, delete `app/Filament/`,
-and remove the `FairPlugin` entry from `config/core.php`.
+`Event` (reactive slug, dollars↔cents, an infolist, the announce action) →
+`Organization` (merge, duplicate detection, a file upload) → `Message` (a live
+`AudienceBuilder` count, channel-conditional fields, send and test-send, a
+read-only recipients table) → `Registration` (largest; the CSV export that must
+honour the active filters).
+
+Then the two dashboard widgets as `x-ui::stat-group`, delete `app/Filament/`
+along with the Filament tests that cover it, and remove the `FairPlugin` entry
+from `config/core.php`.
 
 ## A bug this work turned up
 

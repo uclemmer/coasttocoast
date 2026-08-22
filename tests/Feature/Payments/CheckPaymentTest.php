@@ -5,12 +5,10 @@ use App\Enums\PaymentStatus;
 use App\Enums\RegistrationStatus;
 use App\Events\RegistrationConfirmed;
 use App\Exceptions\RegistrationNotAllowed;
-use App\Filament\Admin\Resources\RegistrationResource\Pages\ViewRegistration as AdminViewRegistration;
 use App\Livewire\Portal\ShowRegistration as RepViewRegistration;
 use App\Models\Event as Fair;
 use App\Models\Grant;
 use App\Models\Organization;
-use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\User;
 use App\Services\Payments\CheckPaymentForm;
@@ -119,70 +117,5 @@ describe('recording a check', function () {
 
         expect(fn () => app(CheckPaymentService::class)->markReceived($this->registration->refresh(), $this->coordinator))
             ->toThrow(RegistrationNotAllowed::class, 'not waiting on payment');
-    });
-});
-
-describe('the admin action', function () {
-    beforeEach(function () {
-        usingAdminPanel();
-        $this->actingAs($this->coordinator);
-    });
-
-    it('records the check and confirms', function () {
-        livewire(AdminViewRegistration::class, ['record' => $this->registration->getRouteKey()])
-            ->callAction('markCheckReceived', [
-                'check_number' => '1042',
-                'received_on' => '2027-03-01',
-                'amount_dollars' => 215,
-            ]);
-
-        expect($this->registration->refresh()->status)->toBe(RegistrationStatus::Confirmed)
-            ->and($this->registration->payments()->first())
-            ->check_number->toBe('1042')
-            ->amount_cents->toBe(21500);
-    });
-
-    it('warns about a short check without refusing it', function () {
-        // Nobody should be turned away at the door over a dollar; the
-        // alternative to a warning is noticing in April.
-        livewire(AdminViewRegistration::class, ['record' => $this->registration->getRouteKey()])
-            ->callAction('markCheckReceived', [
-                'received_on' => '2027-03-01',
-                'amount_dollars' => 200,
-            ])
-            ->assertNotified();
-
-        expect($this->registration->refresh()->status)->toBe(RegistrationStatus::Confirmed)
-            ->and($this->registration->payments()->first()->amount_cents)->toBe(20000);
-    });
-
-    it('appears only on a registration awaiting a check', function () {
-        $card = Registration::factory()->pendingStripe()->forEvent($this->fair)->create();
-        $done = Registration::factory()->forEvent($this->fair)->create();
-
-        livewire(AdminViewRegistration::class, ['record' => $this->registration->getRouteKey()])
-            ->assertActionVisible('markCheckReceived');
-        livewire(AdminViewRegistration::class, ['record' => $card->getRouteKey()])
-            ->assertActionHidden('markCheckReceived');
-        livewire(AdminViewRegistration::class, ['record' => $done->getRouteKey()])
-            ->assertActionHidden('markCheckReceived');
-    });
-
-    it('offers a refund only on a settled card payment', function () {
-        // A mailed check is refunded by writing one back, which this
-        // application cannot do — a button that pretended otherwise would be
-        // worse than none.
-        $cardPaid = Registration::factory()->forEvent($this->fair)->create();
-        Payment::factory()->for($cardPaid)->create(['status' => PaymentStatus::Succeeded]);
-
-        $checkPaid = Registration::factory()->forEvent($this->fair)->create();
-        Payment::factory()->check()->for($checkPaid)->create();
-
-        livewire(AdminViewRegistration::class, ['record' => $cardPaid->getRouteKey()])
-            ->assertActionVisible('refund');
-        livewire(AdminViewRegistration::class, ['record' => $checkPaid->getRouteKey()])
-            ->assertActionHidden('refund');
-        livewire(AdminViewRegistration::class, ['record' => $this->registration->getRouteKey()])
-            ->assertActionHidden('refund');
     });
 });

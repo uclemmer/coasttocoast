@@ -1,7 +1,7 @@
 # 13 — The staff area, and getting the fair's admin off Filament
 
-**Status: in progress. The shell, Sponsors, the FAQ, Grants, Fairs and
-Schools are done (2026-08-21); two resources remain.**
+**Status: complete, 2026-08-21. `app/Filament/` is deleted and the fair's admin
+lives at `/staff`.**
 
 This is step 3 of the workspace Filament removal (`CLAUDE.md`). Doc 12 covered
 step 1 — the rep panel at `/portal`. This one covers the fair's own admin
@@ -210,16 +210,99 @@ Two smaller things:
   decision the service already owns and did not actually fire. The service's
   message is shown verbatim instead.
 
-## Order of the rest
+### Campaigns, and two guards in the right order
 
-`Message` (a live
-`AudienceBuilder` count, channel-conditional fields, send and test-send, a
-read-only recipients table) → `Registration` (largest; the CSV export that must
-honour the active filters).
+A sent campaign is immutable: no edit screen reaches one and it cannot be
+deleted. It is the record of what a hundred schools were told, and the delivery
+table beside it only means something if the message still says what was sent.
 
-Then the two dashboard widgets as `x-ui::stat-group`, delete `app/Filament/`
-along with the Filament tests that cover it, and remove the `FairPlugin` entry
-from `config/core.php`.
+**The already-sent check runs BEFORE `authorize()`, and the order is the point.**
+`MessagePolicy::update()` refuses a sent campaign too, so authorising first made
+the friendly branch unreachable and a stale tab clicking Send got a bare 403.
+Both guards are real; the toast is the one a person should meet. Nothing leaks
+by answering first — reaching the screen at all required `view`.
+
+Three more:
+
+- **Channel-conditional bodies** are the same pattern as the grant amounts: the
+  rule is assembled from the chosen channels rather than written twice as
+  `visible()` and `required()`.
+- **The audience count says "Choose an audience" rather than "0"** when nothing
+  is chosen. Zero is a real and alarming answer and should not be shown when the
+  question has not been asked.
+- **The audience preview moved out of a modal onto the page.** The answer to
+  "who gets this" should not need a round trip.
+
+This is also the **first paginated screen**, so `vendor:publish --tag=ui-pagination`
+finally happened here rather than up front — a hand-ordered list had no business
+being paginated, and publishing views nothing used would have been worse.
+
+### Registrations, and one query for two consumers
+
+The CSV export exists so a coordinator can filter, press export and get *that*
+list. Filament did it with `getFilteredTableQuery()`; here `filteredQuery()` is
+the single builder the table and the export both read, so they cannot drift.
+Rebuilding the filters beside the export is the bug that note exists to prevent,
+and the test falsifies it by doing exactly that.
+
+Streamed rather than queued for the same reason: an export that arrives by email
+a minute later, ignoring the filters, is a different feature. Fair sizes are in
+the hundreds.
+
+Manual entry does not write the model — `RegistrationService::createManualEntry()`
+does, so the same rules the portal follows apply: duplicates refused, price read
+from the fair and any approved grant. A duplicate is reported on the school
+field, because that is the field to change.
+
+There is no delete. A registration is cancelled through the service so the seat
+is released and the record of what happened survives.
+
+### The dashboard
+
+The two Filament widgets became one Livewire page at `/staff`. The money numbers
+come from **registrations, not the payments table**: "collected" means the price
+each school was quoted and confirmed against, so it agrees with what the
+coordinator told them. The payments table answers a different question and would
+disagree by whatever is in flight. Checks are separated out as money in the post
+rather than money lost.
+
+## Done — what came out, and what did not
+
+`app/Filament/` is deleted: 37 files, seven resources, three relation managers,
+two widgets and `FairPlugin`. `core.admin.plugins` is now empty.
+
+**Filament is still installed**, and this is the part to keep straight:
+`laravel-core` hard-requires it and still serves `/admin` for users, roles, the
+email log, content, settings and contact. Removing it is step 4 of the workspace
+order, and it is a package change, not an app one.
+
+Two things stayed behind deliberately:
+
+- `User implements FilamentUser` and `canAccessPanel()` — core's panel calls it.
+- The `HasLabel`/`HasColor`/`HasDescription` interfaces on the nine enums in
+  `app/Enums`. Nothing renders those enums through Filament any more, so the
+  interfaces are now unused markers; the **methods** must survive regardless,
+  because `SendRegistrationNotifications` and the staff views call `getLabel()`.
+  Drop the interfaces with step 4, not before — there is no benefit to churning
+  nine files twice.
+
+### What happened to the Filament tests
+
+Three different treatments, chosen per file rather than in bulk:
+
+| Treatment | Files |
+| --- | --- |
+| **Deleted** — coverage moved wholesale to `tests/Feature/Staff/` | `Admin/{DashboardWidgets,EventResource,GrantResource,OrganizationResource,RegistrationResource}Test.php` |
+| **One block cut**, the rest kept because it tests services and jobs | `Admin/ContentResourcesTest` (sponsors, FAQ), `Notifications/CampaignTest` (the composer), `Payments/CheckPaymentTest` (the admin action) |
+| **Repointed**, because it covers cases the ported tests do not | `Notifications/InterestAnnouncementTest` — another fair's list, and the two not-offered cases |
+
+`Foundation/CoreIntegrationTest` was **inverted**: it asserted the fair plugin
+was attached, and now asserts it is not, while still asserting core's own is.
+`SmokeTest`'s named-page list moved from `/admin/*` to `/staff/*`, keeping
+`/admin` itself.
+
+739 tests pass. The count fell from 826 because the ported originals went with
+their code; every assertion in them has an equivalent under `tests/Feature/Staff/`.
 
 ## A bug this work turned up
 

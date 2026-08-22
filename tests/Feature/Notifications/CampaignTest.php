@@ -2,10 +2,6 @@
 
 use App\Enums\Audience;
 use App\Enums\DeliveryStatus;
-use App\Enums\MessageChannel;
-use App\Filament\Admin\Resources\MessageResource\Pages\CreateMessage;
-use App\Filament\Admin\Resources\MessageResource\Pages\ListMessages;
-use App\Filament\Admin\Resources\MessageResource\Pages\ViewMessage;
 use App\Jobs\SendEventBroadcast;
 use App\Listeners\LinkEmailLogToRecipient;
 use App\Models\Event as Fair;
@@ -15,7 +11,6 @@ use App\Models\Organization;
 use App\Models\Registration;
 use App\Models\User;
 use App\Notifications\CampaignMessage;
-use App\Services\AudienceBuilder;
 use App\Services\Sms\NullSms;
 use App\Services\Sms\SmsService;
 use Illuminate\Support\Facades\Notification;
@@ -228,101 +223,5 @@ describe('scheduled sends', function () {
         $this->artisan('fair:send-scheduled-campaigns')
             ->expectsOutputToContain('No campaigns due.')
             ->assertSuccessful();
-    });
-});
-
-describe('the composer', function () {
-    beforeEach(function () {
-        usingAdminPanel();
-        $this->actingAs(coordinator());
-    });
-
-    it('shows who a campaign would reach before it is sent', function () {
-        // A count says whether it looks about right; the names say whether the
-        // audience is the one she meant.
-        livewire(ViewMessage::class, ['record' => $this->message->getRouteKey()])
-            ->assertActionVisible('previewAudience')
-            ->mountAction('previewAudience')
-            ->assertSuccessful();
-
-        // The modal body itself, rendered against the same resolved list the
-        // action passes it.
-        $recipients = app(AudienceBuilder::class)
-            ->resolve($this->message->audience, $this->message->referenceEvent());
-
-        expect(view('filament.admin.audience-preview', ['recipients' => $recipients])->render())
-            ->toContain('dana@kenyon.example')
-            ->toContain('Kenyon College');
-    });
-
-    it('composes a campaign, recording who wrote it', function () {
-        // The create page 500ed on a Filament API that does not exist
-        // (`Select::descriptions()`, which is a Radio method) and no resource
-        // test noticed, because none of them opened it. The route smoke test
-        // did. This pins it.
-        livewire(CreateMessage::class)
-            ->assertSuccessful()
-            ->fillForm([
-                'event_id' => $this->fair->id,
-                'audience' => Audience::LapsedLastEvent->value,
-                'subject' => 'We would love to see you again',
-                'channels' => [MessageChannel::Email->value],
-                'email_body' => 'Registration is open.',
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors();
-
-        expect(Message::query()->where('subject', 'We would love to see you again')->first())
-            ->audience->toBe(Audience::LapsedLastEvent)
-            ->created_by->not->toBeNull();
-    });
-
-    it('sends a test to the coordinator without recording it against the campaign', function () {
-        Notification::fake();
-
-        livewire(ViewMessage::class, ['record' => $this->message->getRouteKey()])
-            ->callAction('testSend')
-            ->assertNotified();
-
-        Notification::assertSentOnDemandTimes(CampaignMessage::class, 1);
-
-        // Rehearsals must not pollute the real delivery table.
-        expect($this->message->recipients()->count())->toBe(0);
-    });
-
-    it('sends the campaign', function () {
-        Notification::fake();
-
-        livewire(ViewMessage::class, ['record' => $this->message->getRouteKey()])
-            ->callAction('send');
-
-        expect($this->message->refresh()->isSent())->toBeTrue()
-            ->and($this->message->recipients()->count())->toBe(1);
-    });
-
-    it('hides the send button once it has gone, because there is no unsend', function () {
-        $sent = Message::factory()->to(Audience::ThisEventConfirmed)->sent()
-            ->create(['event_id' => $this->fair->id]);
-
-        livewire(ViewMessage::class, ['record' => $sent->getRouteKey()])
-            ->assertActionHidden('send');
-    });
-
-    it('refuses to edit or delete a sent campaign', function () {
-        // It is the record of what a hundred schools were told, and the
-        // delivery table only means anything if it has not changed since.
-        $coordinator = coordinator();
-        $sent = Message::factory()->sent()->create();
-        $draft = Message::factory()->create();
-
-        expect($coordinator->can('update', $sent))->toBeFalse()
-            ->and($coordinator->can('delete', $sent))->toBeFalse()
-            ->and($coordinator->can('update', $draft))->toBeTrue();
-    });
-
-    it('keeps a user without the permission out', function () {
-        $this->actingAs(User::factory()->rep()->create());
-
-        livewire(ListMessages::class)->assertForbidden();
     });
 });

@@ -24,8 +24,14 @@ it('registers the admin panel, and only that one', function () {
         ->and(collect(Filament::getPanels())->keys()->all())->toBe(['core']);
 });
 
-it('attaches the fair plugin to the core panel', function () {
-    expect(Filament::getPanel('core')->hasPlugin('fair'))->toBeTrue()
+it('no longer attaches a fair plugin, and keeps core\'s own', function () {
+    /*
+     * Inverted 2026-08-21. The fair's resources left Filament for /staff
+     * (docs/13), so `FairPlugin` and its `core.admin.plugins` entry are gone.
+     * Core's panel stays until step 4 of the workspace removal, which is what
+     * the second half asserts.
+     */
+    expect(Filament::getPanel('core')->hasPlugin('fair'))->toBeFalse()
         ->and(Filament::getPanel('core')->hasPlugin('laravel-core'))->toBeTrue();
 });
 

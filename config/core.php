@@ -1,6 +1,5 @@
 <?php
 
-use App\Filament\FairPlugin;
 use App\Support\Permissions;
 
 /*
@@ -464,9 +463,14 @@ return [
          *
          * BYO-panel hosts ignore this and call ->plugin(...) themselves.
          */
-        'plugins' => [
-            FairPlugin::class,
-        ],
+        /*
+         * Empty since 2026-08-21: the fair's own resources left Filament for
+         * the Livewire screens at /staff (docs/13). Core's prebuilt panel
+         * still serves users, roles, the email log, content and settings here
+         * until core itself goes headless, which is step 4 of the workspace
+         * removal.
+         */
+        'plugins' => [],
 
         'modules' => [
             'users' => true,

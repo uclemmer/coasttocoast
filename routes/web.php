@@ -13,6 +13,7 @@ use App\Livewire\Portal\Profile;
 use App\Livewire\Portal\Registrations;
 use App\Livewire\Portal\ShowRegistration;
 use App\Livewire\RepresentativesRoster;
+use App\Livewire\Staff\Dashboard as StaffDashboard;
 use App\Livewire\Staff\Events\Edit as EditEvent;
 use App\Livewire\Staff\Events\Index as EventIndex;
 use App\Livewire\Staff\Events\Show as ShowEvent;
@@ -20,9 +21,15 @@ use App\Livewire\Staff\Faq\Edit as EditFaqItem;
 use App\Livewire\Staff\Faq\Index as FaqIndex;
 use App\Livewire\Staff\Grants\Index as GrantIndex;
 use App\Livewire\Staff\Grants\Show as ShowGrant;
+use App\Livewire\Staff\Messages\Edit as EditMessage;
+use App\Livewire\Staff\Messages\Index as MessageIndex;
+use App\Livewire\Staff\Messages\Show as ShowMessage;
 use App\Livewire\Staff\Organizations\Edit as EditOrganization;
 use App\Livewire\Staff\Organizations\Index as OrganizationIndex;
 use App\Livewire\Staff\Organizations\Show as ShowOrganization;
+use App\Livewire\Staff\Registrations\Create as CreateStaffRegistration;
+use App\Livewire\Staff\Registrations\Index as RegistrationIndex;
+use App\Livewire\Staff\Registrations\Show as ShowStaffRegistration;
 use App\Livewire\Staff\Sponsors\Edit as EditSponsor;
 use App\Livewire\Staff\Sponsors\Index as SponsorIndex;
 use Illuminate\Support\Facades\Route;
@@ -103,6 +110,8 @@ Route::middleware(['auth', 'verified'])->prefix('portal')->name('portal.')->grou
  * in each component's mount and again in each action.
  */
 Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(function (): void {
+    Route::get('/', StaffDashboard::class)->name('dashboard');
+
     Route::get('/events', EventIndex::class)->name('events');
     Route::get('/events/create', EditEvent::class)->name('events.create');
     // The show route is last of the three static-vs-dynamic pair so `/create`
@@ -110,10 +119,21 @@ Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(
     Route::get('/events/{event}', ShowEvent::class)->name('events.show');
     Route::get('/events/{event}/edit', EditEvent::class)->name('events.edit');
 
+    Route::get('/messages', MessageIndex::class)->name('messages');
+    Route::get('/messages/create', EditMessage::class)->name('messages.create');
+    Route::get('/messages/{message}', ShowMessage::class)->name('messages.show');
+    Route::get('/messages/{message}/edit', EditMessage::class)->name('messages.edit');
+
     Route::get('/organizations', OrganizationIndex::class)->name('organizations');
     Route::get('/organizations/create', EditOrganization::class)->name('organizations.create');
     Route::get('/organizations/{organization}', ShowOrganization::class)->name('organizations.show');
     Route::get('/organizations/{organization}/edit', EditOrganization::class)->name('organizations.edit');
+
+    // No delete: a registration is cancelled through RegistrationService so
+    // the seat is released and the record of what happened survives.
+    Route::get('/registrations', RegistrationIndex::class)->name('registrations');
+    Route::get('/registrations/create', CreateStaffRegistration::class)->name('registrations.create');
+    Route::get('/registrations/{registration}', ShowStaffRegistration::class)->name('registrations.show');
 
     Route::get('/sponsors', SponsorIndex::class)->name('sponsors');
     Route::get('/sponsors/create', EditSponsor::class)->name('sponsors.create');

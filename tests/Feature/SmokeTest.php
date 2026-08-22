@@ -181,22 +181,29 @@ it('serves the pages a coordinator actually works from, by name', function () {
     // the pages that must genuinely render, so they are asserted precisely.
     $this->actingAs($this->coordinator);
 
+    /*
+     * Moved from /admin to /staff on 2026-08-21 (docs/13). `/admin` itself
+     * stays in the list because laravel-core's panel still serves users,
+     * roles, content and settings there until step 4 of the workspace
+     * Filament removal.
+     */
     $pages = [
         '/admin',
-        '/admin/events',
-        // Event's route key is its slug, in the admin panel as on the
-        // public site.
-        '/admin/events/'.$this->fair->getRouteKey(),
-        '/admin/organizations',
-        '/admin/organizations/'.$this->school->id,
-        '/admin/registrations',
-        '/admin/registrations/'.$this->registration->id,
-        '/admin/grants',
-        '/admin/grants/'.$this->grant->id,
-        '/admin/sponsors',
-        '/admin/faq-items',
-        '/admin/messages',
-        '/admin/messages/'.$this->message->id,
+        '/staff',
+        '/staff/events',
+        // Event's route key is its slug, on the staff side as on the public
+        // site.
+        '/staff/events/'.$this->fair->getRouteKey(),
+        '/staff/organizations',
+        '/staff/organizations/'.$this->school->id,
+        '/staff/registrations',
+        '/staff/registrations/'.$this->registration->id,
+        '/staff/grants',
+        '/staff/grants/'.$this->grant->id,
+        '/staff/sponsors',
+        '/staff/faq',
+        '/staff/messages',
+        '/staff/messages/'.$this->message->id,
     ];
 
     foreach ($pages as $page) {

@@ -61,7 +61,7 @@
                     </svg>
                 </button>
 
-                <a href="{{ route('staff.sponsors') }}"
+                <a href="{{ route('staff.dashboard') }}"
                     class="font-display text-lg font-semibold tracking-tight text-brand-700">
                     {{ config('app.name') }}
                     <span class="font-sans text-sm font-normal text-body">{{ __('Staff') }}</span>
@@ -96,9 +96,12 @@
             --}}
             <ul class="space-y-1 font-medium">
                 @foreach ([
+        ['staff.dashboard', __('Overview')],
         ['staff.events', __('Fairs')],
         ['staff.organizations', __('Schools')],
+        ['staff.registrations', __('Registrations')],
         ['staff.grants', __('Fee assistance')],
+        ['staff.messages', __('Campaigns')],
         ['staff.faq', __('FAQ')],
         ['staff.sponsors', __('Sponsors')],
     ] as [$route, $label])

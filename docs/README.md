@@ -49,11 +49,12 @@ cards from 05 under the rules in 06):
    frontend *and* admin. Reach for a `<x-ui::*>` component first; a missing one is a gap in the
    package, not a reason to open Filament.
 
-   **Migration is in progress.** Flowbite is gone. The rep portal at `/portal` is rebuilt
-   ([12-ui-package-adoption.md](12-ui-package-adoption.md)). The fair's own admin is moving to
-   `/staff` one resource at a time — Sponsors is done, six remain
-   ([13-staff-admin.md](13-staff-admin.md)) — and until that finishes **both `/staff` and core's
-   Filament panel at `/admin` are live**, agreeing on who is staff through the same `admin.access`
+   **Where the migration stands.** Flowbite is gone. The rep portal at `/portal` is rebuilt
+   ([12-ui-package-adoption.md](12-ui-package-adoption.md)), and **this app's own Filament code is
+   gone too** — all seven resources live at `/staff` as Livewire
+   ([13-staff-admin.md](13-staff-admin.md)). What remains is not ours: `laravel-core` still
+   requires Filament and still serves `/admin` for users, roles, the email log, content and
+   settings. Both surfaces are live and agree on who is staff through the same `admin.access`
    permission. Read 12 and 13 before touching any UI, and
    [02-architecture.md](02-architecture.md) for the stack they supersede.
 2. Build on **laravel-core** — never recreate a module it provides (admin shell, roles/permissions, email log, contact, content blocks); package changes happen in its own repo (owner directive 2026-08-16).

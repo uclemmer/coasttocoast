@@ -13,6 +13,9 @@ use App\Livewire\Portal\Profile;
 use App\Livewire\Portal\Registrations;
 use App\Livewire\Portal\ShowRegistration;
 use App\Livewire\RepresentativesRoster;
+use App\Livewire\Staff\Events\Edit as EditEvent;
+use App\Livewire\Staff\Events\Index as EventIndex;
+use App\Livewire\Staff\Events\Show as ShowEvent;
 use App\Livewire\Staff\Faq\Edit as EditFaqItem;
 use App\Livewire\Staff\Faq\Index as FaqIndex;
 use App\Livewire\Staff\Grants\Index as GrantIndex;
@@ -97,6 +100,13 @@ Route::middleware(['auth', 'verified'])->prefix('portal')->name('portal.')->grou
  * in each component's mount and again in each action.
  */
 Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(function (): void {
+    Route::get('/events', EventIndex::class)->name('events');
+    Route::get('/events/create', EditEvent::class)->name('events.create');
+    // The show route is last of the three static-vs-dynamic pair so `/create`
+    // is never swallowed by `{event}`.
+    Route::get('/events/{event}', ShowEvent::class)->name('events.show');
+    Route::get('/events/{event}/edit', EditEvent::class)->name('events.edit');
+
     Route::get('/sponsors', SponsorIndex::class)->name('sponsors');
     Route::get('/sponsors/create', EditSponsor::class)->name('sponsors.create');
     Route::get('/sponsors/{sponsor}/edit', EditSponsor::class)->name('sponsors.edit');

@@ -1,7 +1,7 @@
 # 13 — The staff area, and getting the fair's admin off Filament
 
-**Status: in progress. The shell, Sponsors, the FAQ and Grants are done
-(2026-08-21); four resources remain.**
+**Status: in progress. The shell, Sponsors, the FAQ, Grants and Fairs are
+done (2026-08-21); three resources remain.**
 
 This is step 3 of the workspace Filament removal (`CLAUDE.md`). Doc 12 covered
 step 1 — the rep panel at `/portal`. This one covers the fair's own admin
@@ -168,9 +168,26 @@ Four things worth carrying to the remaining four:
   what will enforce `update()` the day that policy grows a condition. The test
   binds a policy that allows the page and denies the update.
 
+### Fairs, and the money conversion
+
+The fee is typed in dollars and stored in cents. Filament put that conversion on
+the *field* and its comment says why: a field marked `dehydrated(false)` never
+reaches `mutateFormDataBeforeCreate()`, so doing it in the page classes
+**silently saved every fair at zero**. The Livewire equivalent of that mistake
+is converting in one of mount/save and not the other, so both live in
+`Events\Edit`, next to each other, and the tests assert the **stored integer**
+in both directions. Falsified both ways before moving on.
+
+The slug is suggested from the name **while creating only** — existing links are
+out in the world and renaming a fair must not break them.
+
+The announcement is idempotent by design and each recipient is stamped as the
+mail goes out, not in bulk afterwards: if it dies halfway the people already
+told are marked and a re-run continues. A coordinator unsure whether the first
+press worked should be able to press again.
+
 ## Order of the rest
 
-`Event` (reactive slug, dollars↔cents, an infolist, the announce action) →
 `Organization` (merge, duplicate detection, a file upload) → `Message` (a live
 `AudienceBuilder` count, channel-conditional fields, send and test-send, a
 read-only recipients table) → `Registration` (largest; the CSV export that must

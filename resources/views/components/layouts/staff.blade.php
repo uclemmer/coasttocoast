@@ -95,7 +95,10 @@
                 add once all seven exist and the permission set is settled.
             --}}
             <ul class="space-y-1 font-medium">
-                @foreach ([['staff.sponsors', __('Sponsors')]] as [$route, $label])
+                @foreach ([
+        ['staff.faq', __('FAQ')],
+        ['staff.sponsors', __('Sponsors')],
+    ] as [$route, $label])
                     @php $current = request()->routeIs($route . '*'); @endphp
                     <li>
                         <a href="{{ route($route) }}" @if ($current) aria-current="page" @endif

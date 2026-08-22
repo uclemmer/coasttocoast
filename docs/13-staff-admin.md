@@ -1,7 +1,7 @@
 # 13 — The staff area, and getting the fair's admin off Filament
 
-**Status: in progress. The shell and Sponsors are done (2026-08-21); six
-resources remain.**
+**Status: in progress. The shell, Sponsors and the FAQ are done (2026-08-21);
+five resources remain.**
 
 This is step 3 of the workspace Filament removal (`CLAUDE.md`). Doc 12 covered
 step 1 — the rep panel at `/portal`. This one covers the fair's own admin
@@ -120,9 +120,31 @@ Each of these is now ours, and each has a test because none of them had one:
   arrives. Sponsors is hand-ordered, and paginating a hand-ordered list is a
   worse answer than not paginating it.
 
+## Done so far
+
+**Sponsors** established the pattern. **The FAQ** added three things to it:
+
+- **`x-ui::forms.markdown` is a styled textarea, not a rich editor** (the
+  owner's call when the package was built, docs/12), so what a coordinator
+  types and what a visitor reads are not the same string. The edit screen
+  renders a live preview through the same `Str::markdown()` the public page
+  uses, and a test asserts they agree — if either is ever swapped for a
+  different renderer, that is what notices.
+- **Publishing moved into the list.** Filament's toggle lived only in the form,
+  so hiding a question meant opening it. Taking a wrong answer off the public
+  page is the one thing done to a FAQ row in a hurry.
+- **Reordering is refused while *any* filter is active**, not only a search.
+  Filtering by published state hides rows too, and "move up" past a hidden
+  neighbour is just as unpredictable.
+
+`ReordersRecords` was extracted at the third use — sponsors, sponsor staff, FAQ
+— not the first. Authorization deliberately stays at the call site: burying a
+policy check inside a shared helper is exactly the wrong place for the thing
+Filament used to do invisibly.
+
 ## Order of the rest
 
-`FaqItem` (markdown, reorder) → `Grant` (three modal actions over
+`Grant` (three modal actions over
 `GrantService`, a filter defaulting to Pending, a nav badge) → `Event` (reactive
 slug, dollars↔cents, infolist, the announce action) → `Organization` (merge,
 duplicate detection) → `Message` (live `AudienceBuilder` count,

@@ -3,6 +3,7 @@
 namespace App\Livewire\Staff\Sponsors;
 
 use App\Livewire\Staff\Concerns\ActsForStaff;
+use App\Livewire\Staff\Concerns\ReordersRecords;
 use App\Models\Sponsor;
 use App\Models\SponsorStaff;
 use Illuminate\Contracts\View\View;
@@ -33,6 +34,7 @@ use Livewire\WithFileUploads;
 class Edit extends Component
 {
     use ActsForStaff;
+    use ReordersRecords;
     use WithFileUploads;
 
     public ?Sponsor $sponsor = null;
@@ -251,27 +253,11 @@ class Edit extends Component
     {
         $this->authorize('update', $this->sponsor);
 
-        $ordered = $this->sponsor->staff()->get()->values();
-        $position = $ordered->search(fn (SponsorStaff $member): bool => $member->getKey() === $staffId);
-
-        if ($position === false) {
-            return;
+        // Scoped to this sponsor, so an id from another one finds nothing to
+        // move rather than reordering somebody else's list.
+        if ($this->reorderWithin($this->sponsor->staff()->get(), $staffId, $offset)) {
+            unset($this->staff);
         }
-
-        $target = $position + $offset;
-
-        if ($target < 0 || $target >= $ordered->count()) {
-            return;
-        }
-
-        $rows = $ordered->all();
-        [$rows[$position], $rows[$target]] = [$rows[$target], $rows[$position]];
-
-        foreach ($rows as $index => $member) {
-            $member->forceFill(['sort_order' => $index + 1])->save();
-        }
-
-        unset($this->staff);
     }
 
     /**

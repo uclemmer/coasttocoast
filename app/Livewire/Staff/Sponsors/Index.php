@@ -3,6 +3,7 @@
 namespace App\Livewire\Staff\Sponsors;
 
 use App\Livewire\Staff\Concerns\ActsForStaff;
+use App\Livewire\Staff\Concerns\ReordersRecords;
 use App\Models\Sponsor;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -35,6 +36,7 @@ use Livewire\Component;
 class Index extends Component
 {
     use ActsForStaff;
+    use ReordersRecords;
 
     public string $search = '';
 
@@ -89,47 +91,28 @@ class Index extends Component
         $this->swap($sponsorId, 1);
     }
 
-    /**
-     * Swap a sponsor with its neighbour in the hand-ordered list.
-     *
-     * Works on positions in the ordered collection rather than on `sort_order`
-     * arithmetic, because `sort_order` is not guaranteed to be dense or unique
-     * — `ordered()` breaks ties on name, so two rows can legitimately share a
-     * number. Rewriting the whole column from the resulting order is cheap at
-     * this size and leaves it dense, which makes the next move unambiguous.
-     */
+    /** The mechanic is in ReordersRecords; the permission stays here. */
     protected function swap(int $sponsorId, int $offset): void
     {
         if (! $this->canReorder) {
             return;
         }
 
-        $ordered = Sponsor::query()->ordered()->get()->values();
-        $position = $ordered->search(fn (Sponsor $sponsor): bool => $sponsor->getKey() === $sponsorId);
+        $ordered = Sponsor::query()->ordered()->get();
+        $moving = $ordered->firstWhere(fn (Sponsor $sponsor): bool => $sponsor->getKey() === $sponsorId);
 
-        if ($position === false) {
+        if ($moving === null) {
             return;
         }
 
         // Against the record, not the class: `SponsorPolicy::update()` takes a
         // Sponsor, and handing Gate a class-string for it throws rather than
         // failing closed.
-        $this->authorize('update', $ordered[$position]);
+        $this->authorize('update', $moving);
 
-        $target = $position + $offset;
-
-        if ($target < 0 || $target >= $ordered->count()) {
-            return;
+        if ($this->reorderWithin($ordered, $sponsorId, $offset)) {
+            unset($this->sponsors);
         }
-
-        $rows = $ordered->all();
-        [$rows[$position], $rows[$target]] = [$rows[$target], $rows[$position]];
-
-        foreach ($rows as $index => $sponsor) {
-            $sponsor->forceFill(['sort_order' => $index + 1])->save();
-        }
-
-        unset($this->sponsors);
     }
 
     public function confirmDelete(int $sponsorId): void

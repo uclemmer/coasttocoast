@@ -13,6 +13,8 @@ use App\Livewire\Portal\Profile;
 use App\Livewire\Portal\Registrations;
 use App\Livewire\Portal\ShowRegistration;
 use App\Livewire\RepresentativesRoster;
+use App\Livewire\Staff\Faq\Edit as EditFaqItem;
+use App\Livewire\Staff\Faq\Index as FaqIndex;
 use App\Livewire\Staff\Sponsors\Edit as EditSponsor;
 use App\Livewire\Staff\Sponsors\Index as SponsorIndex;
 use Illuminate\Support\Facades\Route;
@@ -96,6 +98,10 @@ Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(
     Route::get('/sponsors', SponsorIndex::class)->name('sponsors');
     Route::get('/sponsors/create', EditSponsor::class)->name('sponsors.create');
     Route::get('/sponsors/{sponsor}/edit', EditSponsor::class)->name('sponsors.edit');
+
+    Route::get('/faq', FaqIndex::class)->name('faq');
+    Route::get('/faq/create', EditFaqItem::class)->name('faq.create');
+    Route::get('/faq/{item}/edit', EditFaqItem::class)->name('faq.edit');
 });
 
 /*

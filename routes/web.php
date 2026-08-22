@@ -13,6 +13,8 @@ use App\Livewire\Portal\Profile;
 use App\Livewire\Portal\Registrations;
 use App\Livewire\Portal\ShowRegistration;
 use App\Livewire\RepresentativesRoster;
+use App\Livewire\Staff\Sponsors\Edit as EditSponsor;
+use App\Livewire\Staff\Sponsors\Index as SponsorIndex;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,6 +73,29 @@ Route::middleware(['auth', 'verified'])->prefix('portal')->name('portal.')->grou
     // still land. A nicer path is not worth breaking that.
     Route::get('/organization-profile', OrganizationProfile::class)->name('organization');
     Route::get('/profile', Profile::class)->name('profile');
+});
+
+/*
+ * The staff area (docs/13).
+ *
+ * The fair's own admin screens, rebuilt off Filament under the 2026-08-20
+ * directive. NOT the only staff surface yet: laravel-core keeps its Filament
+ * panel at /admin for users, roles, the email log, content and settings until
+ * step 4 of the workspace removal, and the two agree on who is staff because
+ * both ask the same `admin.access` permission.
+ *
+ * A new prefix rather than taking /admin, which core still owns. Nothing was
+ * bookmarkable here before - these screens lived inside the panel's own URLs -
+ * so unlike /portal there is no promise to keep about paths.
+ *
+ * `verified` alongside `auth` matches every other authenticated surface here.
+ * Per-screen permission is the policies' job, asked with `$this->authorize()`
+ * in each component's mount and again in each action.
+ */
+Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(function (): void {
+    Route::get('/sponsors', SponsorIndex::class)->name('sponsors');
+    Route::get('/sponsors/create', EditSponsor::class)->name('sponsors.create');
+    Route::get('/sponsors/{sponsor}/edit', EditSponsor::class)->name('sponsors.edit');
 });
 
 /*

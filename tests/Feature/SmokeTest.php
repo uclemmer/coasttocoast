@@ -50,7 +50,8 @@ function panelUrls(string $prefix, array $bindings): array
         ->filter(fn ($route): bool => in_array('GET', $route->methods(), true))
         ->map(fn ($route): string => $route->uri())
         ->filter(fn (string $uri): bool => $prefix === ''
-            ? ! str_starts_with($uri, 'admin') && ! str_starts_with($uri, 'portal') && ! str_starts_with($uri, 'webhooks')
+            ? ! str_starts_with($uri, 'admin') && ! str_starts_with($uri, 'portal')
+                && ! str_starts_with($uri, 'staff') && ! str_starts_with($uri, 'webhooks')
             : str_starts_with($uri, $prefix))
         // Livewire's own endpoints and Filament's asset routes are not pages.
         ->reject(fn (string $uri): bool => str_contains($uri, 'livewire')
@@ -136,6 +137,42 @@ it('serves every portal page to an active representative', function () {
 
         expect($response->status())
             ->toBeIn([200, 302, 404], "Portal page {$uri} returned {$response->status()}.");
+    }
+});
+
+it('serves every staff page to a coordinator', function () {
+    /*
+     * The fair's own admin screens, rebuilt off Filament (docs/13). Swept the
+     * same way as /admin and /portal, and added at the same time as the routes
+     * — without the `staff` exclusion in panelUrls() above, these would have
+     * been swept up as public pages instead and read as a broken site.
+     */
+    $this->actingAs($this->coordinator);
+
+    $urls = panelUrls('staff', [
+        '{sponsor}' => Sponsor::query()->value('id'),
+    ]);
+
+    expect($urls)->not->toBeEmpty();
+
+    foreach ($urls as $uri => $url) {
+        $response = $this->get($url);
+
+        expect($response->status())
+            ->toBeIn([200, 404], "Staff page {$uri} returned {$response->status()}.");
+    }
+});
+
+it('keeps a representative out of every staff page', function () {
+    // Each screen authorises itself on mount; this asserts none was missed.
+    $this->actingAs($this->rep);
+
+    $urls = panelUrls('staff', ['{sponsor}' => Sponsor::query()->value('id')]);
+
+    expect($urls)->not->toBeEmpty();
+
+    foreach ($urls as $uri => $url) {
+        $this->get($url)->assertForbidden("Staff page {$uri} let a representative in.");
     }
 });
 

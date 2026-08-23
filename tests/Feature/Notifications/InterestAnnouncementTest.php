@@ -7,7 +7,6 @@ use App\Notifications\RegistrationOpenAnnouncement;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
-    usingAdminPanel();
     $this->actingAs(coordinator());
     Notification::fake();
 

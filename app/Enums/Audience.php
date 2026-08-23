@@ -2,9 +2,6 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasDescription;
-use Filament\Support\Contracts\HasLabel;
-
 /**
  * Who a campaign goes to (doc 07 §2).
  *
@@ -17,7 +14,7 @@ use Filament\Support\Contracts\HasLabel;
  * The descriptions are shown verbatim as Filament helper text, because
  * "lapsed" means nothing to a coordinator until it is spelled out.
  */
-enum Audience: string implements HasDescription, HasLabel
+enum Audience: string
 {
     case ThisEventConfirmed = 'this_event_confirmed';
     case ThisEventPendingCheck = 'this_event_pending_check';

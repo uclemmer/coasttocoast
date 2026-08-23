@@ -2,9 +2,6 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasLabel;
-
 /**
  * How an organization paid.
  *
@@ -13,7 +10,7 @@ use Filament\Support\Contracts\HasLabel;
  * registrations table). Adding `Free` here would invite a payment row for
  * money that never moved.
  */
-enum PaymentMethod: string implements HasColor, HasLabel
+enum PaymentMethod: string
 {
     case Stripe = 'stripe';
     case Check = 'check';

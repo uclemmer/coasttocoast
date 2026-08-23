@@ -2,9 +2,6 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasLabel;
-
 /**
  * The state of one money movement.
  *
@@ -12,7 +9,7 @@ use Filament\Support\Contracts\HasLabel;
  * of truth (golden rule 3), never the browser returning from Checkout. For
  * checks it is set by the coordinator's "mark check received" action.
  */
-enum PaymentStatus: string implements HasColor, HasLabel
+enum PaymentStatus: string
 {
     case Pending = 'pending';
     case Succeeded = 'succeeded';

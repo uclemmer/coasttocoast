@@ -2,9 +2,6 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasLabel;
-
 /**
  * Where a representative stands with the organization they claim to speak for.
  *
@@ -15,7 +12,7 @@ use Filament\Support\Contracts\HasLabel;
  *
  * Coordinators have no organization and therefore a null membership status.
  */
-enum MembershipStatus: string implements HasColor, HasLabel
+enum MembershipStatus: string
 {
     case Pending = 'pending';
     case Active = 'active';

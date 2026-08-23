@@ -2,9 +2,6 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasLabel;
-
 /**
  * The delivery channels a campaign can use (doc 07 §3).
  *
@@ -12,7 +9,7 @@ use Filament\Support\Contracts\HasLabel;
  * the channel being selected on a message is permission to try, never a
  * promise that every recipient gets one.
  */
-enum MessageChannel: string implements HasColor, HasLabel
+enum MessageChannel: string
 {
     case Email = 'email';
     case Sms = 'sms';

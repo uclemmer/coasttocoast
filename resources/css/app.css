@@ -44,6 +44,15 @@
  */
 @source '../../vendor/uclemmer/laravel-ui/resources/views';
 
+/*
+ * And core's own Blade, for the same reason and with the same silent failure.
+ * New with core 0.4: /admin is Livewire screens in the package rather than a
+ * Filament panel that shipped its own compiled stylesheet, so the admin's
+ * utilities now have to come from this build. Without this line every screen
+ * at /admin renders unstyled and nothing reports an error.
+ */
+@source '../../vendor/uclemmer/laravel-core/resources/views';
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views';
 @source '../../vendor/livewire/livewire/src';
 @source '../../storage/framework/views/*.php';

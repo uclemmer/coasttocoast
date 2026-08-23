@@ -4,8 +4,6 @@ namespace App\Models;
 
 use App\Enums\MembershipStatus;
 use Database\Factories\UserFactory;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -16,8 +14,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Gate;
-use UClemmer\LaravelCore\Admin\Permissions as AdminPermissions;
 use UClemmer\LaravelCore\Auth\HasCoreRoles;
 use UClemmer\LaravelCore\Support\Contracts\HasRoles;
 
@@ -52,7 +48,7 @@ use UClemmer\LaravelCore\Support\Contracts\HasRoles;
  */
 #[Fillable(['name', 'email', 'password', 'phone', 'sms_opt_in'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, HasRoles, MustVerifyEmail
+class User extends Authenticatable implements HasRoles, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasCoreRoles, HasFactory, Notifiable;
@@ -140,29 +136,6 @@ class User extends Authenticatable implements FilamentUser, HasRoles, MustVerify
     public function routeNotificationForSms(): ?string
     {
         return $this->sms_opt_in && filled($this->phone) ? $this->phone : null;
-    }
-
-    /**
-     * Panel access.
-     *
-     * This is deliberately NOT laravel-core's `CanAccessCorePanel` trait: that
-     * trait answers for every panel, and this app has two. The `core` branch is
-     * the trait's own check, kept identical on purpose so the admin panel keeps
-     * following `admin.access` (super admins pass via the Gate's before hook).
-     *
-     * Deviation from card 1.1 recorded in docs/05-build-roadmap.md.
-     */
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return match ($panel->getId()) {
-            'core' => Gate::forUser($this)->allows(AdminPermissions::ACCESS),
-            // Not `hasVerifiedEmail()` — the rep panel calls `->emailVerification()`,
-            // so Filament already guards its routes with the `verified:` middleware.
-            // Repeating the check here runs earlier, in Authenticate, which aborts 403
-            // and denies unverified users the verification prompt they were sent for.
-            'rep' => true,
-            default => false,
-        };
     }
 
     /**

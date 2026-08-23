@@ -2,9 +2,9 @@
 
 use App\Support\Permissions;
 use Database\Seeders\RoleSeeder;
-use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
+use UClemmer\LaravelCore\Admin\Admin;
 use UClemmer\LaravelCore\Auth\Permission;
 use UClemmer\LaravelCore\Auth\Role;
 
@@ -15,28 +15,33 @@ use UClemmer\LaravelCore\Auth\Role;
  */
 
 /*
- * One panel now. The rep portal was Filament's until 2026-08-21 and is
- * Livewire; /admin is the only panel left, and it goes too when core is
- * decoupled. See docs/12.
+ * No panels at all now. The rep portal was Filament's until 2026-08-21 and is
+ * Livewire (docs/12); /admin was core's Filament panel until core 0.4, and is
+ * core's Livewire admin as of 2026-08-22. The claims below are the same ones
+ * the panel assertions made — where the admin lives, what this app contributes
+ * to it, and whose name is on it — asked of the thing that replaced it.
  */
-it('registers the admin panel, and only that one', function () {
-    expect(Filament::getPanel('core')->getPath())->toBe('admin')
-        ->and(collect(Filament::getPanels())->keys()->all())->toBe(['core']);
+it('mounts core\'s admin at /admin', function () {
+    expect(Admin::enabled())->toBeTrue()
+        ->and(Admin::path())->toBe('admin')
+        ->and(Admin::url('dashboard'))->toEndWith('/admin');
 });
 
-it('no longer attaches a fair plugin, and keeps core\'s own', function () {
+it('contributes no screens of its own, and gets core\'s', function () {
     /*
-     * Inverted 2026-08-21. The fair's resources left Filament for /staff
-     * (docs/13), so `FairPlugin` and its `core.admin.plugins` entry are gone.
-     * Core's panel stays until step 4 of the workspace removal, which is what
-     * the second half asserts.
+     * Inverted 2026-08-21 when the fair's resources left for /staff (docs/13),
+     * and it stays inverted: `core.admin.plugins` is the same config key it was
+     * under Filament, holding `ProvidesAdminScreens` class-strings now. This
+     * app names none — everything at /admin is core's own.
      */
-    expect(Filament::getPanel('core')->hasPlugin('fair'))->toBeFalse()
-        ->and(Filament::getPanel('core')->hasPlugin('laravel-core'))->toBeTrue();
+    expect(config('core.admin.plugins'))->toBe([])
+        ->and(Admin::has('users.index'))->toBeTrue()
+        ->and(Admin::has('email-log.index'))->toBeTrue();
 });
 
-it('brands the admin panel for the fair', function () {
-    expect(Filament::getPanel('core')->getBrandName())->toBe('Coast to Coast College Fair');
+it('brands the admin for the fair', function () {
+    // Read by core's admin layout rather than by a panel builder; same key.
+    expect(config('core.admin.brand'))->toBe('Coast to Coast College Fair');
 });
 
 it('published the core migrations', function (string $table) {

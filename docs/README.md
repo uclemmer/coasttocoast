@@ -40,6 +40,7 @@ cards from 05 under the rules in 06):
 | [11-deployment.md](11-deployment.md) | Getting it live: host requirements, the deploy sequence, Stripe/Postmark/Twilio setup, backups, the go-live checklist, and the **owner content queue** — the things only Matt can supply |
 | [12-ui-package-adoption.md](12-ui-package-adoption.md) | Adopting `uclemmer/laravel-ui` and retiring the rep panel: what that panel actually owns (all of auth), where each piece goes, and the published theme sheet repointed at the design handoff |
 | [13-staff-admin.md](13-staff-admin.md) | Getting the fair's own admin off Filament and onto `/staff`: why not `/admin`, the pattern established on Sponsors, what Filament was doing for free, and the traps recorded for the six resources still to come |
+| [14-core-04-upgrade.md](14-core-04-upgrade.md) | Upgrading to laravel-core 0.4 and off Filament for good: the eleven vestigial declarations that would have fatalled, the four tests ported, and the `@source` line whose compiled-CSS diff turned out to be a Blade comment |
 
 **Golden rules** (duplicated from the docs because they matter):
 

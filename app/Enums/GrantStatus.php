@@ -2,9 +2,6 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasLabel;
-
 /**
  * An organization's application for free or discounted registration (D10).
  *
@@ -12,7 +9,7 @@ use Filament\Support\Contracts\HasLabel;
  * and `Withdrawn` are all terminal records rather than absences. Only
  * `Approved` changes what an organization pays.
  */
-enum GrantStatus: string implements HasColor, HasLabel
+enum GrantStatus: string
 {
     case Pending = 'pending';
     case Approved = 'approved';

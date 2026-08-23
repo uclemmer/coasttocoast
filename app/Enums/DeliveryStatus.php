@@ -2,9 +2,6 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasLabel;
-
 /**
  * Per-recipient, per-channel delivery state on `message_recipients`.
  *
@@ -16,7 +13,7 @@ use Filament\Support\Contracts\HasLabel;
  * plus `Skipped` for recipients we deliberately did not contact (no phone, or
  * not opted in to SMS).
  */
-enum DeliveryStatus: string implements HasColor, HasLabel
+enum DeliveryStatus: string
 {
     case Pending = 'pending';
     case Sending = 'sending';

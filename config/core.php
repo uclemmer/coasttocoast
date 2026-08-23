@@ -424,10 +424,10 @@ return [
     | Admin panel (docs/02-admin-dashboard.md)
     |--------------------------------------------------------------------------
     |
-    | `enabled` registers the package's prebuilt Filament panel. Leave it false
-    | if you already have your own panel and would rather attach the plugin:
-    |
-    |     ->plugin(UClemmer\LaravelCore\Admin\CorePlugin::make())
+    | `enabled` mounts the package's admin — ordinary routes over Livewire
+    | components as of core 0.4, where it was a Filament panel before. Leave it
+    | false to have no /admin at all; there is no longer a "bring your own
+    | panel" alternative, because there is no panel.
     |
     | A module shows up only when its toggle here AND the owning feature's own
     | `enabled` flag are both true.
@@ -438,11 +438,14 @@ return [
         'path' => 'admin',
         'brand' => 'Coast to Coast College Fair',
 
-        // Hex strings are expanded into a full Filament palette; you can also
-        // pass Filament\Support\Colors\Color constants directly.
-        'colors' => [
-            // 'primary' => '#4f46e5',
-        ],
+        /*
+         * `colors` and `vite_theme` were removed in core 0.4 and are gone from
+         * here with it. Both were Filament's: a hex string expanded into a
+         * Filament palette, and a path to a compiled Filament theme. The admin
+         * is Livewire on uclemmer/laravel-ui now and takes its colours from
+         * that package's design tokens, which this app's own stylesheet
+         * already imports.
+         */
 
         // Asset path or absolute URL. Rendered by the core::admin.brand view,
         // which you can publish and rewrite entirely.
@@ -450,25 +453,23 @@ return [
         'logo_height' => '1.5rem',
         'favicon' => null,
 
-        // Path to a compiled Filament theme in the host app, if you publish
-        // and build the stub from `vendor:publish --tag=laravel-core-theme`.
-        'vite_theme' => null,
-
         /*
-         * Filament plugins attached to the PREBUILT panel, as class-strings.
-         * This is how add-on packages (e.g. uclemmer/laravel-tickets) and host
-         * apps contribute to the turnkey panel without owning it:
+         * Screen providers attached to the admin, as class-strings. This is how
+         * add-on packages (e.g. uclemmer/laravel-tickets) and host apps
+         * contribute without owning it:
          *
-         *     'plugins' => [UClemmer\LaravelTickets\Filament\TicketsPlugin::class],
+         *     'plugins' => [UClemmer\LaravelTickets\Admin\TicketsScreens::class],
          *
-         * BYO-panel hosts ignore this and call ->plugin(...) themselves.
+         * Same key it was under Filament; the contract is core's
+         * `ProvidesAdminScreens` since 0.4, and a leftover Filament plugin
+         * class here throws on boot with a message naming the replacement.
          */
         /*
          * Empty since 2026-08-21: the fair's own resources left Filament for
-         * the Livewire screens at /staff (docs/13). Core's prebuilt panel
-         * still serves users, roles, the email log, content and settings here
-         * until core itself goes headless, which is step 4 of the workspace
-         * removal.
+         * the Livewire screens at /staff (docs/13). Core headless landed on
+         * 2026-08-22, and /admin still serves users, roles, the email log,
+         * content and settings — as Livewire screens rather than a panel. This
+         * app contributes nothing to it.
          */
         'plugins' => [],
 

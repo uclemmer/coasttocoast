@@ -2,9 +2,6 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasLabel;
-
 /**
  * The lifecycle of one organization's place at one fair.
  *
@@ -12,7 +9,7 @@ use Filament\Support\Contracts\HasLabel;
  * lifecycle) — they move to `Cancelled` or `Refunded` so the audit trail
  * survives.
  */
-enum RegistrationStatus: string implements HasColor, HasLabel
+enum RegistrationStatus: string
 {
     case PendingPayment = 'pending_payment';
     case Confirmed = 'confirmed';

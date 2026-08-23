@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Livewire\Features\SupportTesting\Testable;
@@ -55,31 +54,20 @@ pest()->extend(TestCase::class)
 |--------------------------------------------------------------------------
 */
 
-/**
- * Make one of the two panels current for the rest of the test.
- *
- * Neither panel is marked `->default()` — this app has an admin panel and a
- * rep portal and neither outranks the other — so a Livewire test that mounts a
- * Filament page directly has no panel context and dies with "No default
- * Filament panel is set". At runtime the panel middleware sets it from the
- * route; in a test, this does.
+/*
+ * `usingAdminPanel()` and `usingSitePanel()` lived here until 2026-08-22.
+ * They set Filament's current panel, because a Livewire test that mounted a
+ * Filament page directly had no panel context and died with "No default
+ * Filament panel is set". There are no panels — `livewire()` below mounts an
+ * ordinary component and needs no ceremony.
  */
-function usingAdminPanel(): void
-{
-    Filament::setCurrentPanel('core');
-}
-
-function usingSitePanel(): void
-{
-    Filament::setCurrentPanel('site');
-}
 
 /**
- * Mount a Livewire component — in practice, a Filament page.
+ * Mount a Livewire component.
  *
  * `pestphp/pest-plugin-livewire` is not installed (it has no Pest 5 release),
  * so this is the same helper by hand. Doc 06's examples are written against
- * this name, and every Filament resource test in the suite uses it.
+ * this name, and every component test in the suite uses it.
  *
  * @param  array<string, mixed>  $params
  */

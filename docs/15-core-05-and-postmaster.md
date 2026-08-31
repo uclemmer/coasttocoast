@@ -100,6 +100,53 @@ Tailwind 4 skips gitignored directories and `vendor/` is one, so without it the 
 a full `class` attribute and no styling, and **nothing errors**. Verified by reading, not by diffing
 compiled CSS — worth doing properly before the next deploy.
 
+## The permissions do not carry themselves over
+
+**This is the step that fails silently, and it is not in the data migration above.**
+
+Core's `email-log.view` / `email-log.manage` do not become `postmaster.view` /
+`postmaster.manage` on their own. The result: the screen is registered, the route resolves, the
+component renders — and the navigation entry never appears for anybody, because nobody holds the
+permission it is gated on. No error, no log line.
+
+`core:sync-permissions` is **not** the fix. It creates what the registry declares and prunes what
+it does not, so on its own it would delete the two old permissions — **taking every role's grant
+with them** — and create two new ones granted to nobody.
+
+`2026_08_31_030000_rename_email_log_permissions_to_postmaster.php` renames the rows instead.
+`core_permission_role` links by id, so a rename carries every existing grant across untouched. It
+also handles the case where somebody already ran `core:sync-permissions`: the new row exists
+alongside the old one, so renaming onto it would violate the unique index — the empty newcomer is
+dropped and the one holding the grants is renamed.
+
+Verified here: 21 permissions before, 21 after, coordinator still holding all 21, and the
+navigation entry appeared.
+
+## Browser pass — done 2026-08-31
+
+Everything below was checked in a real browser at `https://coasttocoast.test`, signed in as the
+seeded coordinator.
+
+- **The `@source` line works.** Diffed the compiled stylesheet before and after adding it, then
+  checked every literal `class="…"` token in the package's views against the built CSS. Everything
+  the message-log screens render resolves. (Two tokens did not — `bg-surface` and `text-muted` —
+  but both are only in the package's *fallback* layout, which this app never renders because it
+  sets `postmaster.admin.layout` to `core::admin.layout`. Fixed upstream in postmaster `v0.1.1`.)
+- **Capture works end to end.** Submitted the real contact form; both resulting messages — the
+  receipt and the fair's alert — were captured, marked `sent`, and listed correctly.
+- **The sandbox holds in a live browser**, not just in a unit test: one iframe, `sandbox=""` with
+  no allow-\* tokens, `referrerpolicy="no-referrer"`, content in `srcdoc` rather than `src`.
+- **No horizontal overflow** on the list screen (`scrollWidth === clientWidth`).
+
+Two defects it found, both fixed upstream and pulled in here:
+
+- The navigation printed the literal word `envelope` beside the link — `AdminScreen::icon()` takes
+  inline SVG and renders it raw; it is not an icon name. (postmaster `v0.1.1`)
+- **The detail screen returned a 500.** `ViewMessage::mount()` took `$log` while the route segment
+  is `{message}`, and route-model binding matches by name — so nothing bound and the view fatalled
+  on `$log->status->value`. The index page was fine and every test passed. (postmaster `v0.1.2`)
+
 ## Status
 
-`composer test`: **741 passed** (740 before; the seam test split into two). No browser pass.
+`composer test`: **741 passed** (740 before; the seam test split into two). Browser pass done
+2026-08-31; on postmaster `v0.1.2`.

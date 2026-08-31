@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cfb46498f5c1a682256a1eb494303f8b",
+    "content-hash": "01d609ba51d72dcf0649a02665205cdd",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -6648,16 +6648,16 @@
         },
         {
             "name": "uclemmer/laravel-core",
-            "version": "v0.4.0",
+            "version": "v0.5.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-core.git",
-                "reference": "fc55ecece95465f97182c9645060bfc8b09ee3a3"
+                "reference": "1640280c5c6577f08589f3deec0e38b096d0dbae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/fc55ecece95465f97182c9645060bfc8b09ee3a3",
-                "reference": "fc55ecece95465f97182c9645060bfc8b09ee3a3",
+                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/1640280c5c6577f08589f3deec0e38b096d0dbae",
+                "reference": "1640280c5c6577f08589f3deec0e38b096d0dbae",
                 "shasum": ""
             },
             "require": {
@@ -6758,7 +6758,7 @@
                 "laravel-core"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-core/tree/v0.4.0",
+                "source": "https://github.com/uclemmer/laravel-core/tree/v0.5.0",
                 "issues": "https://github.com/uclemmer/laravel-core/issues"
             },
             "funding": [
@@ -6767,7 +6767,117 @@
                     "url": "https://github.com/UClemmer"
                 }
             ],
-            "time": "2026-08-23T05:36:29+00:00"
+            "time": "2026-08-31T01:41:37+00:00"
+        },
+        {
+            "name": "uclemmer/laravel-postmaster",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:uclemmer/laravel-postmaster.git",
+                "reference": "d340aa9d71ced8cbbb75be83ed8f45f29f7720bc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/uclemmer/laravel-postmaster/zipball/d340aa9d71ced8cbbb75be83ed8f45f29f7720bc",
+                "reference": "d340aa9d71ced8cbbb75be83ed8f45f29f7720bc",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^13.0",
+                "livewire/livewire": "^4.3",
+                "php": "^8.4",
+                "spatie/laravel-package-tools": "^1.16",
+                "uclemmer/laravel-ui": "^0.6"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.14",
+                "nunomaduro/collision": "^8.8",
+                "orchestra/testbench": "^11.0.0",
+                "pestphp/pest": "^4.0",
+                "pestphp/pest-plugin-arch": "^4.0",
+                "pestphp/pest-plugin-laravel": "^4.0",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "spatie/laravel-ray": "^1.35",
+                "uclemmer/laravel-core": "^0.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "UClemmer\\LaravelPostmaster\\PostmasterServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "UClemmer\\LaravelPostmaster\\": "src/",
+                    "UClemmer\\LaravelPostmaster\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "UClemmer\\LaravelPostmaster\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "post-autoload-dump": [
+                    "@composer run prepare"
+                ],
+                "prepare": [
+                    "@php vendor/bin/testbench package:discover --ansi"
+                ],
+                "test": [
+                    "@php -d memory_limit=1G vendor/bin/pest"
+                ],
+                "test-coverage": [
+                    "@php -d memory_limit=1G vendor/bin/pest --coverage"
+                ],
+                "analyse": [
+                    "@prepare",
+                    "vendor/bin/phpstan analyse --memory-limit=1G"
+                ],
+                "analyze": [
+                    "@analyse"
+                ],
+                "format": [
+                    "@format-php",
+                    "@format-blade"
+                ],
+                "format-php": [
+                    "vendor/bin/pint"
+                ],
+                "format-blade": [
+                    "npx blade-formatter --write \"resources/views/**/*.blade.php\""
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Uriah M. Clemmer IV",
+                    "email": "uriah@nihil.co",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Email deliverability for Laravel: message log with delivery lifecycle, provider event ingestion, suppression list, one-click unsubscribe and a themed transactional layout.",
+            "homepage": "https://github.com/uclemmer/laravel-postmaster",
+            "keywords": [
+                "UClemmer",
+                "deliverability",
+                "laravel",
+                "mail",
+                "postmark"
+            ],
+            "support": {
+                "source": "https://github.com/uclemmer/laravel-postmaster/tree/v0.1.0",
+                "issues": "https://github.com/uclemmer/laravel-postmaster/issues"
+            },
+            "time": "2026-08-31T02:09:43+00:00"
         },
         {
             "name": "uclemmer/laravel-ui",

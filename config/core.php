@@ -1,6 +1,7 @@
 <?php
 
 use App\Support\Permissions;
+use UClemmer\LaravelPostmaster\Integration\Core\AdminScreens;
 
 /*
  * Published from uclemmer/laravel-core's config/core.php and edited for Coast to
@@ -93,38 +94,12 @@ return [
     ],
 
     /*
-    |--------------------------------------------------------------------------
-    | Email logging (docs/03-email-logging.md)
-    |--------------------------------------------------------------------------
-    |
-    | Captures every message the application sends. Off by default: logging
-    | mail bodies is a storage and privacy decision the host app should make
-    | deliberately.
-    |
+    | Email logging left core in 0.5.0 for `uclemmer/laravel-postmaster`. Its
+    | settings live in `config/postmaster.php` now, including the 400-day
+    | retention this app needs for a cross-year campaign audit trail. Removed
+    | rather than emptied: a leftover key here reads as configuration and is
+    | actually inert.
     */
-    'email_log' => [
-        /*
-         * READ AT BOOT. The listeners are attached once, during registration,
-         * so changing this in a running process changes nothing — restart it,
-         * and restart your queue workers too. See docs/00-architecture.md,
-         * "Boot-time and runtime flags"; `core:doctor` reports a process whose
-         * wiring no longer matches this value.
-         */
-        'enabled' => true,
-
-        // false ⇒ log the envelope, subject and headers but not the bodies.
-        'store_body' => true,
-
-        // Delete rows older than this. null ⇒ keep forever.
-        'prune_after_days' => 400,   // > 13 months — cross-year campaign audit trail (docs/07-email-design.md)
-
-        // A row still "sending" after this long never got a delivery
-        // confirmation, and is marked failed by core:prune-email-logs.
-        'stale_after_minutes' => 15,
-
-        // Mailable / notification classes to skip entirely (parents match too).
-        'except_mailables' => [],
-    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -465,17 +440,22 @@ return [
          * class here throws on boot with a message naming the replacement.
          */
         /*
-         * Empty since 2026-08-21: the fair's own resources left Filament for
-         * the Livewire screens at /staff (docs/13). Core headless landed on
-         * 2026-08-22, and /admin still serves users, roles, the email log,
-         * content and settings — as Livewire screens rather than a panel. This
-         * app contributes nothing to it.
+         * The fair's own resources left Filament for the Livewire screens at
+         * /staff on 2026-08-21 (docs/13), and core went headless on 2026-08-22.
+         * /admin serves users, roles, content and settings as Livewire screens
+         * rather than a panel.
+         *
+         * The message log used to be in that list and is not any more: core
+         * 0.5.0 gave it up, and `uclemmer/laravel-postmaster` contributes it
+         * back through this key. That is the only entry here — the fair's own
+         * screens still live at /staff and are not contributed to /admin.
          */
-        'plugins' => [],
+        'plugins' => [
+            AdminScreens::class,
+        ],
 
         'modules' => [
             'users' => true,
-            'email_log' => true,
             'queue' => true,
             'content' => true,
             'settings' => true,

@@ -5,14 +5,14 @@ namespace App\Listeners;
 use App\Models\MessageRecipient;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-use UClemmer\LaravelCore\Events\EmailLogged;
+use UClemmer\LaravelPostmaster\Events\MessageLogged;
 
 /**
- * Ties a campaign's recipient row to the laravel-core log row for that send
- * (doc 07 §4).
+ * Ties a campaign's recipient row to the laravel-postmaster log row for that
+ * send (doc 07 §4).
  *
- * The correlation rides out as an `X-CTC-Recipient-Id` header, which core
- * captures along with everything else. That is what lets the message page show
+ * The correlation rides out as an `X-CTC-Recipient-Id` header, which the
+ * package captures along with everything else. That is what lets the message page show
  * a real per-recipient status — sent, failed, still sending — rather than the
  * optimistic "we queued it" that a local column can offer.
  *
@@ -22,7 +22,7 @@ use UClemmer\LaravelCore\Events\EmailLogged;
  */
 class LinkEmailLogToRecipient
 {
-    public function handle(EmailLogged $event): void
+    public function handle(MessageLogged $event): void
     {
         try {
             $recipientId = $this->recipientIdFrom($event->log->headers ?? []);
@@ -44,10 +44,10 @@ class LinkEmailLogToRecipient
     }
 
     /**
-     * Pull our header out of core's stored headers.
+     * Pull our header out of the log row's stored headers.
      *
-     * Core stores them as raw `Name: value` strings, so this parses rather
-     * than looks up. Case-insensitive, because mail transports are.
+     * They are stored as raw `Name: value` strings, so this parses rather than
+     * looks up. Case-insensitive, because mail transports are.
      *
      * @param  array<int|string, string>  $headers
      */

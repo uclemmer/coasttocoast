@@ -16,17 +16,22 @@
         {
             "type": "vcs",
             "url": "https://github.com/uclemmer/laravel-ui.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/uclemmer/laravel-postmaster"
         }
     ],
     "require": {
-        "php": "^8.4",
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.3",
+        "php": "^8.4",
         "stripe/stripe-php": "^21.2",
         "twilio/sdk": "^8.12",
-        "uclemmer/laravel-core": "^0.4",
+        "uclemmer/laravel-core": "^0.5",
+        "uclemmer/laravel-postmaster": "^0.1",
         "uclemmer/laravel-ui": "^0.6"
     },
     "require-dev": {

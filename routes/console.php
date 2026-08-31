@@ -18,9 +18,9 @@ Artisan::command('inspire', function () {
 |
 */
 
-// Prunes rows past core.email_log.prune_after_days (400) and marks sends that
+// Prunes rows past postmaster.log.prune_after_days (400) and marks sends that
 // never got a delivery confirmation as failed.
-Schedule::command('core:prune-email-logs')->dailyAt('03:10');
+Schedule::command('postmaster:prune')->dailyAt('03:10');
 
 // Contact submissions past core.contact.prune_after_days.
 Schedule::command('core:prune-contact-submissions')->dailyAt('03:20');

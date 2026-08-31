@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use UClemmer\LaravelCore\EmailLog\EmailLog;
+// Aliased: this application has its own App\Models\Message, the campaign.
+use UClemmer\LaravelPostmaster\Messages\Message as LoggedMessage;
 
 /**
  * One frozen line of a campaign's delivery list (doc 07 sections 2 and 4).
  *
  * The ULID key is not decoration: it travels out as the `X-CTC-Recipient-Id`
- * header and comes back through laravel-core's `EmailLogged` event, and a
+ * header and comes back through laravel-postmaster's `MessageLogged` event, and a
  * sequential integer in a mail header is guessable by anyone who receives one
  * campaign.
  *
@@ -96,32 +97,37 @@ class MessageRecipient extends Model
     }
 
     /**
-     * The laravel-core log row for this send, linked by the EmailLogged
-     * listener. No database-level foreign key: `core:prune-email-logs` deletes
-     * these on a schedule and must not be blocked by campaign history, nor
-     * take it down with it.
+     * The laravel-postmaster log row for this send, linked by the MessageLogged
+     * listener. No database-level foreign key: `postmaster:prune` deletes these
+     * on a schedule and must not be blocked by campaign history, nor take it
+     * down with it.
      *
-     * @return BelongsTo<EmailLog, $this>
+     * The column is still `email_log_id`. It is NOT renamed to `message_id`,
+     * which is already taken here by the campaign this row belongs to — the
+     * collision is why the model is aliased above, and renaming the column
+     * would make the two indistinguishable at a glance.
+     *
+     * @return BelongsTo<LoggedMessage, $this>
      */
     public function emailLog(): BelongsTo
     {
-        return $this->belongsTo(EmailLog::class, 'email_log_id');
+        return $this->belongsTo(LoggedMessage::class, 'email_log_id');
     }
 
     /**
      * The authoritative email status.
      *
      * When a log row is linked, it wins - it is what the transport actually
-     * reported, and `core:prune-email-logs` keeps it honest by promoting stale
+     * reported, and `postmaster:prune` keeps it honest by promoting stale
      * `sending` rows to `failed`. The local column is the fallback for rows
-     * with no log: SMS-only recipients, or an environment with email logging
+     * with no log: SMS-only recipients, or an environment with message logging
      * turned off (doc 07 section 4 rule 3).
      */
     public function resolvedEmailStatus(): DeliveryStatus
     {
         $log = $this->email_log_id ? $this->emailLog : null;
 
-        return $log instanceof EmailLog
+        return $log instanceof LoggedMessage
             ? DeliveryStatus::fromEmailLog($log->status->value)
             : $this->email_status;
     }

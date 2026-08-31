@@ -13,7 +13,7 @@ use Tests\TestCase;
 |--------------------------------------------------------------------------
 |
 | Feature tests get a migrated database. laravel-core's tables (core_roles,
-| core_permissions, core_email_logs, …) are published migrations in this app,
+| core_permissions, postmaster_messages, …) are published migrations in this app,
 | so RefreshDatabase brings them along with ours.
 |
 | RefreshDatabase migrates but seeds nothing, which leaves `core_permissions`

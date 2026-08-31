@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 use UClemmer\LaravelCore\Admin\Admin;
 use UClemmer\LaravelCore\Auth\Permission;
 use UClemmer\LaravelCore\Auth\Role;
+use UClemmer\LaravelPostmaster\Integration\Core\AdminScreens;
 
 /*
  * Card 1.1 — the wiring between this app and uclemmer/laravel-core. These are
@@ -27,16 +28,39 @@ it('mounts core\'s admin at /admin', function () {
         ->and(Admin::url('dashboard'))->toEndWith('/admin');
 });
 
-it('contributes no screens of its own, and gets core\'s', function () {
+it('contributes only the message log, and gets the rest from core', function () {
     /*
-     * Inverted 2026-08-21 when the fair's resources left for /staff (docs/13),
-     * and it stays inverted: `core.admin.plugins` is the same config key it was
-     * under Filament, holding `ProvidesAdminScreens` class-strings now. This
-     * app names none — everything at /admin is core's own.
+     * Inverted 2026-08-21 when the fair's resources left for /staff (docs/13):
+     * `core.admin.plugins` holds `ProvidesAdminScreens` class-strings, and this
+     * app named none, because everything at /admin was core's own.
+     *
+     * One entry now, and it is not the fair's. Core 0.5.0 gave up its email log
+     * and `uclemmer/laravel-postmaster` contributes it back through this key --
+     * so /admin looks the same to a user while the message log arrives from a
+     * different package. The fair's own screens are still at /staff and still
+     * contribute nothing here.
      */
-    expect(config('core.admin.plugins'))->toBe([])
+    expect(config('core.admin.plugins'))
+        ->toBe([AdminScreens::class])
         ->and(Admin::has('users.index'))->toBeTrue()
-        ->and(Admin::has('email-log.index'))->toBeTrue();
+        ->and(Admin::has('postmaster-messages.index'))->toBeTrue();
+});
+
+/*
+ * The screen has to RENDER inside core's shell, not merely be registered. It
+ * does so because `postmaster.admin.layout` names `core::admin.layout` -- the
+ * package cannot hard-code that, since most of its candidate hosts have no core.
+ */
+it('renders the contributed message log inside the core admin shell', function () {
+    // RoleSeeder syncs the permissions and grants coordinator all of them,
+    // including postmaster.view -- which only exists because the package
+    // registers it through core.permission_providers.
+    $this->seed(RoleSeeder::class);
+
+    $this->actingAs(coordinator())
+        ->get(Admin::url('postmaster-messages.index'))
+        ->assertOk()
+        ->assertSee('Message log');
 });
 
 it('brands the admin for the fair', function () {
@@ -46,7 +70,7 @@ it('brands the admin for the fair', function () {
 
 it('published the core migrations', function (string $table) {
     expect(Schema::hasTable($table))->toBeTrue();
-})->with(['core_roles', 'core_permissions', 'core_role_user', 'core_permission_role', 'core_email_logs', 'core_contact_submissions', 'core_contents']);
+})->with(['core_roles', 'core_permissions', 'core_role_user', 'core_permission_role', 'postmaster_messages', 'core_contact_submissions', 'core_contents']);
 
 it('syncs the application permissions alongside the package ones', function () {
     Artisan::call('core:sync-permissions');

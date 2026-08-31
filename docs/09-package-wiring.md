@@ -16,7 +16,8 @@ never as a path repository and never as `dev-main` or `@dev`. Path repositories 
     { "type": "vcs", "url": "https://github.com/uclemmer/laravel-ui.git" }
 ],
 "require": {
-    "uclemmer/laravel-core": "^0.4",
+    "uclemmer/laravel-core": "^0.5",
+    "uclemmer/laravel-postmaster": "^0.1",
     "uclemmer/laravel-ui": "^0.6"
 }
 ```
@@ -30,8 +31,9 @@ credentials are cached there; CI and deploy targets need a deploy key or PAT wit
 2. Bump the constraint here and `composer update uclemmer/laravel-core`.
 3. Publish any new migrations (below), run them, and run the suite.
 
-This app sits on **core `^0.4`** (`v0.4.0`) as of 2026-08-22 — see
-[14-core-04-upgrade.md](14-core-04-upgrade.md) for what that upgrade cost. Note that `^0.4`
+This app sits on **core `^0.5`** (`v0.5.0`) and **postmaster `^0.1`** as of 2026-08-31 — see
+[15-core-05-and-postmaster.md](15-core-05-and-postmaster.md), and
+[14-core-04-upgrade.md](14-core-04-upgrade.md) for the previous one. Note that `^0.5`
 deliberately does not admit a future `0.5.0`: under SemVer 0.x each minor is treated as breaking, so
 moving to the next core release is always an explicit decision here, never a drift. That rule is
 what made the 0.2 → 0.4 jump a considered change rather than something that happened during a
@@ -68,7 +70,7 @@ residue from a feature that now lives in `uclemmer/laravel-legal`.
 
 If this app ever does want versioned legal documents, the answer is to require that package rather
 than to resurrect these files: it owns `legal_documents`, `legal_versions` and `legal_acceptances`
-under its own prefix, and requires core `^0.4` exactly as this app now does.
+under its own prefix, and requires core `^0.5` exactly as this app now does.
 
 **If a database has already run them**, dropping the migration files does not drop the tables. A
 local or staging database migrated before 2026-08-17 still carries three empty `core_legal_*`
@@ -137,3 +139,4 @@ in the `rep` arm — not email verification.
 | 2026-08-17 | Upgraded core `^0.1.0` → `^0.2` (`v0.2.0`), the release that extracted legal. Deleted the three orphaned `core_legal_*` migrations. No new migrations to publish — core `v0.2.0` ships the same thirteen this app already has. Suite 33/33. |
 | 2026-08-17 | Installed Laravel Boost. `boost.json` was missing its `agents` key, so no `CLAUDE.md`/`AGENTS.md`/`.mcp.json` had ever been generated here and `boost:update` failed on every `composer update`. This could not be fixed before now: the app did not boot until core was installed, and `boost:install` needs a bootable app. |
 | 2026-08-22 | Upgraded core `^0.2` → `^0.4` and ui `^0.5` → `^0.6` in the workspace tag wave, which took `filament/filament` out of the lock entirely. Nothing in `app/` used Filament; eleven files still *declared* they did (nine enums' `HasColor`/`HasLabel`, `User`'s `FilamentUser` and `canAccessPanel()`) and would have fatalled at class load. Four test files ported off the Filament facade, `@source` added for core's views, two retired config keys removed. Suite 739 → 740. Full record in [14-core-04-upgrade.md](14-core-04-upgrade.md). |
+| 2026-08-31 | Upgraded core `^0.4` → `^0.5` and added `uclemmer/laravel-postmaster` `^0.1` with a third `vcs` entry. Core 0.5 removed its email log; the message log comes from the package now. Three app files re-pointed (`MessageRecipient`, `LinkEmailLogToRecipient`, `EventServiceProvider`), the model aliased as `LoggedMessage` around this app's own `Message`, a two-pass data migration into `postmaster_messages`, `core.admin.plugins` gaining its first entry, and a third `@source` line. Suite 740 → 741. Full record in [15-core-05-and-postmaster.md](15-core-05-and-postmaster.md). |

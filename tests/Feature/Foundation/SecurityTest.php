@@ -140,7 +140,7 @@ describe('pruning', function () {
             ->implode(' ');
 
         expect($scheduled)
-            ->toContain('core:prune-email-logs')
+            ->toContain('postmaster:prune')
             ->toContain('core:prune-contact-submissions')
             ->toContain('fair:prune-message-recipients')
             ->toContain('fair:prune-stripe-events')

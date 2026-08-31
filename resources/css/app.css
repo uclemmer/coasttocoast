@@ -52,6 +52,7 @@
  * at /admin renders unstyled and nothing reports an error.
  */
 @source '../../vendor/uclemmer/laravel-core/resources/views';
+@source '../../vendor/uclemmer/laravel-postmaster/resources/views';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views';
 @source '../../vendor/livewire/livewire/src';

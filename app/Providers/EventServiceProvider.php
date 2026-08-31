@@ -18,7 +18,7 @@ use App\Listeners\SendMembershipNotifications;
 use App\Listeners\SendRegistrationNotifications;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
-use UClemmer\LaravelCore\Events\EmailLogged;
+use UClemmer\LaravelPostmaster\Events\MessageLogged;
 
 /**
  * The seam between the domain services and the comms matrix (doc 10, D-2.3-a).
@@ -48,6 +48,6 @@ class EventServiceProvider extends ServiceProvider
 
         // laravel-core's, not ours: fired after every send is logged. Links a
         // campaign's recipient row to its log row (doc 07 §4).
-        Event::listen(EmailLogged::class, LinkEmailLogToRecipient::class);
+        Event::listen(MessageLogged::class, LinkEmailLogToRecipient::class);
     }
 }

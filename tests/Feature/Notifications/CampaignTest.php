@@ -14,8 +14,8 @@ use App\Notifications\CampaignMessage;
 use App\Services\Sms\NullSms;
 use App\Services\Sms\SmsService;
 use Illuminate\Support\Facades\Notification;
-use UClemmer\LaravelCore\EmailLog\EmailLog;
-use UClemmer\LaravelCore\Events\EmailLogged;
+use UClemmer\LaravelPostmaster\Events\MessageLogged;
+use UClemmer\LaravelPostmaster\Messages\Message as LoggedMessage;
 
 beforeEach(function () {
     $this->fair = Fair::factory()->published()->create();
@@ -118,13 +118,13 @@ describe('delivery tracking', function () {
         // coordinator can act on.
         $recipient = MessageRecipient::factory()->for($this->message)->create();
 
-        $log = EmailLog::query()->create([
+        $log = LoggedMessage::query()->create([
             'subject' => 'Parking and check-in',
             'headers' => [MessageRecipient::HEADER.': '.$recipient->getKey()],
             'status' => 'sent',
         ]);
 
-        app(LinkEmailLogToRecipient::class)->handle(new EmailLogged($log));
+        app(LinkEmailLogToRecipient::class)->handle(new MessageLogged($log));
 
         expect($recipient->refresh()->email_log_id)->toBe($log->getKey())
             // The log wins over the local column: it is what the transport
@@ -135,13 +135,13 @@ describe('delivery tracking', function () {
     it('handles headers given as a name => value map as well as as lines', function () {
         $recipient = MessageRecipient::factory()->for($this->message)->create();
 
-        $log = EmailLog::query()->create([
+        $log = LoggedMessage::query()->create([
             'subject' => 'x',
             'headers' => [MessageRecipient::HEADER => (string) $recipient->getKey()],
             'status' => 'sent',
         ]);
 
-        app(LinkEmailLogToRecipient::class)->handle(new EmailLogged($log));
+        app(LinkEmailLogToRecipient::class)->handle(new MessageLogged($log));
 
         expect($recipient->refresh()->email_log_id)->toBe($log->getKey());
     });
@@ -150,9 +150,9 @@ describe('delivery tracking', function () {
         // Every transactional email in the app lands here. Not an error.
         $recipient = MessageRecipient::factory()->for($this->message)->create();
 
-        $log = EmailLog::query()->create(['subject' => 'A receipt', 'headers' => [], 'status' => 'sent']);
+        $log = LoggedMessage::query()->create(['subject' => 'A receipt', 'headers' => [], 'status' => 'sent']);
 
-        app(LinkEmailLogToRecipient::class)->handle(new EmailLogged($log));
+        app(LinkEmailLogToRecipient::class)->handle(new MessageLogged($log));
 
         expect($recipient->refresh()->email_log_id)->toBeNull();
     });
@@ -160,13 +160,13 @@ describe('delivery tracking', function () {
     it('never lets a linking failure blow up, because the mail has already gone', function () {
         // A failure here would turn a delivered email into a failed job and a
         // retry that sends it again.
-        $log = EmailLog::query()->create([
+        $log = LoggedMessage::query()->create([
             'subject' => 'x',
             'headers' => [MessageRecipient::HEADER.': not-a-real-ulid'],
             'status' => 'sent',
         ]);
 
-        expect(fn () => app(LinkEmailLogToRecipient::class)->handle(new EmailLogged($log)))
+        expect(fn () => app(LinkEmailLogToRecipient::class)->handle(new MessageLogged($log)))
             ->not->toThrow(Throwable::class);
     });
 
@@ -175,8 +175,8 @@ describe('delivery tracking', function () {
         $b = MessageRecipient::factory()->for($this->message)->create();
 
         foreach ([$a, $b] as $recipient) {
-            app(LinkEmailLogToRecipient::class)->handle(new EmailLogged(
-                EmailLog::query()->create([
+            app(LinkEmailLogToRecipient::class)->handle(new MessageLogged(
+                LoggedMessage::query()->create([
                     'subject' => 'x',
                     'headers' => [MessageRecipient::HEADER.': '.$recipient->getKey()],
                     'status' => 'sent',

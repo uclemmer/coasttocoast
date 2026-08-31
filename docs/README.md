@@ -33,7 +33,7 @@ cards from 05 under the rules in 06):
 | [05-build-roadmap.md](05-build-roadmap.md) | Eight phases of task cards with dependencies and Definitions of Done — the work queue |
 | [06-testing-strategy.md](06-testing-strategy.md) | Pest conventions, the critical test inventory, and reusable test patterns |
 | [08-install-runbook.md](08-install-runbook.md) | The commands that bring the app up on Herd, what card 1.1 configured in `config/core.php`, and the one deviation from the card |
-| [07-email-design.md](07-email-design.md) | Themed HTML email template, cross-year audience segmentation, and send tracking via laravel-core's EmailLog |
+| [07-email-design.md](07-email-design.md) | Themed HTML email template, cross-year audience segmentation, and send tracking via the message log (laravel-core's EmailLog until 2026-08-30, `uclemmer/laravel-postmaster` since — see doc 15) |
 | [09-package-wiring.md](09-package-wiring.md) | How this app consumes `uclemmer/laravel-core` (vcs + tagged release), publishing core's migrations, the permission sync the test suite needs, and why `canAccessPanel` returns `true` for the rep panel |
 | [10-implementation-decisions.md](10-implementation-decisions.md) | Every judgement call an implementing session made without the owner present, with its reasoning and how to reverse it — **read this before questioning why something differs from 01–07** |
 | [design-handoff/](design-handoff/) | The Claude Design handoff the public site was built from (2026-08-19) — the landing, interior and maintenance prototypes, and the token/type/spacing reference that declares colours, typography, spacing and copy final. Start at its [PROVENANCE.md](design-handoff/PROVENANCE.md) |
@@ -41,6 +41,7 @@ cards from 05 under the rules in 06):
 | [12-ui-package-adoption.md](12-ui-package-adoption.md) | Adopting `uclemmer/laravel-ui` and retiring the rep panel: what that panel actually owns (all of auth), where each piece goes, and the published theme sheet repointed at the design handoff |
 | [13-staff-admin.md](13-staff-admin.md) | Getting the fair's own admin off Filament and onto `/staff`: why not `/admin`, the pattern established on Sponsors, what Filament was doing for free, and the traps recorded for the six resources still to come |
 | [14-core-04-upgrade.md](14-core-04-upgrade.md) | Upgrading to laravel-core 0.4 and off Filament for good: the eleven vestigial declarations that would have fatalled, the four tests ported, and the `@source` line whose compiled-CSS diff turned out to be a Blade comment |
+| [15-core-05-and-postmaster.md](15-core-05-and-postmaster.md) | Core 0.5 removes its email log; the message log arrives from `uclemmer/laravel-postmaster`. The model alias, why `email_log_id` keeps its name, the two-pass data migration, and the `core.admin.plugins` seam gaining its first entry |
 
 **Golden rules** (duplicated from the docs because they matter):
 
@@ -54,13 +55,13 @@ cards from 05 under the rules in 06):
    ([12-ui-package-adoption.md](12-ui-package-adoption.md)), and **this app's own Filament code is
    gone too** — all seven resources live at `/staff` as Livewire
    ([13-staff-admin.md](13-staff-admin.md)). What remains is not ours: `laravel-core` still
-   requires Filament and still serves `/admin` for users, roles, the email log, content and
+   requires Filament and still serves `/admin` for users, roles, content and
    settings. Both surfaces are live and agree on who is staff through the same `admin.access`
    permission. Read 12 and 13 before touching any UI, and
    [02-architecture.md](02-architecture.md) for the stack they supersede.
-2. Build on **laravel-core** — never recreate a module it provides (admin shell, roles/permissions, email log, contact, content blocks); package changes happen in its own repo (owner directive 2026-08-16).
+2. Build on **laravel-core** — never recreate a module it provides (admin shell, roles/permissions, contact, content blocks), nor one a satellite provides (the message log, from `uclemmer/laravel-postmaster` since 2026-08-30); package changes happen in their own repos (owner directive 2026-08-16).
 3. Money is integer cents; price always comes from `Event::priceFor(organization)` (grant-aware, server-side); the Stripe webhook is the source of truth for payment state.
 4. Every vendor SDK call lives behind a service interface (doc 04) so it can be faked in tests.
-5. All email renders in the themed template and is logged via laravel-core's EmailLog (doc 07).
+5. All email renders in the themed template and is logged via the message log (doc 07, doc 15).
 6. Every task ships with Pest tests and a docs update in the same change (project instruction).
 7. Check `01-requirements.md` → "Open questions" before making product assumptions; ask the owner (Matt).

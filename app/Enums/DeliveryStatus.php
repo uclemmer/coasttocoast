@@ -5,11 +5,12 @@ namespace App\Enums;
 /**
  * Per-recipient, per-channel delivery state on `message_recipients`.
  *
- * For email this is normally a *fallback*: once laravel-core's EmailLog is
- * enabled the authoritative status is derived from the linked `core_email_logs`
- * row (doc 07 §4 rule 3), and the local column only answers for rows with no
- * log — SMS-only recipients, or an environment with logging off. The vocabulary
- * matches core's (`sending|sent|failed`) so the two can be read as one value,
+ * For email this is normally a *fallback*: once laravel-postmaster's message
+ * log is enabled the authoritative status is derived from the linked
+ * `postmaster_messages` row (doc 07 §4 rule 3), and the local column only
+ * answers for rows with no log — SMS-only recipients, or an environment with
+ * logging off. The vocabulary matches the package's (`sending|sent|failed`) so
+ * the two can be read as one value,
  * plus `Skipped` for recipients we deliberately did not contact (no phone, or
  * not opted in to SMS).
  */
@@ -44,8 +45,9 @@ enum DeliveryStatus: string
     }
 
     /**
-     * Translate laravel-core's EmailLog status string into ours. Core uses
-     * `sending|sent|failed`; anything unrecognised degrades to `Pending`
+     * Translate laravel-postmaster's message status string into ours. The
+     * package uses `sending|sent|failed`; anything unrecognised degrades to
+     * `Pending`
      * rather than throwing, because a delivery table must render even if the
      * package adds a status we have not seen.
      */

@@ -13,7 +13,7 @@ use Symfony\Component\Mime\Email;
 /**
  * Note the transport. These tests use `array` rather than `Mail::fake()` on
  * purpose (doc 06): faking replaces the mailer entirely, and laravel-core's
- * EmailLog capture listeners hang off the real `MessageSending`/`MessageSent`
+ * laravel-postmaster's capture listeners hang off the real `MessageSending`/`MessageSent`
  * events. Faking would test that we called something, not that anything
  * rendered or was logged.
  */
@@ -107,7 +107,7 @@ describe('Postmark message streams', function () {
     });
 
     it('sets the stream header exactly once', function () {
-        // A duplicate is a Postmark 422, and a resend through core's EmailLog
+        // A duplicate is a Postmark 422, and a resend through the message log
         // re-renders a message that may already carry one.
         Notification::route('mail', 'dana@kenyon.example')->notify(new PaymentReceipt($this->registration));
 

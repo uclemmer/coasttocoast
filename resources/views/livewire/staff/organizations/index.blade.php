@@ -94,7 +94,7 @@
                             <x-ui::button size="xs" variant="secondary"
                                 href="{{ route('staff.organizations.edit', $organization) }}">{{ __('Edit') }}</x-ui::button>
                             <x-ui::button size="xs" variant="warning"
-                                wire:click="startMerge({{ $organization->id }})">{{ __('Merge into…') }}</x-ui::button>
+                                wire:click="startMerge({{ $organization->id }})">{{ __('Merge') }}</x-ui::button>
                             <x-ui::button size="xs" variant="ghost"
                                 wire:click="confirmDelete({{ $organization->id }})">{{ __('Remove') }}</x-ui::button>
                         </div>

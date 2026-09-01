@@ -123,6 +123,25 @@ describe('editing a profile', function () {
 });
 
 describe('the merge action', function () {
+    it('offers merge as a row action', function () {
+        /*
+         * The label is asserted because it is the only thing tying the row
+         * button to the action: every test below reaches `startMerge` by
+         * method name, so renaming the button breaks nothing else.
+         *
+         * Matched as markup, not as text. A plain assertDontSee('Merge into')
+         * fails on the delete dialog, which says "Merge into another
+         * organization instead if this is a duplicate" — prose that is meant to
+         * be there. The old button label carried an ellipsis; that is what must
+         * not come back.
+         */
+        Organization::factory()->named('University of Example')->create();
+
+        livewire(OrganizationIndex::class)
+            ->assertSeeHtml('>Merge</button>')
+            ->assertDontSee('Merge into…');
+    });
+
     it('repoints everything and removes the husk', function () {
         $keep = Organization::factory()->named('The University of Example')->create();
         $duplicate = Organization::factory()->named('University of Example')->create();

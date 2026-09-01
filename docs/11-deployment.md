@@ -227,13 +227,13 @@ None of these block a deploy; all of them are visible to a visitor.
 
 | Item | Where it lives | Flagged as |
 |---|---|---|
-| The real 2027 fair date and price | Admin → Fairs → College Fair 2027 | `TODO-OWNER` in the name; the fair is **unpublished** until this is done |
-| Refund and cancellation policy | Admin → Content → `policy.refunds` | `TODO-OWNER` in the title |
-| Parking and unloading directions | Admin → FAQ | `TODO-OWNER` badge in the table |
-| Hotel list | Admin → FAQ | `TODO-OWNER` badge |
-| Fair conduct guidelines | Admin → FAQ | `TODO-OWNER` badge |
-| Signed W-9 PDF | Staff → FAQ → "Can we get a W-9?" → **Attachment**. PDF, up to 5 MB | `TODO-OWNER` in the answer. A download link appears under the answer once the file is there, so the sentence pointing at this can then be replaced |
-| Google Map embed for the venue | Admin → FAQ | The design's embed is pinned at Chattanooga generally, not the venue — see the asset queue below |
+| The real 2027 fair date and price | `/staff/events` → College Fair 2027 | `TODO-OWNER` in the name; the fair is **unpublished** until this is done, and an unpublished fair can never take money |
+| Refund and cancellation policy | `/admin/content` → `policy.refunds` | `TODO-OWNER` in the title |
+| Parking and unloading directions | `/staff/faq` | `TODO-OWNER` badge in the table |
+| Hotel list | `/staff/faq` | `TODO-OWNER` badge |
+| Fair conduct guidelines | `/staff/faq` | `TODO-OWNER` badge |
+| Signed W-9 PDF | `/staff/faq` → "Can we get a W-9?" → **Attachment**. PDF, up to 5 MB | `TODO-OWNER` in the answer. A download link appears under the answer once the file is there, so the sentence pointing at this can then be replaced |
+| Google Map embed for the venue | `/staff/faq` | The design's embed is pinned at Chattanooga generally, not the venue — see the asset queue below |
 | Brand colour and logo | `FAIR_BRAND_COLOR`, `FAIR_BRAND_LOGO_URL` | Email falls back to the app name in text |
 | Historical rosters, 2022–2026 | `php artisan fair:import-roster <file.csv>` | Five past fairs are seeded and waiting; see below |
 
@@ -245,10 +245,10 @@ fallback — but each is a visible gap that only Matt can close.
 
 | Asset | Where it goes | What happens without it |
 |---|---|---|
-| The four sponsor school logos | Admin → Sponsors → logo | The tile falls back to the school's name set in the display face. Legible, clearly a placeholder |
+| The four sponsor school logos | `/staff/sponsors` → the school → Logo | The tile falls back to the school's name set in the display face. Legible, clearly a placeholder |
 | A wordmark with a transparent background | `public/images/wordmark.jpg` | The current file is a JPEG with a white background, so it sits on the hero photo as a white card with a rounded corner and a shadow. That is the design's own treatment, so it does not look broken — but a transparent PNG or SVG would let it sit on the photograph directly |
 | A higher-resolution cityscape | `public/images/cityscape.jpg` | The current file is fine at desktop widths and soft on a large display. It is the hero background and the maintenance page's full-bleed image |
-| A map embed pinned to the venue | Admin → FAQ | The handoff's embed centres on Chattanooga generally rather than on the Convention Center. Pointing it at the building is a one-line change once the correct embed URL exists |
+| A map embed pinned to the venue | `/staff/faq` | The handoff's embed centres on Chattanooga generally rather than on the Convention Center. Pointing it at the building is a one-line change once the correct embed URL exists |
 
 **One discrepancy needs Matt's word rather than a file.** The design gives the venue address as
 **1 Carter Plaza**; doc 00 (transcribed from the live site) and the production seed both say
@@ -293,7 +293,7 @@ It is idempotent: fix a column and run it again.
 | Symptom | First thing to check |
 |---|---|
 | A school paid but is still "awaiting payment" | `stripe_webhook_events` — did the delivery arrive? Then the Stripe dashboard's webhook log |
-| No email at all | Is the queue worker running? Then Admin → Email log — a row with status `sending` means the transport never confirmed |
+| No email at all | Is the queue worker running? Then `/admin/messages` (the postmaster message log) — a row with status `sending` means the transport never confirmed |
 | A campaign shows every recipient as "queued" forever | `core:prune-email-logs` promotes stale rows to `failed`; if the schedule is not running, nothing ever moves |
 | A school is missing from a campaign | Does it have an **active** rep? A school with only pending or retired reps falls back to `admissions_email`, and with neither is dropped — that drop is logged |
 | Registration says closed when it should be open | Is the fair **published**? An unpublished fair is never open, whatever the window says |

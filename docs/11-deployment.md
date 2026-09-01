@@ -31,10 +31,13 @@ php artisan migrate --force
 php artisan db:seed --class="Database\Seeders\ProductionSeeder" --force
 php artisan storage:link            # organization and sponsor logos are on the public disk
 npm ci && npm run build
-php artisan filament:optimize
 php artisan config:cache route:cache view:cache
 php artisan core:doctor             # must exit 0 — see below
 ```
+
+**`storage:link` is not optional and it is not only about logos.** FAQ attachments — the signed W-9
+— live on the *private* disk and are streamed by a controller, so they need no link; but organization
+and sponsor logos are read straight from `public/storage` and render as broken images without it.
 
 `ProductionSeeder` is idempotent and safe to re-run on every deploy. It creates the coordinator
 account **without a usable password** outside local — send a reset link rather than looking for one
@@ -47,11 +50,18 @@ php artisan down --render="errors::503" --retry=60 --with-secret
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
 php artisan config:cache route:cache view:cache
-php artisan filament:optimize
 php artisan core:doctor
 php artisan queue:restart           # workers hold old code and old config until told otherwise
 php artisan up
 ```
+
+**`filament:optimize` used to sit in both sequences and was removed on 2026-08-19.** Filament left
+this application with the `/staff` rebuild (docs/13) and the core `0.4` upgrade (docs/14), so the
+command no longer exists — `artisan filament:optimize` exits 1 with "There are no commands defined in
+the filament namespace" and would have failed the deploy at that line. The same removal took
+`@php artisan filament:upgrade` out of `composer.json`'s `post-autoload-dump`, where it had been
+breaking `composer install` itself on any fresh clone. `FrontendWiringTest` now asserts both are
+gone.
 
 **`--render` is the whole point of the maintenance page.** Without it, `artisan down` still shows
 `resources/views/errors/503.blade.php` — the exception handler registers `resources/views/errors`
@@ -287,4 +297,5 @@ It is idempotent: fix a column and run it again.
 | A campaign shows every recipient as "queued" forever | `core:prune-email-logs` promotes stale rows to `failed`; if the schedule is not running, nothing ever moves |
 | A school is missing from a campaign | Does it have an **active** rep? A school with only pending or retired reps falls back to `admissions_email`, and with neither is dropped — that drop is logged |
 | Registration says closed when it should be open | Is the fair **published**? An unpublished fair is never open, whatever the window says |
-| Filament pages 500 after a deploy | `filament:optimize`, then `view:clear` |
+| A staff or portal page 500s after a deploy | `view:clear`, then `config:clear` — a cached view or config from the previous release. There is no `filament:optimize` any more; that row was stale from before the `/staff` rebuild |
+| The W-9 download 404s | Is the FAQ question **published**? Unpublishing withdraws the file deliberately (doc 10, D-9-c). If it is published, the row is pointing at a file that is not on disk — a restore that brought back the database and not `storage/app/private` |

@@ -19,7 +19,7 @@ cd C:\Users\uriah\Herd\coasttocoastcollegefair
 
 php -v                          # must report 8.4.x before anything else
 
-composer update                 # resolves uclemmer/laravel-core @dev + filament/filament ^5
+composer update                 # resolves uclemmer/laravel-core
 ```
 
 `composer.json` requires `uclemmer/laravel-core: "@dev"` — a path repository has no released version, so the
@@ -43,24 +43,30 @@ That creates `core_roles`, `core_permissions`, `core_role_user`, `core_permissio
 > `php artisan vendor:publish --provider="UClemmer\LaravelCore\LaravelCoreServiceProvider"` and record the
 > real tag here.
 
-### Publish Filament's assets
+### Link the public disk
 
 ```bash
-php artisan filament:assets
 php artisan storage:link
 ```
 
-**This is easy to miss and the symptom is alarming out of proportion to the cause.** Filament arrives
-*transitively* through `uclemmer/laravel-core`, so its installer never runs here and nothing copies
-its CSS and JS into `public/`. Every page then serves a 200 and renders as unstyled HTML, with
-`/css/filament/...` and `/js/filament/...` 404ing in the network tab.
+Organization and sponsor logos are read straight from `public/storage` and render as broken images
+without it. FAQ attachments — the signed W-9 — are on the *private* disk and streamed by a
+controller, so they need no link (doc 10, D-9-c).
 
-`composer.json` now runs `filament:upgrade` in `post-autoload-dump`, so a fresh `composer install`
-does this for you. The commands above are for a checkout that predates that hook. `storage:link` is
-separate and still manual: organization and sponsor logos are on the public disk.
-
-**Any app in this workspace that picks Filament up through `core` rather than requiring it directly
-has the same hole.**
+> **This section used to be "Publish Filament's assets", and the history is worth keeping.**
+> Filament arrived *transitively* through `uclemmer/laravel-core`, so its installer never ran here
+> and nothing copied its CSS and JS into `public/`. Every page served a 200 and rendered as unstyled
+> HTML with `/css/filament/...` 404ing — the failure doc 10 D-8-a records. The fix was
+> `filament:assets` plus a `filament:upgrade` hook in `post-autoload-dump`.
+>
+> **Both are gone as of 2026-08-19, and the hook had become a defect.** Filament left this
+> application with the `/staff` rebuild (docs/13) and the core `0.4` upgrade (docs/14), but the hook
+> outlived it: `artisan filament:upgrade` exits 1 with "There are no commands defined in the filament
+> namespace", which fails `post-autoload-dump` and therefore **`composer install` itself** on any
+> fresh clone or deploy. It passed locally only because `vendor/` was already built. The published
+> assets under `public/css/filament`, `public/js/filament` and `public/fonts/filament` went with it —
+> 37 tracked files for a framework that is not installed. `FrontendWiringTest` now asserts the
+> absence rather than the presence.
 
 ### Permissions, roles and a coordinator account
 

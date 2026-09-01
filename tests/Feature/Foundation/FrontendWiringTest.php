@@ -171,21 +171,37 @@ describe('the Flowbite removal', function () {
     });
 });
 
-describe('Filament assets', function () {
-    it('publishes them, because Filament arrives transitively and its installer never ran', function () {
-        // Doc 10, D-8-a: the whole application rendered as unstyled HTML while
-        // passing 609 tests, because nothing had copied Filament's CSS and JS
-        // into public/. `composer.json` now runs `filament:upgrade` on
-        // autoload dump; this fails if that hook is ever dropped.
-        expect(file_exists(public_path('css/filament/filament/app.css')))->toBeTrue()
-            ->and(file_exists(public_path('js/filament/filament/app.js')))->toBeTrue();
-    });
-
-    it('keeps the hook that republishes them', function () {
+describe('the Filament leftovers', function () {
+    /*
+     * These two assertions used to be their inverse: doc 10, D-8-a records the
+     * whole application rendering as unstyled HTML while 609 tests passed,
+     * because nothing had copied Filament's CSS and JS into public/. The fix
+     * was a `filament:upgrade` hook on autoload dump, and a test pinning it.
+     *
+     * Filament then left the workspace entirely (docs/13, docs/14) and the
+     * hook outlived it. `artisan filament:upgrade` now exits 1 with "There are
+     * no commands defined in the filament namespace", which fails
+     * `post-autoload-dump` -- so `composer install` was broken on any fresh
+     * clone or deploy, while passing locally because vendor/ was already built.
+     * The test defended the breakage rather than catching it, because the
+     * stale published assets were still sitting in public/.
+     *
+     * Inverted rather than deleted. A test that says "this must be gone" is
+     * worth more here than no test at all: the removal is the kind of thing a
+     * copy-pasted composer.json or a re-run installer quietly undoes.
+     */
+    it('runs no Filament command on autoload dump', function () {
         $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
 
         expect($composer['scripts']['post-autoload-dump'] ?? [])
-            ->toContain('@php artisan filament:upgrade');
+            ->not->toContain('@php artisan filament:upgrade')
+            ->and($composer['require'] ?? [])->not->toHaveKey('filament/filament');
+    });
+
+    it('ships no published Filament assets', function () {
+        expect(is_dir(public_path('css/filament')))->toBeFalse()
+            ->and(is_dir(public_path('js/filament')))->toBeFalse()
+            ->and(is_dir(public_path('fonts/filament')))->toBeFalse();
     });
 });
 

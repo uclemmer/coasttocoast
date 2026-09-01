@@ -15,8 +15,8 @@
 Filament v5 panel plugin, in-house roles/permissions, email logging, queue metrics, content management,
 profiles/settings, contact form, and a `core:doctor` diagnostic. Facts that matter here:
 
-- Requires **PHP ^8.4**, `filament/filament ^5.0`, Laravel `^11||^12||^13`. (The app must run PHP 8.4 —
-  see the note in doc 02.)
+- Requires **PHP ^8.4** and Laravel `^13`. (It required `filament/filament ^5.0` when this was
+  written; core dropped that in `0.4` and narrowed to Laravel 13 in `0.3`.)
 - **EmailLog module** (`core.email_log.*` config, `core_email_logs` table): listeners on `MessageSending`/
   `MessageSent` capture **every** outgoing email — envelope, subject, HTML/text bodies, headers, attachment
   metadata — with status `sending|sent|failed`, correlated via an `X-Core-Email-Log-Id` header. Ships a

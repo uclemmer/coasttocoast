@@ -109,17 +109,25 @@ run; the commands, and the table of what was changed, are in [08-install-runbook
 Step 1's path repository was replaced by a tagged VCS release on 2026-08-16 — see
 [09-package-wiring.md](09-package-wiring.md) for why and how to upgrade.
 
-**Resolved versions** (read from `vendor/composer/installed.json` on 2026-08-18 — this is card 1.1's
-remaining deliverable):
+**Constraints** (`composer.json`, current as of 2026-08-19; the resolved-version column was read
+once on 2026-08-18 and rotted, so it is gone — `composer show --direct` is the answer that cannot be
+stale):
 
-| Package | Constraint | Resolved version |
-|---|---|---|
-| `uclemmer/laravel-core` | `^0.2` (vcs `github.com/uclemmer/laravel-core.git`) | **v0.2.0** |
-| `filament/filament` | `^5.0` (transitive, via laravel-core) | **v5.7.6** |
-| `laravel/framework` | `^13.8` | **v13.24.0** |
-| `livewire/livewire` | `^4.3` (direct; Filament v5 requires `^4.1`) | **v4.4.0** |
-| `pestphp/pest` | `^5.0` | **v5.0.4** |
-| PHP | `^8.4` | **8.4.24** (Herd) |
+| Package | Constraint |
+|---|---|
+| `uclemmer/laravel-core` | `^0.5` (vcs `github.com/uclemmer/laravel-core.git`) |
+| `uclemmer/laravel-ui` | `^0.6` (vcs) |
+| `uclemmer/laravel-postmaster` | `^0.1` (vcs) |
+| `laravel/framework` | `^13.8` |
+| `livewire/livewire` | `^4.3` |
+| `pestphp/pest` | `^5.0` |
+| PHP | `^8.4` |
+
+**`filament/filament` is not here, and that is the point.** It used to arrive transitively through
+`laravel-core` and this table listed it at v5.7.6. Core `0.4` dropped it, the `/staff` rebuild removed
+the last application code that wanted it (docs/13, docs/14), and the last leftovers — the
+`filament:upgrade` composer hook and 37 published asset files under `public/` — went on 2026-08-19.
+`FrontendWiringTest` asserts they stay gone.
 
 **Panels as built:**
 
@@ -249,5 +257,6 @@ Local dev uses Stripe test keys + Stripe CLI (`stripe listen --forward-to coastt
 
 Production target is undecided (likely Forge/Ploi-style VPS or Laravel Cloud). Requirements whatever the host:
 HTTPS, a queue worker, `php artisan schedule:run` cron (scheduled broadcasts), MySQL/Postgres, Postmark domain
-verification (DKIM/return-path), Stripe webhook endpoint registered, Twilio number provisioned, and
-`php artisan filament:optimize` in the deploy script.
+verification (DKIM/return-path), Stripe webhook endpoint registered, and a Twilio number provisioned.
+The deploy sequence itself lives in [11-deployment.md](11-deployment.md) — it no longer runs
+`filament:optimize`, which was removed on 2026-08-19 along with the rest of the Filament wiring.

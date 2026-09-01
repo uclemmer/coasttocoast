@@ -23,9 +23,11 @@
  * reason it gave — that laravel-ui had no accordion — stopped being true when
  * the package shipped one in v0.5.0, on the evidence of this site's FAQ.
  *
- * The admin panel does NOT use this stylesheet — Filament ships its own
- * compiled CSS, published into `public/css/filament/`. Nothing here can affect
- * it, and removing it is a separate and much larger job.
+ * That note used to end by saying the admin panel does not use this stylesheet,
+ * because Filament shipped its own compiled CSS into `public/css/filament/`.
+ * It does now: /staff and /portal are Livewire on `uclemmer/laravel-ui` and
+ * render from this build like everything else. Filament's published assets
+ * were deleted on 2026-08-19 — see docs/08.
  */
 
 /*

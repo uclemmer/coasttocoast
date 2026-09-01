@@ -99,19 +99,26 @@ composer path repository in dev). Requires **PHP 8.4** + Filament v5. Modules us
 - Don't recreate anything the package provides (tables, resources, permissions). If a package change is needed, it happens in the laravel-core repo with its own tests/docs — never patched from this app.
 - Integration checklist lives in doc 02.
 
-## Filament (UI framework)
+## ~~Filament (UI framework)~~ → Blade, Livewire and `uclemmer/laravel-ui`
 
-**Package:** `filament/filament` **v5** (pinned by laravel-core's `^5.0` constraint). Two panels: Admin `/admin`
-(laravel-core's prebuilt panel + our `FairPlugin`), Rep `/portal` (app-owned) — per 02.
+**Filament is gone from this application.** It is not a dependency, no `app/Filament/` directory
+exists, and as of 2026-08-19 neither does any of its wiring — see doc 02. The rebuild happened in
+two steps: the public site left in Phase 8 (docs/10, D-5.1-a), and the staff and portal surfaces
+followed with the `/staff` rebuild (docs/13) and the core `0.4` upgrade (docs/14).
 
-### Rules
+The rules below outlived the framework, because none of them were really about it:
 
-- Panel access: Admin via laravel-core's panel-access check (coordinator role/permission); Rep via `canAccessPanel()` requiring a verified email.
-- Authorization on every resource via Policies — never rely on navigation hiding alone.
-- Custom actions (Mark check received, Refund, Resend confirmation) call services from 02; keep logic out of Filament classes.
-- Public pages are **Blade views and Livewire components styled with Flowbite** (owner directive 2026-08-19)
-  — not Filament. They are built as a Filament panel today and queued for rework; see doc 02.
-- Testing: Filament resources and wizard are tested with Pest + Livewire test helpers (`livewire()` against Filament pages) — patterns in 06.
+- **Authorization on every action via Policies — never rely on navigation hiding alone.** This got
+  *more* important, not less. Filament re-evaluated an action's `visible()` closure before running
+  it, so a hidden action was an uncallable one. Livewire couples nothing: a public method on a
+  mounted component is reachable by anyone who reached the component.
+- **Actions call the services in doc 02** (Mark check received, Refund, Resend confirmation). Keep
+  the logic out of the UI class, whichever framework the UI class belongs to.
+- **Access:** staff screens through `ActsForStaff`, the portal through `ActsForAnOrganization` — both
+  ported from the panels' equivalents, and both refusing in `mount()` so the page is unreachable
+  rather than merely unauthorised.
+- **Testing:** Pest with the `livewire()` helper, exactly as before — the helper outlived the panels
+  because it was always testing Livewire underneath.
 
 ## Integration environment matrix
 

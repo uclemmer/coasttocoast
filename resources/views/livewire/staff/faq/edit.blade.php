@@ -37,9 +37,21 @@
                 </div>
             </div>
 
+            @php
+                $hasAttachment = $this->isEditing() && $item?->hasAttachment() && ! $removeAttachment;
+            @endphp
+
             <div class="mt-6">
-                @if ($this->isEditing() && $item?->hasAttachment() && ! $removeAttachment)
-                    <div class="mb-3 flex flex-wrap items-center gap-3">
+                @if ($hasAttachment)
+                    {{-- Labelled, unlike the sponsor screen's equivalent block
+                         in the same position. There the current item is an
+                         image thumbnail and needs no words; a bare filename
+                         link reads as orphaned above the field label that
+                         follows it. Label classes copied from the package's own
+                         `forms.*` label so the two line up exactly. --}}
+                    <p class="mb-2.5 block text-sm font-medium text-heading">{{ __('Attached now') }}</p>
+
+                    <div class="mb-5 flex flex-wrap items-center gap-3">
                         <a href="{{ route('site.faq.download', $item) }}"
                            class="text-sm font-semibold text-brand underline underline-offset-2">
                             {{ $item->attachmentDownloadName() }}
@@ -54,8 +66,10 @@
                      change either way, and `.live` would additionally
                      round-trip the answer textarea with it. --}}
                 <x-ui::forms.file name="attachment" wire:model="attachment" accept="application/pdf"
-                    :label="__('Attachment')"
-                    :hint="__('A PDF, up to 5 MB — the signed W-9, a floor plan, a parking map. Visitors get a download link under the answer.')" />
+                    :label="$hasAttachment ? __('Replace it with') : __('Attachment')"
+                    :hint="$hasAttachment
+                        ? __('A PDF, up to 5 MB. Choosing a file here replaces the one above when you save.')
+                        : __('A PDF, up to 5 MB — the signed W-9, a floor plan, a parking map. Visitors get a download link under the answer.')" />
 
                 <div wire:loading wire:target="attachment" class="mt-2 text-sm text-body">
                     {{ __('Uploading…') }}

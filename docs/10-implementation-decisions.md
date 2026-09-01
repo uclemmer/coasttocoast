@@ -1311,7 +1311,17 @@ generally rather than at the venue. That is doc 11's asset queue, and unrelated.
 
 ### D-9-g — The download link shows a filename in its real case
 
-Small, and in the feature D-9-c added. The button is display type and uppercases its label, which
-turned `coast-to-coast-w9.pdf` into `DOWNLOAD COAST-TO-COAST-W9.PDF`. A filename is not a label:
-shouting it loses the case the file actually has and reads like an error. The word "Download" keeps
-the uppercase treatment; the filename is a `normal-case` span beside it.
+Two bits of polish on the feature D-9-c added, both found by looking at the screens.
+
+**On the public page**, the button is display type and uppercases its label, which turned
+`coast-to-coast-w9.pdf` into `DOWNLOAD COAST-TO-COAST-W9.PDF`. A filename is not a label: shouting it
+loses the case the file actually has and reads like an error. "Download" keeps the uppercase
+treatment; the filename is a `normal-case` span beside it.
+
+**On the staff screen**, the current file sat above the field with no label of its own, so a bare
+link floated above the word "Attachment" and read as orphaned. The position is right and matches
+`Sponsors\Edit` — but there the current item is an image thumbnail and speaks for itself. Added an
+"Attached now" heading, styled from the package's own `forms.*` label so the two align, and the
+field's own label now switches to "Replace it with" when there is already a file. Both states are
+tested, including that ticking removal drops the block — otherwise the page offers a download link
+for a file the save is about to delete.

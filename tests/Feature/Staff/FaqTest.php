@@ -277,4 +277,40 @@ describe('the attachment', function () {
             ->and($item->fresh()->attachment_name)->toBeNull()
             ->and(Storage::disk(FaqItem::ATTACHMENT_DISK)->exists($path))->toBeFalse();
     });
+    it('labels the attachment field for what it does', function () {
+        // The current file sits above the field, as it does on the sponsor
+        // screen. There it is an image thumbnail and speaks for itself; a bare
+        // filename link needed saying (doc 10, D-9-g).
+        $blank = FaqItem::factory()->create();
+
+        livewire(EditFaqItem::class, ['item' => $blank])
+            ->assertSee('Attachment')
+            ->assertDontSee('Attached now')
+            ->assertDontSee('Replace it with');
+
+        $withFile = FaqItem::factory()->create([
+            'attachment_path' => FaqItem::ATTACHMENT_DIRECTORY.'/stored.pdf',
+            'attachment_name' => 'coast-to-coast-w9.pdf',
+        ]);
+
+        livewire(EditFaqItem::class, ['item' => $withFile])
+            ->assertSee('Attached now')
+            ->assertSee('coast-to-coast-w9.pdf')
+            ->assertSee('Replace it with')
+            ->assertSee('Remove this file when I save');
+    });
+
+    it('drops the current-file block the moment removal is ticked', function () {
+        // Otherwise the page offers a download link for a file the save is
+        // about to delete.
+        $item = FaqItem::factory()->create([
+            'attachment_path' => FaqItem::ATTACHMENT_DIRECTORY.'/stored.pdf',
+            'attachment_name' => 'coast-to-coast-w9.pdf',
+        ]);
+
+        livewire(EditFaqItem::class, ['item' => $item])
+            ->set('removeAttachment', true)
+            ->assertDontSee('Attached now')
+            ->assertSee('Attachment');
+    });
 });

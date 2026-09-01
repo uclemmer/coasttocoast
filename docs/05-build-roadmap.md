@@ -581,7 +581,7 @@ doc 02 (its "Public pages" row and the panel table), this file, and golden rule 
 
 ## Where this leaves the build (2026-08-19)
 
-All eight phases are implemented and **630 tests pass** with Pint clean. The application is
+All eight phases are implemented and **748 tests pass** with Pint clean. The application is
 functionally complete: registration, payments, grants, the admin panel, the rep portal, the whole
 comms system, and now a public site built the way the owner directive asks for.
 

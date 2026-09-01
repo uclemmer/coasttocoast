@@ -2,9 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\ThrottlesPublicSubmissions;
 use App\Models\Event;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
@@ -28,6 +28,8 @@ use Livewire\Component;
  */
 class EventInterest extends Component
 {
+    use ThrottlesPublicSubmissions;
+
     /**
      * Locked because it decides which fair's list a sign-up lands on. Livewire
      * re-hydrates a model property from its key on every request.
@@ -40,9 +42,6 @@ class EventInterest extends Component
 
     #[Validate('nullable|string|max:255')]
     public string $organizationName = '';
-
-    /** The honeypot — visually hidden, never `type="hidden"`. */
-    public string $website = '';
 
     public bool $sent = false;
 
@@ -66,21 +65,13 @@ class EventInterest extends Component
     {
         $this->validate();
 
-        if (filled($this->website)) {
-            $this->addError('email', __('Something went wrong. Please try again.'));
-
+        if ($this->rejectedAsAbuse(
+            bucket: 'event-interest',
+            errorField: 'email',
+            throttleMessage: __('Please try again a little later.'),
+        )) {
             return;
         }
-
-        $key = 'event-interest:'.request()->ip();
-
-        if (RateLimiter::tooManyAttempts($key, maxAttempts: 5)) {
-            $this->addError('email', __('Please try again a little later.'));
-
-            return;
-        }
-
-        RateLimiter::hit($key, decaySeconds: 3600);
 
         // `updateOrCreate` on the lowercased address is both the dedupe and the
         // "we heard you the first time" — and a second submission still

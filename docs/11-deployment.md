@@ -100,6 +100,30 @@ the first real registration:
 | `COORDINATOR_EMAIL`, `COORDINATOR_NAME` | Who `ProductionSeeder` provisions |
 | `FAIR_CONTACT_*` | The block in the public footer, the email footer and the printed check form. The postal address is a CAN-SPAM requirement, not decoration |
 | `FAIR_BRAND_COLOR`, `FAIR_BRAND_LOGO_URL` | The logo **must** be an absolute URL served from `public/` — a Vite-hashed path does not resolve in a mail client |
+| `TRUSTED_PROXIES` | **Depends on the topology — read the section below before setting it.** Blank on a directly reachable host |
+
+### `TRUSTED_PROXIES` — get this one right in both directions
+
+Every rate limit on the public side keys on `request()->ip()`: the contact form, the interest
+capture, and the `throttle:5,60` on the plain interest POST. Which address that is depends on whether
+the application trusts whatever sits in front of it.
+
+| Topology | Value | What happens if you get it wrong |
+|---|---|---|
+| Plain VPS, nginx/Apache in front of PHP on the same box | **blank** | Setting `*` here lets anybody send `X-Forwarded-For: <random>` and get a fresh throttle bucket on every request. That does not loosen the limit, it **removes** it |
+| Load balancer or CDN is the only route in (Cloudflare, an ALB, Laravel Cloud) | `*` | Leaving it blank makes every visitor share the proxy's address, so the fifth contact message of the hour **from anyone** locks out **everyone** |
+| Reachable both directly and through a proxy | comma-separated CIDRs, e.g. `10.0.0.0/8,192.168.0.0/16` | As above, in whichever direction you guessed wrong |
+
+**Verify rather than assume.** With the app deployed, hit any page twice from one address and check
+that the throttle counts you individually — or read a `core_email_logs` / contact submission row and
+confirm the recorded IP is a real visitor address and not the load balancer's. If every row carries
+the same address, the proxy is not trusted and the throttles are shared.
+
+**It is read in `AppServiceProvider::boot()`, not in `bootstrap/app.php`.** That file's middleware
+closure runs before the config repository is bound, so `config()` there is a fatal — and `env()`
+there returns null the moment `config:cache` runs, because caching config stops `.env` being loaded
+at all. It would have worked in development and quietly done nothing in production. See doc 10,
+D-9-b; a test asserts the value still comes through `config/fair.php`.
 
 ## The queue worker
 
@@ -180,6 +204,7 @@ of a receipt. Do not point both at `outbound` to save a step.
 - [ ] DNS cut over from ISPEUS
 - [ ] Backups running and a restore tested
 - [ ] `php artisan down --render="errors::503"` shows the maintenance page, and `php artisan up` clears it
+- [ ] `TRUSTED_PROXIES` matches the real topology, verified by a recorded IP being a visitor's rather than the proxy's
 
 ## Owner content queue — the things only Matt can supply
 

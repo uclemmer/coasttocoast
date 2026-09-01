@@ -22,6 +22,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         /*
+         * Trusted proxies are configured in `AppServiceProvider::boot()`, NOT
+         * here. This closure runs while the console/HTTP kernel is being
+         * resolved, which is before the config repository is bound - a
+         * `config()` call here is a fatal, and an `env()` call silently becomes
+         * null the moment `config:cache` runs, because that stops .env being
+         * loaded at all. Both were tried. See docs/10, D-9-b.
+         */
+
+        /*
          * Appended globally rather than to `web`, so the webhook route and any
          * future API surface get them too. See the class docblock for why
          * there is no Content-Security-Policy (card 7.1, doc 10 D-7.1-a).

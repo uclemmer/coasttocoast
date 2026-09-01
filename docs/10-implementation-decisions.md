@@ -1108,3 +1108,56 @@ previous *fair* rather than the previous year, and two fairs coexisting in one c
 year". Its logic is `previousPublished()`, which already means "the previous fair" and stays correct
 with two fairs a year — only the wording would read oddly. Renaming it breaks a public URL, so it is
 the owner's call rather than a tidy-up.
+
+---
+
+### D-9-b — The honeypot now costs an attempt, and trusted proxies are configurable
+
+**Owner question, 2026-08-19:** "does the contact form have a honeypot and a race counter?" Both
+were there. Checking properly turned up two faults behind them.
+
+#### The limiter counted only successes
+
+`RateLimiter::hit()` ran *after* the honeypot check, so a submission that tripped the honeypot was
+told "something went wrong" and never counted. A bot could retry indefinitely, booting the framework
+on every attempt. The limiter was guarding the expensive path — storage plus two emails — but not
+the cheap-to-repeat one.
+
+**Decision.** Check the limit, **increment, then examine the honeypot**. A honeypot trip now spends
+its allowance like any other submission. A visitor never fills that field, so this costs them
+nothing, and a bot that has identified itself gets five attempts an hour instead of unlimited.
+
+**Validation failures still do not count**, deliberately — they throw before the limiter is reached,
+and somebody mistyping their email three times should not burn an hour's allowance. Both halves are
+tested.
+
+**Extracted to `App\Livewire\Concerns\ThrottlesPublicSubmissions`** rather than fixed twice. The
+contact form and the interest capture held identical copies of this logic, which is exactly how one
+ends up fixed and the other does not. The honeypot field name lives there too, so the two forms
+cannot disagree about the one thing a bot author would need to know. `MAX_ATTEMPTS_PER_HOUR` is also
+asserted against the `throttle:5,60` on the plain interest POST — the non-JavaScript path writes to
+the same table, and a limit that only guards the JavaScript path is not a limit.
+
+#### `TrustProxies` was never configured
+
+Every one of those limits keys on `request()->ip()`, which behind a load balancer or CDN is the
+**proxy's** address until the proxy is trusted. Every visitor would share one throttle bucket, and
+the fifth contact message of the hour from anybody would lock out everybody. Herd hides this locally
+because there is no proxy.
+
+**Decision.** `TRUSTED_PROXIES`, off by default. Off rather than `*` because the wrong answer is
+dangerous in *both* directions: trusting nothing behind a proxy throttles the whole internet as one
+visitor, and trusting `*` on a directly reachable host lets anyone forge `X-Forwarded-For` and mint a
+fresh bucket per request — which removes the limit rather than loosening it. The topology is the
+owner's to know, so doc 11 carries a table of the three cases and how to verify the result.
+
+**Where it is read is the interesting part, and both obvious places are wrong.**
+`bootstrap/app.php`'s `withMiddleware` closure runs while the kernel is being resolved, *before* the
+config repository is bound — `config()` there is a fatal, which is how this was found. And `env()`
+there silently returns null the moment `config:cache` runs, because caching config stops `.env` being
+loaded at all: it would have worked in development and quietly done nothing in production, the one
+environment the setting exists for. It is therefore read in `AppServiceProvider::boot()`, where
+config is available and which is comfortably before any request is handled, via `TrustProxies::at()`.
+
+Three tests: the default ignores `X-Forwarded-For`, a trusted proxy is honoured, and the value still
+comes through `config/fair.php` rather than an `env()` call at the point of use.

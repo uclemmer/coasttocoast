@@ -15,6 +15,7 @@ use App\Models\SponsorStaff;
 use Database\Seeders\ContentBlockSeeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use UClemmer\LaravelCore\Contact\ContactSubmission;
 
 beforeEach(function () {
@@ -344,6 +345,62 @@ describe('the contact page', function () {
         expect(ContactSubmission::query()->count())->toBe(0);
     });
 
+    it('charges a honeypot trip against the rate limit', function () {
+        // The limiter used to be incremented only on a successful send, so a
+        // bot that tripped the honeypot was told "something went wrong" and
+        // could retry for ever, booting the framework every time. A visitor
+        // never fills that field, so charging for it costs them nothing.
+        foreach (range(1, 5) as $i) {
+            livewire(ContactForm::class)
+                ->set('name', 'Bot')
+                ->set('email', 'bot@example.com')
+                ->set('message', 'Buy things.')
+                ->set('consent', true)
+                ->set('website', 'https://spam.example')
+                ->call('submit');
+        }
+
+        expect(RateLimiter::tooManyAttempts('contact:127.0.0.1', ContactForm::MAX_ATTEMPTS_PER_HOUR))
+            ->toBeTrue();
+
+        // And the allowance is genuinely spent -- a real message from the same
+        // address is now refused rather than merely counted.
+        livewire(ContactForm::class)
+            ->set('name', 'Dana Whitfield')
+            ->set('email', 'dana@kenyon.example')
+            ->set('message', 'Where do we unload?')
+            ->set('consent', true)
+            ->call('submit')
+            ->assertHasErrors(['message']);
+
+        expect(ContactSubmission::query()->count())->toBe(0);
+    });
+
+    it('does not charge a failed validation against the rate limit', function () {
+        // Somebody mistyping their address should not burn an hour's
+        // allowance. Validation runs before the limiter is touched.
+        foreach (range(1, 6) as $i) {
+            livewire(ContactForm::class)
+                ->set('name', 'Dana')
+                ->set('email', 'not-an-email')
+                ->set('message', 'Hello.')
+                ->set('consent', true)
+                ->call('submit')
+                ->assertHasErrors(['email']);
+        }
+
+        expect(RateLimiter::tooManyAttempts('contact:127.0.0.1', ContactForm::MAX_ATTEMPTS_PER_HOUR))
+            ->toBeFalse();
+
+        livewire(ContactForm::class)
+            ->set('name', 'Dana Whitfield')
+            ->set('email', 'dana@kenyon.example')
+            ->set('message', 'Where do we unload?')
+            ->set('consent', true)
+            ->call('submit')
+            ->assertHasNoErrors();
+    });
+
     it('rate-limits by IP, because a Livewire submit never touches core\'s throttled route', function () {
         foreach (range(1, 6) as $i) {
             livewire(ContactForm::class)
@@ -422,6 +479,34 @@ describe('the event page', function () {
             ->call('submit');
 
         expect(InterestRow::query()->count())->toBe(0);
+    });
+
+    it('charges a honeypot trip against the interest rate limit too', function () {
+        // The two public forms share ThrottlesPublicSubmissions precisely so
+        // this cannot be true of one and not the other.
+        $fair = Fair::factory()->registrationClosed()->create();
+
+        foreach (range(1, 5) as $i) {
+            livewire(EventInterest::class, ['event' => $fair])
+                ->set('email', 'bot@example.com')
+                ->set('website', 'https://spam.example')
+                ->call('submit');
+        }
+
+        expect(RateLimiter::tooManyAttempts('event-interest:127.0.0.1', EventInterest::MAX_ATTEMPTS_PER_HOUR))
+            ->toBeTrue();
+    });
+
+    it('throttles the non-JavaScript path to the same limit', function () {
+        // The plain POST writes to the same table. A limit that only guards the
+        // Livewire path is not a limit -- and the two numbers live in a route
+        // middleware string and a trait constant, which nothing else connects.
+        $throttle = collect(Route::getRoutes()->getByName('events.interest')->gatherMiddleware())
+            ->first(fn (mixed $m): bool => is_string($m) && str_starts_with($m, 'throttle:'));
+
+        expect($throttle)->toBe(
+            'throttle:'.EventInterest::MAX_ATTEMPTS_PER_HOUR.','.(EventInterest::DECAY_SECONDS / 60)
+        );
     });
 
     it('hides an unpublished fair as a 404, not a 403', function () {

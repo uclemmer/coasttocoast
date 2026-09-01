@@ -8,8 +8,52 @@ use App\Models\Registration;
 use App\Models\Sponsor;
 use App\Models\StripeWebhookEvent;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Support\Permissions;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Http\Middleware\TrustProxies;
+use Illuminate\Support\Facades\Route;
+
+describe('trusted proxies', function () {
+    // The static outlives a single test, so every test here restores it.
+    afterEach(fn () => TrustProxies::at([]));
+
+    beforeEach(function () {
+        Route::get('/_test_ip', fn (): string => (string) request()->ip());
+    });
+
+    it('ignores a forwarded address by default', function () {
+        // A directly reachable host must not believe X-Forwarded-For. If it
+        // did, anyone could mint a fresh throttle bucket per request and the
+        // rate limits on the two public forms would silently stop existing.
+        expect(config('fair.trusted_proxies'))->toBeEmpty();
+
+        $this->get('/_test_ip', ['X-Forwarded-For' => '203.0.113.9'])
+            ->assertOk()
+            ->assertSee('127.0.0.1');
+    });
+
+    it('honours a forwarded address once a proxy is trusted', function () {
+        // Behind a load balancer this is the difference between throttling per
+        // visitor and throttling the whole internet as one.
+        config(['fair.trusted_proxies' => '*']);
+        (new AppServiceProvider($this->app))->boot();
+
+        $this->get('/_test_ip', ['X-Forwarded-For' => '203.0.113.9'])
+            ->assertOk()
+            ->assertSee('203.0.113.9');
+    });
+
+    it('is read from config, not env, so config:cache cannot silently disable it', function () {
+        // `config:cache` stops .env being loaded, so an env() call at the point
+        // of use returns null in production -- the one environment this setting
+        // is for. The value must come through the config file.
+        expect(file_get_contents(base_path('config/fair.php')))
+            ->toContain("'trusted_proxies' => env('TRUSTED_PROXIES')")
+            ->and(file_get_contents(base_path('bootstrap/app.php')))
+            ->not->toContain('TRUSTED_PROXIES');
+    });
+});
 
 describe('response headers', function () {
     it('sets the headers that cost nothing and close something', function () {

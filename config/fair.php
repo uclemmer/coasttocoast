@@ -56,6 +56,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted proxies
+    |--------------------------------------------------------------------------
+    |
+    | Who may tell this application the visitor's IP address. Read in
+    | bootstrap/app.php.
+    |
+    | Both public forms throttle on `request()->ip()`. Behind a load balancer or
+    | a CDN that is the proxy's address until the proxy is trusted, so every
+    | visitor shares one throttle bucket.
+    |
+    | Blank means trust nothing, which is correct on a plain VPS where the web
+    | server is the only thing in front of PHP. `*` trusts whatever is in front
+    | of us and is correct when a load balancer is the ONLY route in - but on a
+    | directly reachable host it lets anyone forge `X-Forwarded-For` and mint a
+    | fresh throttle bucket per request, which removes the limit silently. A
+    | comma-separated CIDR list is the middle ground.
+    |
+    | It lives in config rather than being read with env() at the call site
+    | because `config:cache` stops loading .env entirely, and an env() call in
+    | bootstrap/app.php would quietly become null in production - the exact
+    | environment this setting exists for.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Brand
     |--------------------------------------------------------------------------
     |

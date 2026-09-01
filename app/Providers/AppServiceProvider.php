@@ -7,6 +7,7 @@ use App\Services\Payments\StripeCheckoutService;
 use App\Services\Sms\NullSms;
 use App\Services\Sms\SmsService;
 use App\Services\Sms\TwilioSms;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Stripe\StripeClient;
@@ -64,5 +65,41 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Blade::anonymousComponentPath(resource_path('views/emails'), 'emails');
+
+        $this->trustConfiguredProxies();
+    }
+
+    /**
+     * Who may tell this application the visitor's IP address.
+     *
+     * Both public forms throttle on `request()->ip()`, and so does the
+     * `throttle:5,60` on the plain interest POST. Behind a load balancer or a
+     * CDN that address is the *proxy's* until the proxy is trusted — so every
+     * visitor shares one throttle bucket and the fifth message of the hour from
+     * anybody locks out everybody.
+     *
+     * **Here rather than in `bootstrap/app.php`, deliberately.** That file's
+     * `withMiddleware` closure runs while the kernel is being resolved, before
+     * the config repository is bound: `config()` there is a fatal, and `env()`
+     * there silently returns null the moment `config:cache` runs, because that
+     * stops `.env` being loaded at all — so it would work in development and
+     * quietly do nothing in the one environment it exists for. Both were tried;
+     * see docs/10, D-9-b. `TrustProxies::at()` is a static setter, and provider
+     * boot is comfortably before any request is handled.
+     *
+     * Off unless configured, because the wrong answer is dangerous in both
+     * directions — see `config/fair.php`.
+     */
+    protected function trustConfiguredProxies(): void
+    {
+        $proxies = config('fair.trusted_proxies');
+
+        if (blank($proxies)) {
+            return;
+        }
+
+        TrustProxies::at(
+            $proxies === '*' ? '*' : array_map(trim(...), explode(',', (string) $proxies)),
+        );
     }
 }

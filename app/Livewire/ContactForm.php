@@ -2,8 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\ThrottlesPublicSubmissions;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use UClemmer\LaravelCore\Contact\ContactService;
@@ -17,10 +17,11 @@ use UClemmer\LaravelCore\Contact\ContactService;
  * organizer alert. None of that is reimplemented here.
  *
  * The abuse defences are ours because core's route carries them and a Livewire
- * submit never touches that route: the honeypot below, and an IP throttle. Both
- * carried over from the Filament build (doc 10, D-8-d), as did the consent
- * checkbox — which is validated here, before the service is ever called, so it
- * means something rather than being decoration.
+ * submit never touches that route: the honeypot and the IP throttle both live
+ * in `ThrottlesPublicSubmissions`, shared with the interest capture. Carried
+ * over from the Filament build (doc 10, D-8-d), as was the consent checkbox —
+ * which is validated here, before the service is ever called, so it means
+ * something rather than being decoration.
  *
  * The design adds an Institution field the package does not store. It is folded
  * into the message body rather than dropped, and rather than migrating a column
@@ -28,12 +29,7 @@ use UClemmer\LaravelCore\Contact\ContactService;
  */
 class ContactForm extends Component
 {
-    /**
-     * The honeypot. Rendered off-screen rather than `type="hidden"` — bots
-     * skip hidden inputs and fill visible ones, so this has to be visually
-     * hidden but present.
-     */
-    public string $website = '';
+    use ThrottlesPublicSubmissions;
 
     #[Validate('required|string|max:255')]
     public string $name = '';
@@ -67,22 +63,13 @@ class ContactForm extends Component
     {
         $this->validate();
 
-        if (filled($this->website)) {
-            // Deliberately vague: a bot should not learn which field caught it.
-            $this->addError('message', __('Something went wrong. Please try again.'));
-
+        if ($this->rejectedAsAbuse(
+            bucket: 'contact',
+            errorField: 'message',
+            throttleMessage: __('You have sent us several messages already. Please try again later.'),
+        )) {
             return;
         }
-
-        $key = 'contact:'.request()->ip();
-
-        if (RateLimiter::tooManyAttempts($key, maxAttempts: 5)) {
-            $this->addError('message', __('You have sent us several messages already. Please try again later.'));
-
-            return;
-        }
-
-        RateLimiter::hit($key, decaySeconds: 3600);
 
         app(ContactService::class)->submit(
             attributes: [

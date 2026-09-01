@@ -224,6 +224,8 @@ class Edit extends Component
             'registration_opens_at' => __('registration opening time'),
             'registration_closes_at' => __('registration closing time'),
             'priceDollars' => __('registration fee'),
+            // Labelled "Venue", not "Venue name".
+            'venue_name' => __('venue'),
         ];
     }
 

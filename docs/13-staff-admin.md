@@ -371,6 +371,27 @@ either produces labelled errors or is on a named list of three modal actions
 that guard before validating (`denyClaim`, `deny`, `cancel`). Proved by claiming
 `cancel` validates: one failure, naming it.
 
+**Then the sweep's own comparison turned out to be the next leak.** It asked
+whether the message *contained* its label, and "the venue name field is
+required" contains "venue". Tightening it to compare the attribute exactly —
+Laravel puts it immediately before the word "field", so it can be isolated —
+found three more instantly:
+
+| Field | Label | Was saying |
+|---|---|---|
+| `venue_name` | Venue | the **venue name** field |
+| `staffName` | Name | the **staff name** field |
+| `rep_name` / `rep_email` (registration detail) | Name / Email | the **rep name** / **rep email** field |
+
+The last is the one to learn from. `rep_name` and `rep_email` had already been
+fixed on both registration *forms*; `Staff\Registrations\Show` carries the same
+two fields and was missed, and the loose comparison had been passing it the
+whole time. **A check that is not as strict as the rule it enforces hides
+exactly the cases the rule exists for**, and it looks like coverage while doing
+it. Messages that do not take the "The X field" shape — `exists` renders "The
+selected X is invalid", hand-written ones render anything — still fall back to
+containment, because there is no attribute to isolate in them.
+
 `channels` is the exception worth recording, because it is where the rule stops.
 Its label is "Send by", and "the send by field is required" is not English — the
 heading sits above a checkbox list and is not a noun for the thing being

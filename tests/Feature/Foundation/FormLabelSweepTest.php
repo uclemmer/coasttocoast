@@ -131,6 +131,30 @@ function deliberatelyUnlabelled(): array
     ];
 }
 
+/**
+ * Does this message name exactly `$expected`, rather than merely containing it?
+ *
+ * Laravel puts the attribute immediately before "field" in most messages, so
+ * that shape can be compared exactly — which is the difference between
+ * accepting "the venue field" and accepting "the venue NAME field" under a
+ * label reading "Venue". A substring test passes both, and passed the second
+ * one for a while.
+ *
+ * Messages that do not take that shape — `exists` renders "The selected X is
+ * invalid", and a hand-written message renders whatever it likes — fall back to
+ * containment, because there is no attribute to isolate in them.
+ */
+function messageNames(string $error, string $expected): bool
+{
+    $expected = mb_strtolower($expected);
+
+    if (preg_match('/^The (.+?) field /ui', $error, $matches) === 1) {
+        return mb_strtolower($matches[1]) === $expected;
+    }
+
+    return str_contains(mb_strtolower($error), $expected);
+}
+
 beforeEach(function () {
     $this->coordinator = coordinator();
     $this->fair = Fair::factory()->published()->create();
@@ -262,7 +286,7 @@ it('names every field after the input it sits under', function (string $method, 
             continue;
         }
 
-        if (! str_contains(mb_strtolower($pair['error']), mb_strtolower($expected))) {
+        if (! messageNames($pair['error'], $expected)) {
             $mismatches[] = sprintf(
                 '%s: labelled "%s" but says "%s"',
                 $field,

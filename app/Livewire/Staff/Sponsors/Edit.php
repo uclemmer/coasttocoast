@@ -292,6 +292,21 @@ class Edit extends Component
      * heading here is the sponsor's name. The portal's ShowRegistration has the
      * same shape and solves it the same way.
      */
+    /**
+     * The staff-row dialog's inputs are labelled "Name" and "Title"; the
+     * properties carry a `staff` prefix to keep them apart from the sponsor's
+     * own fields on the same component, and that prefix is not on screen.
+     *
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        return [
+            'staffName' => __('name'),
+            'staffTitle' => __('title'),
+        ];
+    }
+
     public function render(): View
     {
         return view('livewire.staff.sponsors.edit', [

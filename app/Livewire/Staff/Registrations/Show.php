@@ -265,6 +265,25 @@ class Show extends Component
         $this->toast(__('Refund sent to Stripe. The payment updates when Stripe confirms it.'));
     }
 
+    /**
+     * The same `rep_` prefix as the two registration forms, and the same fix.
+     *
+     * This component was missed when those two were done, because the sweep
+     * only tested that a message CONTAINED its label — "the rep name field"
+     * contains "name", so it passed. Comparing the attribute exactly is what
+     * surfaced it.
+     *
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        return [
+            'rep_name' => __('name'),
+            'rep_email' => __('email'),
+            'rep_phone' => __('phone'),
+        ];
+    }
+
     public function render(): View
     {
         return view('livewire.staff.registrations.show');

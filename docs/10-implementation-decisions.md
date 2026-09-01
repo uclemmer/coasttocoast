@@ -1208,3 +1208,51 @@ list, because the row is worthless without the file. And the development databas
 68-byte placeholder PDF on the W-9 question, deliberately named
 `SAMPLE-replace-with-the-real-w9.pdf` — it demonstrates the affordance and cannot be mistaken for a
 real tax document.
+---
+
+### D-9-d — A coordinator signing in landed in the rep portal
+
+**Found in a browser pass, 2026-08-19.** Not by a test, and the reason that matters is recorded
+below.
+
+**Symptom.** Signing in as the coordinator landed on `/portal`, showing:
+
+> Your account is not attached to a school. Contact the fair coordinator to be added.
+
+They *are* the fair coordinator. Every anchor on that page was checked: no link to `/staff` or
+`/admin` anywhere. The only route to their own screens was typing the URL.
+
+**Cause.** `config/core.php` sets `core.auth.routes.redirect_to => '/portal'`, and its own comment
+says "Reps land in the portal" — but core's `LoginController::redirectTo()` reads that as a single
+string for **everybody**. The intent was reps; nothing carved out staff.
+
+**Fix.** `App\Http\Middleware\SendStaffToTheirOwnScreens` on the `portal.` route group. A user who is
+staff *and* has no organization is redirected to `staff.dashboard`.
+
+**Guarding the destination rather than the login.** Core owns the login controller and takes one
+string, so fixing it at the source means a package change and a release. The destination catches
+every way in at once — the post-login redirect, the `redirectUsersTo('/portal')` that bounces an
+authenticated user off `/login`, and a stale bookmark to a deeper portal page.
+
+**Deliberately narrow, on both halves of the condition.** A *rep* with no school still gets the
+message, because for them it is true and actionable, and `/staff` would 403 them. A staff member who
+*does* have a school is left alone — they have real business in the portal. The gate is
+`Permissions::ACCESS`, the same permission `ActsForStaff` and `User::canAccessPanel()` ask, so the
+three cannot drift about who counts as staff.
+
+**Why no test caught it.** Every test in `RepPanelAccessTest` navigates straight to the screen under
+test. Nothing exercised "sign in and see where you end up", which is the only way this appears. The
+new tests do, and one of them follows the redirect through and asserts the staff dashboard actually
+renders — registration is not rendering, and asserting a redirect target alone would pass against a
+500 at the other end.
+
+**One existing assertion changed rather than being deleted.** "keeps a coordinator out of nothing —
+admin and the portal are independent" asserted `assertOk()` on `/portal`. The independence it was
+about still holds; what changed is that a coordinator with no school is now redirected. It now makes
+its point with a coordinator who *has* a school — the case that claim was really about, and the one
+the redirect leaves alone.
+
+**A guard worth knowing about, met while writing that test.** `User` is `$guarded = ['*']` with
+`organization_id` not fillable, so `$user->update(['organization_id' => ...])` silently does nothing.
+That is deliberate — it is what stops a rep mass-assigning themselves into another school — and it
+cost one debugging round. Assign the property and `save()`.

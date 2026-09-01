@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\EventInterestController;
 use App\Http\Controllers\FaqAttachmentController;
 use App\Http\Controllers\SiteController;
+use App\Http\Middleware\SendStaffToTheirOwnScreens;
 use App\Livewire\Auth\Register;
 use App\Livewire\LastYearRoster;
 use App\Livewire\Portal\CreateRegistration;
@@ -77,21 +78,27 @@ Route::get('/register', Register::class)->middleware('guest')->name('register');
  * it here would quietly widen who can register a school. Membership - pending,
  * active, retired - is enforced per screen instead, since browsing is allowed
  * and acting is not; see Portal\Concerns\ActsForAnOrganization.
+ *
+ * `SendStaffToTheirOwnScreens` is here because core's login redirects everybody
+ * to one configured path, so the coordinator arrived at a portal that told them
+ * to contact themselves (doc 10, D-9-d). Guarding the destination catches every
+ * way in at once.
  */
-Route::middleware(['auth', 'verified'])->prefix('portal')->name('portal.')->group(function (): void {
-    Route::get('/', Dashboard::class)->name('dashboard');
+Route::middleware(['auth', 'verified', SendStaffToTheirOwnScreens::class])
+    ->prefix('portal')->name('portal.')->group(function (): void {
+        Route::get('/', Dashboard::class)->name('dashboard');
 
-    Route::get('/registrations', Registrations::class)->name('registrations');
-    Route::get('/registrations/create', CreateRegistration::class)->name('registrations.create');
-    Route::get('/registrations/{registration}', ShowRegistration::class)->name('registrations.show');
+        Route::get('/registrations', Registrations::class)->name('registrations');
+        Route::get('/registrations/create', CreateRegistration::class)->name('registrations.create');
+        Route::get('/registrations/{registration}', ShowRegistration::class)->name('registrations.show');
 
-    Route::get('/grants', Grants::class)->name('grants');
-    // 'organization-profile', not the tidier 'organization': this is the URL
-    // Filament's panel served, and the route comment above promises bookmarks
-    // still land. A nicer path is not worth breaking that.
-    Route::get('/organization-profile', OrganizationProfile::class)->name('organization');
-    Route::get('/profile', Profile::class)->name('profile');
-});
+        Route::get('/grants', Grants::class)->name('grants');
+        // 'organization-profile', not the tidier 'organization': this is the URL
+        // Filament's panel served, and the route comment above promises bookmarks
+        // still land. A nicer path is not worth breaking that.
+        Route::get('/organization-profile', OrganizationProfile::class)->name('organization');
+        Route::get('/profile', Profile::class)->name('profile');
+    });
 
 /*
  * The staff area (docs/13).

@@ -237,6 +237,7 @@ None of these block a deploy; all of them are visible to a visitor.
 | Brand colour and logo | `FAIR_BRAND_COLOR`, `FAIR_BRAND_LOGO_URL` | Email falls back to the app name in text |
 | Historical rosters, 2023–2026 | Copy the export to `storage/app/private/participants.json` on the host, then `db:seed --class=…\OrganizationSeeder` and `…\RegistrationSeeder` | **Supplied 2026-09-01** and read straight from the owner's export — see [18-participant-export.md](18-participant-export.md). The export is gitignored, so it does **not** arrive with a deploy; without it both seeders throw. Not part of `ProductionSeeder`; run the two by name, once |
 | Historical roster, 2022 | `php artisan fair:import-roster <file.csv>` | Not in the export. The fair is seeded and empty; see below |
+| Admissions office details | `db:seed --class=…\AdmissionsOfficeSeeder`, then `php artisan fair:fetch-organization-logos --dry-run` | Committed data, so no file to copy. Fills office, page, address, phone and inbox for 157 organizations ([19-admissions-offices.md](19-admissions-offices.md)); thirteen have no published office inbox and stay on the rep's address |
 
 ### Design assets still outstanding (2026-08-19)
 

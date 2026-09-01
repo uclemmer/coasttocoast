@@ -26,9 +26,12 @@ use Illuminate\Database\Seeder;
  * than a seed that dies — while running either seeder by name without it still
  * throws, because there the roster is the thing that was asked for.
  *
- * `ProductionSeeder` deliberately does NOT call them. The history is real, but
- * that seeder's contract is that it invents nothing and runs on every deploy;
- * loading a roster is a deliberate one-off, either these two by name or
+ * `AdmissionsOfficeSeeder` follows them and runs either way: its own data file
+ * is committed, and it only ever updates organizations that already exist.
+ *
+ * `ProductionSeeder` deliberately does NOT call any of the three. The data is
+ * real, but that seeder's contract is that it invents nothing and runs on every
+ * deploy; loading a roster is a deliberate one-off, either these by name or
  * `fair:import-roster`. See the note in `OrganizationSeeder`.
  *
  * `WithoutModelEvents` is deliberately NOT used: `Organization` derives
@@ -51,15 +54,20 @@ class DatabaseSeeder extends Seeder
             FairFixtureSeeder::class,
         ]);
 
-        if (! ParticipantExportSeeder::available()) {
+        if (ParticipantExportSeeder::available()) {
+            $this->call([
+                OrganizationSeeder::class,
+                RegistrationSeeder::class,
+            ]);
+        } else {
             $this->command?->warn('No participant export at '.ParticipantExportSeeder::path().' — seeded the fixtures only, with no real roster history.');
-
-            return;
         }
 
+        // Unconditional: its own data file is committed, and it only ever
+        // updates organizations that already exist. Without the export that is
+        // just the fixtures, several of which are real institutions by name.
         $this->call([
-            OrganizationSeeder::class,
-            RegistrationSeeder::class,
+            AdmissionsOfficeSeeder::class,
         ]);
     }
 }

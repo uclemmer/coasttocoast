@@ -276,11 +276,14 @@ all if any organization exists, so seeding the history first would silently cost
 |---|---|---|
 | `OrganizationSeeder` | 158 organizations from `storage/app/private/participants.json` | **dev only**, plus by hand on a real host |
 | `RegistrationSeeder` | their 354 places at the 2023–2026 fairs | **dev only**, plus by hand on a real host |
+| `AdmissionsOfficeSeeder` | the admissions office behind 157 of them — office, page, address, phone, inbox (doc 19) | **dev only**, plus by hand on a real host |
 
 That export is real contact data and is **not in the repository** — `storage/app/private` is
-gitignored, so these two are the only seeders that can find nothing to do. `DatabaseSeeder` checks
-first and warns rather than dying, so a developer without the file still gets the fixtures; running
-either seeder by name without it throws, because there the roster is what was asked for.
+gitignored, so the first two are the only seeders that can find nothing to do. `DatabaseSeeder`
+checks first and warns rather than dying, so a developer without the file still gets the fixtures;
+running either seeder by name without it throws, because there the roster is what was asked for.
+`AdmissionsOfficeSeeder` has no such problem: its own data file is institutional, not personal, and
+is committed.
 
 `ProductionSeeder` deliberately does not call either: its contract is that it invents nothing and is
 safe on every deploy, and loading a roster is a deliberate one-off. Both share
@@ -331,7 +334,7 @@ One cosmetic loose end if that day comes: the public page is routed at `/last-ye
 stays correct — only the wording would read oddly. Renaming the route would break a public URL, so
 it is a deliberate decision rather than a tidy-up.
 
-`DatabaseSeeder` (dev) calls all nine; `ProductionSeeder` calls the first six. Note that
+`DatabaseSeeder` (dev) calls all ten; `ProductionSeeder` calls the first six. Note that
 `DatabaseSeeder` does **not** use `WithoutModelEvents` — `Organization` derives `normalized_name`
 and `Event` fills a blank slug in `saving` hooks, so muting model events would seed rows the
 application itself could never produce, and the duplicate-detection fixtures would seed as

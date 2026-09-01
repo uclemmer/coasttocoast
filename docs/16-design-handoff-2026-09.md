@@ -4,9 +4,11 @@ The owner uploaded a Claude Design bundle to `storage/app/private/design_handoff
 This doc records what was in it, what was built from it, and — more usefully — the four places where
 the handoff asks for something this application deliberately does not do.
 
-The bundle now lives in [`design-handoff/`](design-handoff/), moved there for the reason
-[its PROVENANCE](design-handoff/PROVENANCE.md) gives: `storage/app/private/` is gitignored, so a doc
-that pointed at it would name a path a fresh clone does not have.
+The bundle now lives in [`design-handoff/`](design-handoff/), and the storage copy was deleted once
+it was committed and pushed. That is the move [its PROVENANCE](design-handoff/PROVENANCE.md)
+describes, and the reason for it: `storage/app/private/` is gitignored, so a doc that pointed at it
+would name a path a fresh clone does not have. **Every `storage/app/private/…` path below is
+therefore historical** — it says where the delivery arrived, not where to find it now.
 
 ---
 
@@ -18,12 +20,25 @@ Diff first. `Landing Page.dc.html`, `Interior Page.dc.html`, `Maintenance Page.d
 
 That matters because three of the bundle's six deliverables were already built, in Phase 8, and a
 redelivery read as a redesign would have meant rebuilding the landing page, the interior layout and
-the maintenance page against files that had not moved. Two commands answer the question:
+the maintenance page against files that had not moved.
+
+**Do this on the next upload, before reading a word of the new README.** `docs/design-handoff/` is
+the previous delivery, so it is the thing to diff against; point `NEW` at wherever the bundle
+arrived and let `diff -rq` name the changed files for you.
 
 ```bash
-diff -q "docs/design-handoff/Landing Page.dc.html" "storage/app/private/design_handoff_college_fair_landing/Landing Page.dc.html"
-diff -u docs/design-handoff/README.md storage/app/private/design_handoff_college_fair_landing/README.md
+NEW="storage/app/private/<the-new-bundle>"; diff -rq docs/design-handoff "$NEW" | grep -v PROVENANCE
 ```
+
+Then read the changed ones in full — a delivery can rewrite a prototype as easily as add one, and
+`diff -rq` tells you *which* files moved, not *whether* the design did:
+
+```bash
+diff -u docs/design-handoff/README.md "$NEW/README.md"
+```
+
+`PROVENANCE.md` is ours rather than the designer's, so it is filtered out; every other `Only in
+docs/design-handoff` line is a real question — a file the new bundle dropped.
 
 **New in this delivery:** `Error Pages.dc.html`, `Admin Dashboard.dc.html`, `email-template.html`,
 and `screenshots/`.

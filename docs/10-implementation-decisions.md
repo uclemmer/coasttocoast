@@ -1161,3 +1161,50 @@ config is available and which is comfortably before any request is handled, via 
 
 Three tests: the default ignores `X-Forwarded-For`, a trusted proxy is honoured, and the value still
 comes through `config/fair.php` rather than an `env()` call at the point of use.
+---
+
+### D-9-c — The FAQ attachment is on the private disk, behind a route
+
+**Owner request, 2026-08-19:** add the W-9 upload to the FAQ. Doc 11's owner queue had said "Admin →
+FAQ (and a file to upload)" since it was written, and the FAQ screen had no upload at all — the panel
+could not keep a promise the runbook was making on its behalf.
+
+**Generic attachment, not a `w9_path`.** `faq_items.attachment_path` and `.attachment_name`. The W-9
+is the document that exists today; a floor plan, a parking map and a conduct policy are the same
+shape, and a column named after one document has to be joined by another the first time a second
+appears. The upload accepts a PDF up to 5 MB, validated with `mimes:pdf` — which reads the file, not
+the extension the browser claimed.
+
+**Stored on the private disk and served by `FaqAttachmentController`, not linked from
+`Storage::disk('public')->url()`.** The public-disk version is one line and was the obvious build.
+It was rejected because a public URL keeps serving for ever: unpublishing the question would hide it
+from the page and go on handing out the file to anyone holding the link. A signed W-9 carries the
+fair's EIN and an authorised signature — not a secret, it is given to every college that asks, but
+"the coordinator took it down" should mean it is down.
+
+The route is still unauthenticated. This is not access control; it is making withdrawal work. It
+costs a framework boot per download, which on this page is a rare event.
+
+The controller 404s rather than 403s throughout, matching how an unpublished fair is hidden
+(D-5.4-c), and 404s when the **row outlives the file** — a database restore without the storage
+directory, or a file removed by hand. Without that guard a visitor gets a 500 on a link the page
+itself rendered.
+
+**`attachment_name` exists because the stored name is randomised.** Somebody filing a W-9 into an
+accounts-payable system needs `coast-to-coast-w9.pdf` back rather than a hash, and
+`Storage::download()` takes the name to serve it under.
+
+**Replacing or clearing an attachment deletes the old file**, mirroring
+`Sponsors\Edit::deleteStoredLogo()`. Nothing else references that path, so nothing else would ever
+delete it.
+
+Verified in a browser as well as by the nine tests: the download returns 200 with
+`Content-Type: application/pdf` and `Content-Disposition: attachment; filename=coast-to-coast-w9.pdf`,
+the file sits in `storage/app/private/faq-attachments/`, and `/storage/faq-attachments/` is a 403 —
+it is not on the public disk at all.
+
+**Two follow-ons recorded rather than done.** `storage/app/private` was added to doc 11's backup
+list, because the row is worthless without the file. And the development database now carries a
+68-byte placeholder PDF on the W-9 question, deliberately named
+`SAMPLE-replace-with-the-real-w9.pdf` — it demonstrates the affordance and cannot be mistaken for a
+real tax document.

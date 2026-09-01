@@ -43,6 +43,23 @@
                                           :heading="$item->question"
                                           :open="$loop->first">
                         <x-ui.prose :html="Str::markdown($item->answer)" class="text-[16px] leading-[1.7]" />
+
+                        {{-- The attachment, when the coordinator has uploaded
+                             one — the signed W-9 is what this exists for. Not
+                             a Storage::url(): the download goes through a route
+                             so unpublishing the question withdraws the file
+                             (doc 10, D-9-c). --}}
+                        @if ($item->hasAttachment())
+                            <a href="{{ route('site.faq.download', $item) }}"
+                               class="mt-4 inline-flex items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-4 py-2.5 font-display text-[13px] font-bold uppercase tracking-[0.04em] text-brand-600 transition-colors hover:bg-brand-100">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                     stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
+                                </svg>
+                                {{ __('Download :file', ['file' => $item->attachmentDownloadName()]) }}
+                            </a>
+                        @endif
                     </x-ui::accordion.item>
                 @endforeach
             </x-ui::accordion>

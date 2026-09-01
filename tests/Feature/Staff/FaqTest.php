@@ -4,6 +4,8 @@ use App\Livewire\Staff\Faq\Edit as EditFaqItem;
 use App\Livewire\Staff\Faq\Index as FaqIndex;
 use App\Models\FaqItem;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 /*
  * The staff FAQ screens (docs/13).
@@ -200,5 +202,79 @@ describe('removing questions', function () {
             ->set('published', 'no');
 
         expect($page->get('selected'))->toBe([]);
+    });
+});
+
+describe('the attachment', function () {
+    // Added 2026-08-19: doc 11's owner queue promised "Admin → FAQ (and a file
+    // to upload)" and the screen had no upload, so the panel could not keep it.
+    beforeEach(fn () => Storage::fake(FaqItem::ATTACHMENT_DISK));
+
+    it('stores an uploaded PDF and remembers what it was called', function () {
+        livewire(EditFaqItem::class)
+            ->set('question', 'Can we get a W-9?')
+            ->set('answer', 'Yes.')
+            ->set('attachment', UploadedFile::fake()->create('coast-to-coast-w9.pdf', 40, 'application/pdf'))
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $item = FaqItem::query()->where('question', 'Can we get a W-9?')->firstOrFail();
+
+        expect($item->hasAttachment())->toBeTrue()
+            // The stored name is randomised; somebody filing this into an
+            // accounts-payable system should get the real filename back.
+            ->and($item->attachment_name)->toBe('coast-to-coast-w9.pdf')
+            ->and(Storage::disk(FaqItem::ATTACHMENT_DISK)->exists($item->attachment_path))->toBeTrue();
+    });
+
+    it('refuses anything that is not a PDF', function () {
+        livewire(EditFaqItem::class)
+            ->set('question', 'Can we get a W-9?')
+            ->set('answer', 'Yes.')
+            ->set('attachment', UploadedFile::fake()->image('not-a-form.png'))
+            ->call('save')
+            ->assertHasErrors(['attachment']);
+
+        expect(FaqItem::query()->count())->toBe(0);
+    });
+
+    it('deletes the old file when one replaces it', function () {
+        // Nothing else references the old path, so nothing else would ever
+        // delete it.
+        $item = FaqItem::factory()->create();
+
+        livewire(EditFaqItem::class, ['item' => $item])
+            ->set('attachment', UploadedFile::fake()->create('old.pdf', 10, 'application/pdf'))
+            ->call('save');
+
+        $first = $item->fresh()->attachment_path;
+
+        livewire(EditFaqItem::class, ['item' => $item->fresh()])
+            ->set('attachment', UploadedFile::fake()->create('new.pdf', 10, 'application/pdf'))
+            ->call('save');
+
+        $second = $item->fresh()->attachment_path;
+
+        expect($second)->not->toBe($first)
+            ->and(Storage::disk(FaqItem::ATTACHMENT_DISK)->exists($first))->toBeFalse()
+            ->and(Storage::disk(FaqItem::ATTACHMENT_DISK)->exists($second))->toBeTrue();
+    });
+
+    it('clears the file and the row together when removal is ticked', function () {
+        $item = FaqItem::factory()->create();
+
+        livewire(EditFaqItem::class, ['item' => $item])
+            ->set('attachment', UploadedFile::fake()->create('w9.pdf', 10, 'application/pdf'))
+            ->call('save');
+
+        $path = $item->fresh()->attachment_path;
+
+        livewire(EditFaqItem::class, ['item' => $item->fresh()])
+            ->set('removeAttachment', true)
+            ->call('save');
+
+        expect($item->fresh()->hasAttachment())->toBeFalse()
+            ->and($item->fresh()->attachment_name)->toBeNull()
+            ->and(Storage::disk(FaqItem::ATTACHMENT_DISK)->exists($path))->toBeFalse();
     });
 });

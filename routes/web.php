@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\EventInterestController;
+use App\Http\Controllers\FaqAttachmentController;
 use App\Http\Controllers\SiteController;
 use App\Livewire\Auth\Register;
 use App\Livewire\LastYearRoster;
@@ -178,6 +179,18 @@ Route::name('site.')->group(function (): void {
     Route::get('/about', [SiteController::class, 'about'])->name('about');
     Route::get('/sponsors', [SiteController::class, 'sponsors'])->name('sponsors');
     Route::get('/faq', [SiteController::class, 'faq'])->name('faq');
+
+    /*
+     * The file attached to a published FAQ answer — the signed W-9, today.
+     *
+     * Served by PHP rather than linked from the public disk so that
+     * unpublishing the question actually withdraws the file; doc 10, D-9-c has
+     * the reasoning. `{faqItem}` matches the controller's parameter name, which
+     * is what route-model binding binds on — a mismatch there silently hands
+     * the action a fresh empty model.
+     */
+    Route::get('/faq/{faqItem}/download', FaqAttachmentController::class)
+        ->name('faq.download');
 
     /*
      * The rosters are Livewire because they want search and pagination. One

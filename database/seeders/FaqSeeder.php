@@ -71,8 +71,9 @@ class FaqSeeder extends Seeder
             ],
             [
                 'Can we get a W-9?',
-                'Yes — a downloadable W-9 is available on this page. TODO-OWNER: attach the current '
-                    .'signed W-9 PDF.',
+                'Yes. TODO-OWNER: upload the current signed W-9 as this question\'s attachment '
+                    .'(Staff → FAQ → edit this question → Attachment). A download link appears '
+                    .'under this answer once it is there, and this sentence can be replaced.',
             ],
             [
                 'Where do we park, and where do we unload?',

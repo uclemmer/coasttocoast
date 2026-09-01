@@ -189,6 +189,11 @@ of a receipt. Do not point both at `outbound` to save a step.
   because the check payments were never in Stripe.
 - **`storage/app/public`**, which holds organization and sponsor logos. Less critical — the schools
   can re-upload — but cheap to include.
+- **`storage/app/private`**, which holds FAQ attachments — the signed W-9 among them. Unlike a logo
+  this is a document somebody had to sign, and the database row that points at it is worthless
+  without the file. A restore that brings back the row and not the file gives visitors a link that
+  404s, which the controller handles deliberately rather than 500ing, but it is still a gap only a
+  backup closes.
 - **Test a restore before the first fair, not after.**
 
 ## Go-live checklist
@@ -217,7 +222,7 @@ None of these block a deploy; all of them are visible to a visitor.
 | Parking and unloading directions | Admin → FAQ | `TODO-OWNER` badge in the table |
 | Hotel list | Admin → FAQ | `TODO-OWNER` badge |
 | Fair conduct guidelines | Admin → FAQ | `TODO-OWNER` badge |
-| Signed W-9 PDF | Admin → FAQ (and a file to upload) | `TODO-OWNER` badge |
+| Signed W-9 PDF | Staff → FAQ → "Can we get a W-9?" → **Attachment**. PDF, up to 5 MB | `TODO-OWNER` in the answer. A download link appears under the answer once the file is there, so the sentence pointing at this can then be replaced |
 | Google Map embed for the venue | Admin → FAQ | The design's embed is pinned at Chattanooga generally, not the venue — see the asset queue below |
 | Brand colour and logo | `FAIR_BRAND_COLOR`, `FAIR_BRAND_LOGO_URL` | Email falls back to the app name in text |
 | Historical rosters, 2022–2026 | `php artisan fair:import-roster <file.csv>` | Five past fairs are seeded and waiting; see below |

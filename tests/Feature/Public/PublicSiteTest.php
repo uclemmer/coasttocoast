@@ -16,6 +16,7 @@ use Database\Seeders\ContentBlockSeeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use UClemmer\LaravelCore\Contact\ContactSubmission;
 
 beforeEach(function () {
@@ -514,5 +515,60 @@ describe('the event page', function () {
         $draft = Fair::factory()->create();
 
         $this->get("/events/{$draft->slug}")->assertNotFound();
+    });
+});
+
+describe('the FAQ attachment download', function () {
+    beforeEach(function () {
+        Storage::fake(FaqItem::ATTACHMENT_DISK);
+
+        $this->item = FaqItem::factory()->create([
+            'question' => 'Can we get a W-9?',
+            'is_published' => true,
+            'attachment_path' => FaqItem::ATTACHMENT_DIRECTORY.'/stored-under-a-hash.pdf',
+            'attachment_name' => 'coast-to-coast-w9.pdf',
+        ]);
+
+        Storage::disk(FaqItem::ATTACHMENT_DISK)
+            ->put($this->item->attachment_path, '%PDF-1.4 pretend');
+    });
+
+    it('offers the download on the public page under the answer', function () {
+        $this->get('/faq')
+            ->assertOk()
+            ->assertSee(route('site.faq.download', $this->item), escape: false)
+            ->assertSee('coast-to-coast-w9.pdf');
+    });
+
+    it('serves the file under the name it was uploaded with', function () {
+        // The stored name is a hash. Somebody filing a W-9 into their
+        // accounts-payable system needs the real one.
+        $this->get(route('site.faq.download', $this->item))
+            ->assertOk()
+            ->assertDownload('coast-to-coast-w9.pdf');
+    });
+
+    it('stops serving the file when the question is unpublished', function () {
+        // The whole reason this is a route and not a public-disk URL. A
+        // Storage::url() would keep serving for ever, and a signed W-9 carries
+        // the fair EIN and an authorised signature (doc 10, D-9-c).
+        $this->item->update(['is_published' => false]);
+
+        $this->get(route('site.faq.download', $this->item))->assertNotFound();
+        $this->get('/faq')->assertOk()->assertDontSee('coast-to-coast-w9.pdf');
+    });
+
+    it('404s when the row outlives the file', function () {
+        // A database restore without the storage directory. Without the guard
+        // the visitor gets a 500 on a link the page itself rendered.
+        Storage::disk(FaqItem::ATTACHMENT_DISK)->delete($this->item->attachment_path);
+
+        $this->get(route('site.faq.download', $this->item))->assertNotFound();
+    });
+
+    it('404s for a question with no attachment at all', function () {
+        $plain = FaqItem::factory()->create(['is_published' => true]);
+
+        $this->get(route('site.faq.download', $plain))->assertNotFound();
     });
 });

@@ -37,10 +37,35 @@
                 </div>
             </div>
 
+            <div class="mt-6">
+                @if ($this->isEditing() && $item?->hasAttachment() && ! $removeAttachment)
+                    <div class="mb-3 flex flex-wrap items-center gap-3">
+                        <a href="{{ route('site.faq.download', $item) }}"
+                           class="text-sm font-semibold text-brand underline underline-offset-2">
+                            {{ $item->attachmentDownloadName() }}
+                        </a>
+
+                        <x-ui::forms.checkbox name="removeAttachment" wire:model.live="removeAttachment"
+                            :label="__('Remove this file when I save')" />
+                    </div>
+                @endif
+
+                {{-- `wire:model` rather than `.live`: the upload starts on
+                     change either way, and `.live` would additionally
+                     round-trip the answer textarea with it. --}}
+                <x-ui::forms.file name="attachment" wire:model="attachment" accept="application/pdf"
+                    :label="__('Attachment')"
+                    :hint="__('A PDF, up to 5 MB — the signed W-9, a floor plan, a parking map. Visitors get a download link under the answer.')" />
+
+                <div wire:loading wire:target="attachment" class="mt-2 text-sm text-body">
+                    {{ __('Uploading…') }}
+                </div>
+            </div>
+
             <div class="mt-4">
                 <x-ui::forms.toggle name="is_published" wire:model="is_published" :label="__('Published')" />
                 <p class="mt-1 text-sm text-body">
-                    {{ __('Unpublished questions stay here but disappear from the public page.') }}
+                    {{ __('Unpublished questions stay here but disappear from the public page — and their attachment stops being downloadable with them.') }}
                 </p>
             </div>
         </x-ui::section>

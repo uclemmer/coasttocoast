@@ -5,9 +5,12 @@ namespace App\Livewire\Staff\Faq;
 use App\Livewire\Staff\Concerns\ActsForStaff;
 use App\Models\FaqItem;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 /**
  * Write or edit one FAQ question (docs/13) — replaces the admin panel's
@@ -25,6 +28,7 @@ use Livewire\Component;
 class Edit extends Component
 {
     use ActsForStaff;
+    use WithFileUploads;
 
     public ?FaqItem $item = null;
 
@@ -33,6 +37,18 @@ class Edit extends Component
     public string $answer = '';
 
     public bool $is_published = true;
+
+    /**
+     * A newly chosen file, before saving. Null means "leave what is there".
+     *
+     * This is what the signed W-9 hangs off (doc 11's owner queue), but it is
+     * deliberately a generic attachment — a floor plan or a parking map is the
+     * same shape.
+     */
+    public $attachment = null;
+
+    /** Ticked to clear an existing attachment on save. */
+    public bool $removeAttachment = false;
 
     public function mount(?FaqItem $item = null): void
     {
@@ -77,6 +93,11 @@ class Edit extends Component
             'question' => ['required', 'string', 'max:255'],
             'answer' => ['required', 'string'],
             'is_published' => ['boolean'],
+            // `mimes` checks the file's actual type, not the extension the
+            // browser claimed. PDF only: this field exists to publish documents
+            // to a public page, and it is reachable by anyone who can edit the
+            // FAQ, so the narrowest useful type is the right one.
+            'attachment' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ]);
 
         $item = $this->item;
@@ -95,13 +116,45 @@ class Edit extends Component
         $item->question = $validated['question'];
         $item->answer = $validated['answer'];
         $item->is_published = $this->is_published;
+
+        if ($this->attachment instanceof TemporaryUploadedFile) {
+            $this->deleteStoredAttachment($item);
+
+            $item->attachment_path = $this->attachment->store(
+                FaqItem::ATTACHMENT_DIRECTORY,
+                FaqItem::ATTACHMENT_DISK,
+            );
+            $item->attachment_name = $this->attachment->getClientOriginalName();
+        } elseif ($this->removeAttachment) {
+            $this->deleteStoredAttachment($item);
+
+            $item->attachment_path = null;
+            $item->attachment_name = null;
+        }
+
         $item->save();
 
         $this->item = $item;
+        $this->attachment = null;
+        $this->removeAttachment = false;
 
         session()->flash('status', __('Question saved.'));
 
         $this->redirect(route('staff.faq.edit', $item), navigate: false);
+    }
+
+    /**
+     * Remove the file behind a question's current attachment.
+     *
+     * Replacing or clearing one without this leaves the old file on disk for
+     * ever — nothing else references it, so nothing else will ever delete it.
+     * Mirrors `Sponsors\Edit::deleteStoredLogo()`.
+     */
+    protected function deleteStoredAttachment(FaqItem $item): void
+    {
+        if (filled($item->attachment_path)) {
+            Storage::disk(FaqItem::ATTACHMENT_DISK)->delete($item->attachment_path);
+        }
     }
 
     public function render(): View

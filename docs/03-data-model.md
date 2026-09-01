@@ -174,7 +174,26 @@ Enums added (`app/Enums`): `MembershipStatus`, `GrantStatus`, `GrantBenefit`.
 
 ### faq_items
 
-id, question (string), answer (text/markdown), sort_order, is_published, timestamps.
+id, question (string), answer (text/markdown), attachment_path, attachment_name, sort_order,
+is_published, timestamps.
+
+**The attachment is generic, not a `w9_path`** (added 2026-08-19). The signed W-9 is the document
+that exists today — doc 11's owner queue had promised "Admin → FAQ (and a file to upload)" while the
+FAQ screen had no upload at all — but a floor plan, a parking map or a conduct policy are the same
+shape, and a column named after one document has to be joined by another the first time a second
+appears.
+
+Three things about how it is stored, each a decision (doc 10, D-9-c):
+
+- **The private disk (`local`), not `public`.** The download goes through `site.faq.download` rather
+  than a `Storage::url()`, so unpublishing a question actually withdraws its file. A public-disk URL
+  keeps serving for ever, and a signed W-9 carries the fair's EIN and an authorised signature.
+- **`attachment_name` remembers the uploaded filename**, because the stored name is randomised and
+  somebody filing a W-9 into an accounts-payable system needs `coast-to-coast-w9.pdf` back, not a
+  hash.
+- **Replacing or clearing an attachment deletes the old file.** Nothing else references that path, so
+  nothing else would ever delete it — the same reasoning, and the same shape of method, as
+  `Sponsors\Edit::deleteStoredLogo()`.
 
 ### ~~content_blocks~~ → laravel-core Content module
 

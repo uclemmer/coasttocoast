@@ -1256,3 +1256,62 @@ the redirect leaves alone.
 `organization_id` not fillable, so `$user->update(['organization_id' => ...])` silently does nothing.
 That is deliberate — it is what stops a rep mass-assigning themselves into another school — and it
 cost one debugging round. Assign the property and `save()`.
+---
+
+### D-9-e — A fair cannot be published while it still has its placeholder name
+
+**Found in the same browser pass as D-9-d.** `/representatives` was rendering the heading
+"COLLEGE FAIR 2027 (DATE AND PRICE NOT YET CONFIRMED — TODO-OWNER)" — in the design's display type,
+on a public page. The public roster names the active fair, and `EventSeeder` writes the next fair
+with that placeholder.
+
+**Why it was not caught before.** The seeder leaves 2027 **unpublished**, and an unpublished fair is
+invisible to the public — so in production the string never reaches a visitor. That guard was real
+but partial: it stopped a placeholder fair *taking money*, and nothing stopped it being *published*.
+Publishing without renaming is one click, and the development database does exactly that for its
+fixtures, which is where it showed up.
+
+**Decision.** A closure rule on `is_published` in `Staff\Events\Edit`: publishing is refused while
+the name contains `TODO-OWNER`.
+
+Attached to the toggle rather than to the name, because publishing is the thing being refused, and
+the message says what to do about it. A refusal rather than a warning: the placeholder states in its
+own words that the date and price are unconfirmed, so a fair wearing it is never one that should be
+open for registrations.
+
+**Saving an unpublished placeholder is still allowed**, and there is a test for it — the seeded row
+is exactly that, and editing its venue or dates must not be blocked on renaming it first.
+
+### D-9-f — The venue map loads on click, not on page load
+
+**Context.** The landing page embedded Google's Maps iframe directly. That is a third-party request
+fired for every visitor before anyone asked for a map — on the same page whose fonts are self-hosted
+specifically so visitors are not announced to Google before it paints (D-8.1-a). Half of that
+decision was being undone three sections further down.
+
+**Decision.** A placeholder panel with a "Show the map" button; the iframe is created on click.
+
+Three details that are the whole point:
+
+- **`x-if`, not `x-show`.** A hidden iframe still fetches. The element must not exist until asked
+  for.
+- **The button is `x-cloak`'d**, so it never appears when Alpine has not run. A button that does
+  nothing is worse than no button.
+- **The plain "Open in Google Maps" link sits outside the Alpine block**, which makes it the whole
+  feature in that case rather than a fallback nobody sees.
+
+The label says what the click will do — "Loads a map from Google, which will see your visit" —
+because a consent affordance that does not say what it consents to is decoration.
+
+Verified in the browser: **zero requests to google.com on load, zero iframes**; after the click, one
+of each. Two tests pin the absence, which is the half that would rot silently.
+
+**Not a change to the TODO-OWNER note.** The embed is still the handoff's, pinned at Chattanooga
+generally rather than at the venue. That is doc 11's asset queue, and unrelated.
+
+### D-9-g — The download link shows a filename in its real case
+
+Small, and in the feature D-9-c added. The button is display type and uppercases its label, which
+turned `coast-to-coast-w9.pdf` into `DOWNLOAD COAST-TO-COAST-W9.PDF`. A filename is not a label:
+shouting it loses the case the file actually has and reads like an error. The word "Download" keeps
+the uppercase treatment; the filename is a `normal-case` span beside it.

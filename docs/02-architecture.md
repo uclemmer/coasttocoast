@@ -144,6 +144,23 @@ rosters, the countdown and the two public forms are the whole of that list.
 `User::canAccessPanel()` switches on the panel id rather than using core's `CanAccessCorePanel` trait — see
 the deviation note in [05-build-roadmap.md](05-build-roadmap.md) card 1.1.
 
+### A known wrinkle: the CSS build is not byte-reproducible
+
+`resources/css/app.css` carries `@source '../../storage/framework/views/*.php'`, which points Tailwind
+at Blade's **compiled-view cache**. That directory's contents depend on which pages have been
+rendered since the last `view:clear`, so two builds of identical source can differ — measured
+2026-08-19 at 79.98 kB warm against 79.84 kB cold, with different asset hashes.
+
+Nothing renders wrongly either way; the source `.blade.php` files are scanned regardless, and the
+cold build is the smaller one. It matters for two things. A CI build and a local build will not
+produce matching hashes, so neither can be used to verify the other. And the workspace's own rule for
+verifying a dependency removal — diff the compiled CSS before and after — needs the view cache in
+the same state on both sides, or the diff carries noise that has nothing to do with the change.
+
+Left in place rather than removed: whether anything actually needs that source has not been tested,
+and dropping it on the assumption that it does not is how a class stops compiling silently. Warm the
+cache the same way on both sides when diffing.
+
 ## Application layout
 
 Standard Laravel conventions plus:

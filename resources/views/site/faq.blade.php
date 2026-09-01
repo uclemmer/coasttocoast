@@ -52,12 +52,23 @@
                         @if ($item->hasAttachment())
                             <a href="{{ route('site.faq.download', $item) }}"
                                class="mt-4 inline-flex items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-4 py-2.5 font-display text-[13px] font-bold uppercase tracking-[0.04em] text-brand-600 transition-colors hover:bg-brand-100">
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                      stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                           d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
                                 </svg>
-                                {{ __('Download :file', ['file' => $item->attachmentDownloadName()]) }}
+
+                                {{ __('Download') }}
+
+                                {{-- `normal-case`, deliberately. The button is
+                                     display type and uppercases its label, but a
+                                     filename is not a label: shouting
+                                     COAST-TO-COAST-W9.PDF loses the case the
+                                     file actually has and reads like an error.
+                                     The word "Download" keeps the treatment. --}}
+                                <span class="font-sans text-[13px] font-normal normal-case tracking-normal text-brand-700">
+                                    {{ $item->attachmentDownloadName() }}
+                                </span>
                             </a>
                         @endif
                     </x-ui::accordion.item>

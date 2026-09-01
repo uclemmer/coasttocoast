@@ -179,15 +179,77 @@
                 </div>
             </div>
 
-            {{-- TODO-OWNER: the embed is the handoff's placeholder, pinned at
-                 Chattanooga generally rather than at the venue. Replace the
-                 `src` with a Maps embed for the Convention Center. --}}
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d208917.77311510406!2d-85.37877454266417!3d35.09821494037796!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x886060408a83e785%3A0x2471261f898728aa!2sChattanooga%2C%20TN!5e0!3m2!1sen!2sus!4v1666630094698!5m2!1sen!2sus"
-                    title="{{ __('Map — :venue', ['venue' => $fair?->venue_name ?? __('Chattanooga Convention & Trade Center')]) }}"
-                    loading="lazy"
-                    allowfullscreen
-                    referrerpolicy="no-referrer-when-downgrade"
-                    class="block aspect-[4/3] w-full rounded-xl border-0 shadow-map"></iframe>
+            {{--
+                The map loads on click, not on page load.
+
+                Google's embed is a third-party request that fires for every
+                visitor before they have asked for a map, and this site's
+                visitors are largely high school students and their parents. The
+                fonts are self-hosted for exactly that reason (doc 10, D-8.1-a);
+                shipping the iframe eagerly would have undone half of it. See
+                doc 10, D-9-f.
+
+                Costs nothing to the visitor who wants the map: one click, and
+                the iframe is the same one. Without JavaScript the button is
+                absent and the address link below is the whole feature — which is
+                why that link is not inside the Alpine block.
+
+                TODO-OWNER: the embed is the handoff's placeholder, pinned at
+                Chattanooga generally rather than at the venue. Replace the
+                `src` with a Maps embed for the Convention Center.
+            --}}
+            @php
+                $venueName = $fair?->venue_name ?? __('Chattanooga Convention & Trade Center');
+                $mapEmbed = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d208917.77311510406!2d-85.37877454266417!3d35.09821494037796!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x886060408a83e785%3A0x2471261f898728aa!2sChattanooga%2C%20TN!5e0!3m2!1sen!2sus!4v1666630094698!5m2!1sen!2sus';
+                $mapLink = 'https://www.google.com/maps/search/?api=1&query='.urlencode($venueName.', Chattanooga, TN');
+            @endphp
+
+            <div class="grid gap-3">
+                <div x-data="{ loaded: false, src: @js($mapEmbed) }"
+                     class="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-brand-50 shadow-map">
+                    {{-- x-if, not x-show: the iframe must not exist until asked
+                         for. A hidden iframe still fetches. --}}
+                    <template x-if="loaded">
+                        <iframe :src="src"
+                                title="{{ __('Map — :venue', ['venue' => $venueName]) }}"
+                                allowfullscreen
+                                referrerpolicy="no-referrer-when-downgrade"
+                                class="block h-full w-full border-0"></iframe>
+                    </template>
+
+                    {{-- x-cloak so the button is hidden when Alpine never runs:
+                         a button that does nothing is worse than no button, and
+                         the link below covers that case. --}}
+                    <button type="button"
+                            x-show="! loaded"
+                            x-cloak
+                            @click="loaded = true"
+                            class="absolute inset-0 grid place-content-center justify-items-center gap-2 px-6 text-center">
+                        <svg class="h-9 w-9 text-brand-600" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                        </svg>
+
+                        <span class="font-display text-[13.5px] font-bold uppercase tracking-[0.04em] text-brand-600">
+                            {{ __('Show the map') }}
+                        </span>
+
+                        <span class="max-w-[34ch] text-[13.5px] leading-[1.5] text-ink-500">
+                            {{ __('Loads a map from Google, which will see your visit.') }}
+                        </span>
+                    </button>
+                </div>
+
+                {{-- Outside the Alpine block on purpose: this is the whole
+                     feature when JavaScript never runs. --}}
+                <a href="{{ $mapLink }}" target="_blank" rel="noopener noreferrer"
+                   class="justify-self-start text-[14px] font-semibold text-brand-600 underline underline-offset-2 hover:text-brand-700">
+                    {{ __('Open :venue in Google Maps', ['venue' => $venueName]) }}
+                </a>
+            </div>
         </section>
     </x-site.container>
 

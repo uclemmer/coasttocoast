@@ -308,3 +308,53 @@ describe('announcing that registration is open', function () {
         livewire(ShowEvent::class, ['event' => $this->fair])->assertForbidden();
     });
 });
+
+describe('publishing a fair that still has its placeholder name', function () {
+    // doc 10, D-9-e. The public roster renders the active fair's name as its
+    // heading, so publishing without renaming puts "TODO-OWNER" on the public
+    // site in the design's display type. Found in a browser pass.
+    it('is refused', function () {
+        $fair = Event::factory()->create([
+            'name' => 'College Fair 2027 (date and price not yet confirmed — TODO-OWNER)',
+            'is_published' => false,
+        ]);
+
+        livewire(EditEvent::class, ['event' => $fair])
+            ->set('is_published', true)
+            ->call('save')
+            ->assertHasErrors(['is_published']);
+
+        expect($fair->refresh()->is_published)->toBeFalse();
+    });
+
+    it('is allowed once the fair has a real name', function () {
+        $fair = Event::factory()->create([
+            'name' => 'College Fair 2027 (date and price not yet confirmed — TODO-OWNER)',
+            'is_published' => false,
+        ]);
+
+        livewire(EditEvent::class, ['event' => $fair])
+            ->set('name', 'College Fair 2027')
+            ->set('is_published', true)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        expect($fair->refresh()->is_published)->toBeTrue();
+    });
+
+    it('still lets the placeholder be saved unpublished', function () {
+        // The seeder writes exactly this row. Editing anything else about it
+        // must not be blocked.
+        $fair = Event::factory()->create([
+            'name' => 'College Fair 2027 (date and price not yet confirmed — TODO-OWNER)',
+            'is_published' => false,
+        ]);
+
+        livewire(EditEvent::class, ['event' => $fair])
+            ->set('venue_name', 'Somewhere Else')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        expect($fair->refresh()->venue_name)->toBe('Somewhere Else');
+    });
+});

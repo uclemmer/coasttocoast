@@ -572,3 +572,27 @@ describe('the FAQ attachment download', function () {
         $this->get(route('site.faq.download', $plain))->assertNotFound();
     });
 });
+
+describe('the venue map', function () {
+    // doc 10, D-9-f. The fonts are self-hosted so a visitor is not announced to
+    // Google before the page paints; shipping the Maps iframe eagerly would
+    // have undone half of that on the same page.
+    it('does not request Google on page load', function () {
+        Fair::factory()->published()->create();
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        // The URL is in the markup -- Alpine needs it -- but not in a src that
+        // the browser will fetch.
+        expect($html)->not->toContain('<iframe src="https://www.google.com/maps/embed')
+            ->toContain('x-if="loaded"');
+    });
+
+    it('offers a plain link that works without JavaScript', function () {
+        // The button is x-cloak'd, so with no Alpine it never appears. The link
+        // is outside the Alpine block for exactly that reason.
+        Fair::factory()->published()->create();
+
+        $this->get('/')->assertOk()->assertSee('maps/search/?api=1', escape: false);
+    });
+});

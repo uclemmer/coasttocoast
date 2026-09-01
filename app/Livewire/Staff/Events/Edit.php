@@ -5,6 +5,7 @@ namespace App\Livewire\Staff\Events;
 use App\Livewire\Staff\Concerns\ActsForStaff;
 use App\Models\Event;
 use App\Support\Money;
+use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -130,7 +131,32 @@ class Edit extends Component
             'capacity' => ['nullable', 'integer', 'min:1'],
             'registration_opens_at' => ['nullable', 'date'],
             'registration_closes_at' => ['nullable', 'date', 'after:registration_opens_at'],
-            'is_published' => ['boolean'],
+            /*
+             * Refuse to publish a fair still carrying its placeholder name.
+             *
+             * `EventSeeder` writes the next fair as "College Fair 2027 (date and
+             * price not yet confirmed — TODO-OWNER)" and leaves it unpublished,
+             * because an unpublished fair can never take money. Nothing guarded
+             * the other half: publishing without renaming puts that string on
+             * the PUBLIC roster page, which renders the active fair's name as
+             * its heading. Found in a browser pass — the development database
+             * publishes 2027 for its fixtures, and there it was in the design's
+             * display type (doc 10, D-9-e).
+             *
+             * A refusal rather than a warning, and attached to the toggle rather
+             * than to the name, because publishing is the thing being refused.
+             * The placeholder says in its own words that the date and price are
+             * unconfirmed, so a fair wearing it is never one that should be
+             * taking registrations.
+             */
+            'is_published' => ['boolean', function (string $attribute, mixed $value, Closure $fail): void {
+                if ($value && str_contains($this->name, 'TODO-OWNER')) {
+                    $fail(__(
+                        'This fair still has its placeholder name, which would show on the public '
+                        .'site. Give it its real name before publishing it.',
+                    ));
+                }
+            }],
         ]);
 
         $event = $this->event;

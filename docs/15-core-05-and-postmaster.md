@@ -189,7 +189,50 @@ the database**, confirming this app's rename migration did its job. That is the 
 place immediately: it is the only thing in this family that looks at the real database rather than a
 freshly seeded test one.
 
+## Upgrading to postmaster `v0.2.0` (2026-09-01), and the coupling it exposed
+
+`v0.2.0` stops an unsubscribe, a spam complaint and a soft bounce from refusing **transactional**
+mail — a password reset, a receipt, a 2FA code. A hard bounce and a manual entry still refuse
+everything. Classification is by the `X-PM-Message-Stream` header: the broadcast stream is
+marketing, and **unstamped mail counts as transactional**.
+
+The upgrade commit recorded the conclusion "nothing to do in this app", and the conclusion is right.
+Two lines of its reasoning are not, and the difference matters because it is the difference between
+being safe and being safe *on purpose*:
+
+- It says this app has no campaign path outside postmaster's broadcast path. **It has one** —
+  `SendEventBroadcast` → `CampaignMessage` → `Notification::route('mail', …)`, which never touches
+  postmaster's list code.
+- It says everything here is transactional "by elimination". **Campaigns are not.** They classify as
+  marketing, and correctly so.
+
+What actually makes them safe is that `Notifications\Concerns\RendersThemedMail::stampStream()`
+has always written `X-PM-Message-Stream`, and `CampaignMessage` overrides it to the broadcast
+stream — code written for Postmark's own routing, years before postmaster had a classifier to read
+it. The app was safe by coincidence.
+
+**And the coincidence had a seam.** The app stamped `services.postmark.broadcast_stream_id`;
+postmaster classified against `postmaster.streams.broadcast`. Two keys, two files, two packages,
+equal only because both defaulted to `'broadcast'` — while `streams.marketing` was empty. Renaming
+the Postmark stream, which Postmark lets you do and which no one would think twice about, would have
+reclassified every campaign as transactional and delivered the next one to everybody who had
+unsubscribed. No error, no failing test, every screen correct.
+
+`config/postmaster.php` now reads `POSTMARK_BROADCAST_STREAM` and `POSTMARK_MESSAGE_STREAM` — the
+same env vars the app stamps with — so the two halves move together. Verified by setting
+`POSTMARK_BROADCAST_STREAM=campaigns` and watching both follow, with `Streams::isMarketing()` still
+true.
+
+`tests/Feature/Notifications/SuppressionTest.php` pins all of it, and this app had **no suppression
+test at all** before it. Eight assertions, including the two that matter: a campaign is refused to
+somebody who unsubscribed, and transactional mail to that same address still goes. One deliberately
+demonstrates the failure — stamp a stream postmaster does not know and the campaign reaches the
+unsubscribed address — so the reason for the coupling is executable rather than a paragraph here.
+
+Proved by breaking it: pointing `CampaignMessage` at the transactional stream fails three of the
+eight, the refusal test among them.
+
 ## Status
 
-`composer test`: **771 passed** (741 before). Browser pass done 2026-08-31; on postmaster `v0.1.3`,
-core `v0.5.0`.
+`composer test`: **807 passed** (799 before these eight). Browser pass done 2026-08-31, and again 2026-09-01 over all 31
+staff and portal screens. On postmaster `v0.2.0`, core `v0.5.0`.

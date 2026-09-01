@@ -136,6 +136,31 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Message streams
+    |--------------------------------------------------------------------------
+    |
+    | Bound to the SAME env vars this app's own mail stamps with
+    | (`services.postmark.*`, applied by Notifications\Concerns\RendersThemedMail).
+    |
+    | These have to agree, and nothing else makes them. postmaster classifies a
+    | message by its `X-PM-Message-Stream` header: the broadcast stream counts as
+    | marketing, everything else as transactional — and since 0.2.0 an unsubscribe
+    | only refuses marketing. So if this app stamped `campaigns` while postmaster
+    | still expected `broadcast`, every campaign would classify as transactional
+    | and go to people who had unsubscribed. Silently: no error, nothing red.
+    |
+    | Reading both from one env var is what stops that, rather than two defaults
+    | that happen to match. See docs/15 and SuppressionTest.
+    |
+    */
+
+    'streams' => [
+        'transactional' => env('POSTMARK_MESSAGE_STREAM', 'outbound'),
+        'broadcast' => env('POSTMARK_BROADCAST_STREAM', 'broadcast'),
+    ],
+
     'driver' => 'postmark',
 
     'drivers' => [

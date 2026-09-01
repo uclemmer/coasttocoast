@@ -342,6 +342,21 @@ beneath its own input — so the label is the only word there is to match it
 against. Both registration forms now name **every** field as the form labels it,
 not just the ones that were unreadable.
 
+A third pass found the campaigns form still doing it in three more places —
+`channels`, `email_body` and `sms_body`, under inputs labelled "Send by",
+"Email" and "Text message". Each pass found the previous one's leftovers, which
+is what a rule applied by hand does; **the sweep that would have found all of
+them at once is to submit each form empty and read what comes back**, and it
+takes a minute per screen.
+
+`channels` is the exception worth recording, because it is where the rule stops.
+Its label is "Send by", and "the send by field is required" is not English — the
+heading sits above a checkbox list and is not a noun for the thing being
+validated. It takes a written name, **delivery method**, and there is a test
+pinning that specifically, because the obvious tidy-up is to make it match the
+label like everything else. Matching labels is a means to a message somebody can
+act on, not the point in itself.
+
 **This belongs in the table above.** A Filament `Select` was constructed with its
 label and used it for both the field and its messages; a Livewire property is
 just a property, and the label lives in the Blade where the validator cannot see

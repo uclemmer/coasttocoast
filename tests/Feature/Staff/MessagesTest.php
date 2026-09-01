@@ -130,6 +130,37 @@ describe('composing', function () {
         expect($errors->first('event_id'))->toBe('The selected reference fair is invalid.');
     });
 
+    it('names the two bodies after their inputs, not after their columns', function () {
+        // Labelled "Email" and "Text message"; they used to fail as
+        // "email body" and "sms body". Both channels on so both are required.
+        $errors = livewire(EditMessage::class)
+            ->set('audience', Audience::ThisEventConfirmed->value)
+            ->set('subject', 'Parking and check-in')
+            ->set('channels', [MessageChannel::Email->value, MessageChannel::Sms->value])
+            ->call('save')
+            ->errors();
+
+        expect($errors->first('email_body'))->toBe('The email field is required.')
+            ->and($errors->first('sms_body'))->toBe('The text message field is required.');
+    });
+
+    it('calls the channel list a delivery method rather than "send by"', function () {
+        /*
+         * The one field that deliberately does NOT take its label. The checkbox
+         * list is headed "Send by", and "the send by field is required" is not
+         * English — the heading is not a noun for the thing being validated.
+         * Pinned because the obvious "fix" is to make it match the label.
+         */
+        $errors = livewire(EditMessage::class)
+            ->set('audience', Audience::ThisEventConfirmed->value)
+            ->set('subject', 'Parking and check-in')
+            ->set('channels', [])
+            ->call('save')
+            ->errors();
+
+        expect($errors->first('channels'))->toBe('The delivery method field is required.');
+    });
+
     it('refuses to open a sent campaign for editing', function () {
         // A form that cannot be saved should not be rendered.
         $sent = Message::factory()->sent()->create();

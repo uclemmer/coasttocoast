@@ -198,8 +198,19 @@ class Edit extends Component
     }
 
     /**
-     * The select is labelled "Reference fair". It is nullable, so `required`
-     * never fires — but `integer` and `exists` do, and they named `event_id`.
+     * Name every field as the form labels it — with one deliberate exception.
+     *
+     * `event_id` is labelled "Reference fair" and is nullable, so `required`
+     * never fires there; `integer` and `exists` do, and they named the column.
+     * The two bodies named columns outright: "email body" under an input
+     * labelled "Email", "sms body" under one labelled "Text message".
+     *
+     * `channels` is the exception, and takes a written name rather than its
+     * label. The checkbox list is headed "Send by", which reads as a heading
+     * above the boxes and not as a noun for the thing being validated — "the
+     * send by field is required" is not English. Matching the label is a means
+     * to a message the coordinator can act on, not the point in itself, and
+     * where the two disagree the message wins.
      *
      * @return array<string, string>
      */
@@ -207,6 +218,10 @@ class Edit extends Component
     {
         return [
             'event_id' => __('reference fair'),
+            'channels' => __('delivery method'),
+            'channels.*' => __('delivery method'),
+            'email_body' => __('email'),
+            'sms_body' => __('text message'),
         ];
     }
 

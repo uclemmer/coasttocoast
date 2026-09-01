@@ -12,8 +12,9 @@ and every judgement made in between.
 
 ## What arrived
 
-`storage/app/private/participants.json`, copied verbatim to
-`database/seeders/data/participants.json`. 381 submissions, each carrying the fair it belongs to:
+`storage/app/private/participants.json`, read verbatim and left where it landed — see
+[The export stays out of the repository](#the-export-stays-out-of-the-repository) below. 381
+submissions, each carrying the fair it belongs to:
 
 ```
 id, event_id, first, last, organization, email, phone, message, created_at, updated_at,
@@ -177,19 +178,40 @@ Phone numbers are stored exactly as typed. The export has twelve different forma
 555-0100`, `4235550100`, `+1 (248) 555-0100` — and the application has no normalizer anywhere, so
 imposing a house format here would make these rows unlike every row a rep has ever created.
 
-## The file is committed, and that is a decision too
+## The export stays out of the repository
 
-`database/seeders/data/participants.json` is real contact data for ~380 real people, and it is in
-the repository.
+**Owner directive, 2026-09-01.** The export is real contact data for ~380 real people, and it lives
+at `storage/app/private/participants.json`, which is gitignored. It is not committed, and it is not
+to be. The first pass of this work did commit it, to a `database/seeders/data/` folder; that was
+reversed the same day and the folder is gone.
 
-The alternative was to read it from `storage/app/private`, which is gitignored. That produces a
-seeder that works on the machine holding the file and fails everywhere else — and the failure mode
-is not a crash but an empty roster, invisible until a cross-year audience resolves to nobody months
-later. The seeder throws loudly if the file is missing for the same reason.
+The seeders read it from storage, so **they can only run where the file is**. That is the cost, and
+it is paid deliberately: the names, work addresses and phone numbers of every admissions
+representative who ever registered are not in anybody's clone, not in a fork, and not in whatever a
+future CI runner has read access to.
 
-**The repository is private, and this is business contact data for admissions representatives**
-rather than anything more sensitive. If that changes, the seam is one method: `export()` in
-`ParticipantExportSeeder`.
+**The risk that buys is not a crash — it is a roster that seeds empty**, with no error and no log
+line, invisible until a win-back campaign resolves to nobody months later. Nothing is allowed to
+degrade quietly, so the absence is loud in three places:
+
+| Where | What happens with no export |
+|---|---|
+| Either seeder run **by name** | Throws, naming the path. You asked for the roster; it cannot be produced |
+| `DatabaseSeeder` | Checks `ParticipantExportSeeder::available()` first, warns with the path, and seeds the fixtures without them. A developer who was never given the file still gets a working local app |
+| The test suite | `ParticipantExportSeederTest` skips every assertion with the path in the message, rather than passing against an empty database. `ParticipantExportMissingTest` runs everywhere and proves the three behaviours in this table |
+
+That second row is the one to remember when reading a seed log: **"140 organizations" and "no
+participant export — seeded the fixtures only" are both successful runs**, and only the summary
+lines tell them apart.
+
+The seam is one method — `ParticipantExportSeeder::path()`. Everything else, including the tests,
+asks it rather than naming a file.
+
+### Getting the file onto a host
+
+It is not deployed with the code. Copy it to `storage/app/private/participants.json` on the target,
+run the two seeders, and then decide whether to delete it — nothing reads it after the seed, and the
+data it carried is in the database by then.
 
 ## What is seeded
 
@@ -205,7 +227,10 @@ rather than anything more sensitive. If that changes, the seam is one method: `e
 `tests/Feature/Foundation/ParticipantExportSeederTest.php` — 30 tests — pins all of it: the counts
 per fair, the collapsing of duplicate submissions, each entry in the canonical-name map, the pair
 that must *not* be merged, the absence of user accounts, the three stated conventions, and that
-re-running creates nothing and overwrites nothing.
+re-running creates nothing and overwrites nothing. All 30 skip where the export is not, so a green
+run on a machine without it has proved nothing about the roster — read the skip count.
+
+`tests/Feature/Foundation/ParticipantExportMissingTest.php` is the half that runs everywhere.
 
 ## Still outstanding
 

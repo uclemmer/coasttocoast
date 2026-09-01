@@ -274,8 +274,13 @@ all if any organization exists, so seeding the history first would silently cost
 
 | Seeder | What it writes | Runs in |
 |---|---|---|
-| `OrganizationSeeder` | 158 organizations from `database/seeders/data/participants.json` | **dev only**, plus by hand on a real host |
+| `OrganizationSeeder` | 158 organizations from `storage/app/private/participants.json` | **dev only**, plus by hand on a real host |
 | `RegistrationSeeder` | their 354 places at the 2023–2026 fairs | **dev only**, plus by hand on a real host |
+
+That export is real contact data and is **not in the repository** — `storage/app/private` is
+gitignored, so these two are the only seeders that can find nothing to do. `DatabaseSeeder` checks
+first and warns rather than dying, so a developer without the file still gets the fixtures; running
+either seeder by name without it throws, because there the roster is what was asked for.
 
 `ProductionSeeder` deliberately does not call either: its contract is that it invents nothing and is
 safe on every deploy, and loading a roster is a deliberate one-off. Both share

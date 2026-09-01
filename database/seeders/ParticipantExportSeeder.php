@@ -17,10 +17,10 @@ use RuntimeException;
  *
  * ## The file
  *
- * `database/seeders/data/participants.json` is the owner's export, committed
- * verbatim rather than massaged, so what the seeder reads is what the old site
- * produced. 381 submissions across the 2023, 2024, 2025 and 2026 fairs, each
- * carrying the fair it belongs to:
+ * `storage/app/private/participants.json` is the owner's export, read verbatim
+ * rather than massaged, so what the seeder reads is what the old site produced.
+ * 381 submissions across the 2023, 2024, 2025 and 2026 fairs, each carrying the
+ * fair it belongs to:
  *
  *     first, last, organization, email, phone, message, created_at, event.slug
  *
@@ -28,11 +28,17 @@ use RuntimeException;
  * site's form collected none. `OrganizationSeeder` and `RegistrationSeeder`
  * each say what they do about that rather than inventing it.
  *
- * It is real contact data for real people, and it is committed rather than left
- * in `storage/app/private` because a seeder that reads a gitignored file works
- * on one machine and fails everywhere else. Failing at seed time would be the
- * good case; the bad case is seeding an empty roster and finding out months
- * later when a win-back campaign resolves to nobody.
+ * **It is deliberately NOT in the repository** (owner, 2026-09-01). It is real
+ * contact data for ~380 real people, `storage/app/private` is gitignored, and
+ * keeping it there means the names and addresses of every admissions
+ * representative who ever registered are not in anybody's clone.
+ *
+ * The cost is that these seeders cannot run where the file is not, and the
+ * failure mode to guard against is a roster that seeds EMPTY — invisible until
+ * a win-back campaign resolves to nobody, months later. So nothing here degrades
+ * quietly: `export()` throws, `DatabaseSeeder` checks `available()` and says out
+ * loud when it skips them, and the tests that assert the seeded roster skip with
+ * the path in the message rather than passing on an empty database.
  *
  * ## Two submissions are not two registrations
  *
@@ -236,6 +242,28 @@ abstract class ParticipantExportSeeder extends Seeder
     }
 
     /**
+     * The owner's export. Gitignored, so it is present on the machine that was
+     * given it and nowhere else — see the class docblock.
+     */
+    public static function path(): string
+    {
+        return storage_path('app/private/participants.json');
+    }
+
+    /**
+     * Whether there is anything to seed from.
+     *
+     * `DatabaseSeeder` asks before calling, so a developer without the export
+     * still gets a working development seed. Running either seeder BY NAME
+     * without it is a different thing — you asked for the roster and it cannot
+     * be produced — and that throws.
+     */
+    public static function available(): bool
+    {
+        return is_readable(static::path());
+    }
+
+    /**
      * @return Collection<int, array<string, mixed>>
      */
     protected function export(): Collection
@@ -244,14 +272,12 @@ abstract class ParticipantExportSeeder extends Seeder
             return $this->export;
         }
 
-        $path = base_path('database/seeders/data/participants.json');
-
-        if (! is_readable($path)) {
-            // Loud, never skipped. A roster that seeds empty is invisible until
+        if (! static::available()) {
+            // Loud, never a shrug. A roster that seeds empty is invisible until
             // a cross-year audience resolves to nobody.
-            throw new RuntimeException("The participant export is missing: {$path}");
+            throw new RuntimeException('The participant export is missing: '.static::path());
         }
 
-        return $this->export = collect(json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR));
+        return $this->export = collect(json_decode((string) file_get_contents(static::path()), true, 512, JSON_THROW_ON_ERROR));
     }
 }

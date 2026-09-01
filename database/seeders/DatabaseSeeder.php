@@ -20,6 +20,12 @@ use Illuminate\Database\Seeder;
  * awkward registrations. And `RegistrationSeeder` needs `OrganizationSeeder`
  * to have run, because it will not invent an organization it cannot find.
  *
+ * They are also the only two that can be absent. The export they read is real
+ * contact data and is deliberately not in the repository, so a developer who
+ * has not been given it gets the fixtures and a warning naming the file rather
+ * than a seed that dies — while running either seeder by name without it still
+ * throws, because there the roster is the thing that was asked for.
+ *
  * `ProductionSeeder` deliberately does NOT call them. The history is real, but
  * that seeder's contract is that it invents nothing and runs on every deploy;
  * loading a roster is a deliberate one-off, either these two by name or
@@ -43,6 +49,15 @@ class DatabaseSeeder extends Seeder
             FaqSeeder::class,
             EventSeeder::class,
             FairFixtureSeeder::class,
+        ]);
+
+        if (! ParticipantExportSeeder::available()) {
+            $this->command?->warn('No participant export at '.ParticipantExportSeeder::path().' — seeded the fixtures only, with no real roster history.');
+
+            return;
+        }
+
+        $this->call([
             OrganizationSeeder::class,
             RegistrationSeeder::class,
         ]);

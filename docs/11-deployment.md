@@ -235,7 +235,7 @@ None of these block a deploy; all of them are visible to a visitor.
 | Signed W-9 PDF | `/staff/faq` → "Can we get a W-9?" → **Attachment**. PDF, up to 5 MB | `TODO-OWNER` in the answer. A download link appears under the answer once the file is there, so the sentence pointing at this can then be replaced |
 | Google Map embed for the venue | `/staff/faq` | The design's embed is pinned at Chattanooga generally, not the venue — see the asset queue below |
 | Brand colour and logo | `FAIR_BRAND_COLOR`, `FAIR_BRAND_LOGO_URL` | Email falls back to the app name in text |
-| Historical rosters, 2023–2026 | `db:seed --class=…\OrganizationSeeder` then `…\RegistrationSeeder` | **Supplied 2026-09-01** and read straight from the owner's export — see [18-participant-export.md](18-participant-export.md). Not part of `ProductionSeeder`; run the two by name, once |
+| Historical rosters, 2023–2026 | Copy the export to `storage/app/private/participants.json` on the host, then `db:seed --class=…\OrganizationSeeder` and `…\RegistrationSeeder` | **Supplied 2026-09-01** and read straight from the owner's export — see [18-participant-export.md](18-participant-export.md). The export is gitignored, so it does **not** arrive with a deploy; without it both seeders throw. Not part of `ProductionSeeder`; run the two by name, once |
 | Historical roster, 2022 | `php artisan fair:import-roster <file.csv>` | Not in the export. The fair is seeded and empty; see below |
 
 ### Design assets still outstanding (2026-08-19)
@@ -271,6 +271,10 @@ form submissions rather than a CSV, and `OrganizationSeeder` + `RegistrationSeed
 are deliberately not part of `ProductionSeeder`, and they are idempotent. Read
 [18-participant-export.md](18-participant-export.md) first, because six of the fields they write are
 a stated convention rather than something the export knew.
+
+**The export is real contact data and is gitignored, so it is not on the host until you put it
+there** — `storage/app/private/participants.json`. Both seeders throw if it is absent rather than
+seeding an empty roster, and nothing reads it once the seed has run.
 
 The command below remains the way in for anything the export does not cover — the 2022 roster, or a
 later correction that arrives as a spreadsheet. Whatever the old system can produce needs massaging

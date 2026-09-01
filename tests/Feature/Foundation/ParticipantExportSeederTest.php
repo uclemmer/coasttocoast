@@ -8,16 +8,30 @@ use App\Models\Registration;
 use App\Models\User;
 use Database\Seeders\EventSeeder;
 use Database\Seeders\OrganizationSeeder;
+use Database\Seeders\ParticipantExportSeeder;
 use Database\Seeders\RegistrationSeeder;
 
 /**
- * The previous system's roster, seeded from `database/seeders/data/participants.json`.
+ * The previous system's roster, seeded from `storage/app/private/participants.json`.
  *
  * These run the two export seeders on their own — no fixtures — because the
  * fixtures create some of the same organizations by name and would blur every
  * count. `SeederTest` covers what the development seed does with both.
+ *
+ * **The export is gitignored on purpose** (owner, 2026-09-01) — it is real
+ * contact data for ~380 people. So every test here is SKIPPED where the file is
+ * not, rather than asserted against an empty database, and the run says which
+ * file it wanted.
+ *
+ * What a machine without the export can still prove is that its absence is
+ * loud, and that is `ParticipantExportMissingTest` — a separate file precisely
+ * so this one's guard does not skip it.
  */
 beforeEach(function () {
+    if (! ParticipantExportSeeder::available()) {
+        $this->markTestSkipped('No participant export at '.ParticipantExportSeeder::path().'.');
+    }
+
     $this->seed(EventSeeder::class);
     $this->seed(OrganizationSeeder::class);
     $this->seed(RegistrationSeeder::class);

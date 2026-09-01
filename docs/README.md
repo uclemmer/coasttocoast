@@ -41,7 +41,7 @@ cards from 05 under the rules in 06):
 | [12-ui-package-adoption.md](12-ui-package-adoption.md) | Adopting `uclemmer/laravel-ui` and retiring the rep panel: what that panel actually owns (all of auth), where each piece goes, and the published theme sheet repointed at the design handoff |
 | [13-staff-admin.md](13-staff-admin.md) | Getting the fair's own admin off Filament and onto `/staff`: why not `/admin`, the pattern established on Sponsors, what Filament was doing for free, and the traps recorded for the six resources still to come |
 | [14-core-04-upgrade.md](14-core-04-upgrade.md) | Upgrading to laravel-core 0.4 and off Filament for good: the eleven vestigial declarations that would have fatalled, the four tests ported, and the `@source` line whose compiled-CSS diff turned out to be a Blade comment |
-| [15-core-05-and-postmaster.md](15-core-05-and-postmaster.md) | Core 0.5 removes its email log; the message log arrives from `uclemmer/laravel-postmaster`. The model alias, why `email_log_id` keeps its name, the two-pass data migration, and the `core.admin.plugins` seam gaining its first entry |
+| [15-core-05-and-postmaster.md](15-core-05-and-postmaster.md) | Core 0.5 removes its email log; the message log arrives from `uclemmer/laravel-postmaster`. The model alias, why `email_log_id` keeps its name, the two-pass data migration, the `core.admin.plugins` seam gaining its first entry, and the `v0.1.3` upgrade — where a version bump owed five unpublished migrations and failed at runtime in the Stripe tests rather than at install |
 
 **Golden rules** (duplicated from the docs because they matter):
 

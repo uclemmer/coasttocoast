@@ -146,7 +146,50 @@ Two defects it found, both fixed upstream and pulled in here:
   is `{message}`, and route-model binding matches by name — so nothing bound and the view fatalled
   on `$log->status->value`. The index page was fine and every test passed. (postmaster `v0.1.2`)
 
+## Upgrading to postmaster `v0.1.3` (2026-09-01)
+
+The constraint here is `^0.1`, which already admitted `0.1.3` — so the *composer* side was a lock
+move and nothing else. The rest was not.
+
+### A version bump can owe you migrations, and it fails at runtime rather than at install
+
+`composer update` succeeded, `composer install` was clean, and then **15 tests failed with
+`no such table: postmaster_suppressions`**. This app installed postmaster when it shipped only the
+message log, and published exactly the two migrations that existed then. Everything the package has
+grown since — suppressions, the ingestion columns, lists, subscribers, memberships — arrived as
+`.stub` files nobody had asked for:
+
+```bash
+php artisan vendor:publish --tag=postmaster-migrations
+php artisan migrate
+```
+
+Five published, the two existing ones correctly skipped rather than duplicated.
+
+**The general shape is worth more than the fix.** The workspace file already says a package's
+migrations are stubs that must be published; the case it does not cover is the *upgrade*, where you
+published once at install and a later version added tables. Nothing about installing the new version
+tells you — Composer is satisfied, the app boots, and the failure comes later from whichever code
+path first touches the new table. Here that was `PreventSuppressedRecipients`, a listener on
+`MessageSending`, so the symptom surfaced in the **Stripe checkout tests**: every one that sends a
+confirmation blew up on a suppression lookup, and nothing in the message named postmaster or the
+upgrade.
+
+**Publish and migrate after every package version bump, not just at install.**
+
+### What the release actually brings here
+
+Three more admin screens — the do-not-send list, mailing lists, and one list's members with its
+consent record — reachable under **Mail** in the admin, gated on the `postmaster.view` this app
+already renamed its permissions to on 2026-08-31.
+
+And an `Email permissions` check in `core:doctor`, which came out of a browser pass finding a host
+whose permissions had never been synced at all. Run here it reports **OK — registered and present in
+the database**, confirming this app's rename migration did its job. That is the check earning its
+place immediately: it is the only thing in this family that looks at the real database rather than a
+freshly seeded test one.
+
 ## Status
 
-`composer test`: **741 passed** (740 before; the seam test split into two). Browser pass done
-2026-08-31; on postmaster `v0.1.2`.
+`composer test`: **771 passed** (741 before). Browser pass done 2026-08-31; on postmaster `v0.1.3`,
+core `v0.5.0`.

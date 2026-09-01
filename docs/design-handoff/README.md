@@ -11,6 +11,9 @@ Deliverables in this bundle:
 2. **Interior page (kitchen sink)** — the secondary page layout plus a complete component inventory
    (typography, buttons, badges, alerts, cards, tabs, table, pagination, accordion, form elements).
 3. **Maintenance page** — the page Laravel serves when the app is in maintenance mode.
+4. **Error pages** — one template covering 404, 403, 500, and 503 (copy + action buttons vary per code).
+5. **Admin dashboard** — reference design for the Filament panel (nav, widgets, tables, theme).
+6. **Email template** — send-ready themed HTML email boilerplate.
 
 ## About the Design Files
 The `.dc.html` files in this bundle are **design references created in HTML** — prototypes that
@@ -45,6 +48,11 @@ resources/views/
     interior.blade.php       # the kitchen-sink / secondary layout
   errors/
     503.blade.php            # maintenance page (Laravel serves this in maintenance mode)
+    404.blade.php            # all four error views extend one error layout —
+    403.blade.php            #   see "Error Pages" below; only code, copy, and
+    500.blade.php            #   action buttons differ per view
+  emails/
+    layout.blade.php         # from email-template.html; slots for preheader/headline/body/CTA
 livewire/
   EventCountdown.php
   TabPanel.php
@@ -232,6 +240,44 @@ Components documented in the file:
 - Centered stack: wordmark (`min(360px,80vw)` wide, `radius:8px`, shadow) → Caveat "We'll be right back" (`#b8f0ca`, `rotate(-2deg)`, `margin-top:36px`) → H1 "Down for maintenance" (Montserrat 800 `clamp(30px,4.2vw,48px)` uppercase white) → 18px/1.65 body (`max-width:52ch`) → white outline **Email us in the meantime** button (`mailto:`)
 - **No nav and no footer** — intentional; the site is down, so there is nothing to navigate to.
 
+### 4. Error Pages — `Error Pages.dc.html`
+**Purpose:** Laravel error views → `resources/views/errors/{404,403,500,503}.blade.php`. One layout, per-code content — the design file has a `code` tweak to preview each.
+- Same full-screen treatment as the maintenance page (cityscape background, no overlay, no nav/footer), with the wordmark at `min(300px,70vw)`.
+- Centered stack: wordmark → giant status code (Montserrat 800 `clamp(96px,16vw,170px)`, white, layered text shadows) → Caveat script line (`#b8f0ca`, `rotate(-2deg)`) → uppercase H1 (Montserrat 800 `clamp(26px,3.6vw,42px)`) → 18px/1.65 body (`max-width:52ch`) → button row (`flex`, `gap:14px`, wrap, centered).
+- **Buttons:** every code gets white **Back to home** (link to `route('home')`). 403 adds a ghost **Log in** (`rgba(8,24,14,0.35)` bg, white 2px border); 500 and 503 add a ghost **Contact us** (`mailto:`).
+- **Per-code copy:**
+
+| Code | Script line | H1 | Body |
+|---|---|---|---|
+| 404 | Well, this is awkward | Page not found | The page you're looking for has moved or never existed. Check the address, or head back to the fair. |
+| 403 | Members only | Access denied | You don't have permission to view this page. Log in with a representative account, or head back home. |
+| 500 | That's on us | Something went wrong | An unexpected error occurred on our end. We're on it — try again in a moment, or let us know what happened. |
+| 503 | Hang tight | Service unavailable | The site is temporarily busy or being updated. Try again in a few minutes — the fair itself is right on schedule. |
+
+Note: Laravel serves the maintenance page (artisan down) from `503.blade.php`; if you want the maintenance design for downtime and this 503 design for genuine overload errors, render the maintenance view from a custom `down` template instead.
+
+### 5. Admin Dashboard — `Admin Dashboard.dc.html`
+**Purpose:** reference for theming and laying out the **Filament** admin panel. Do not hand-build this —
+implement it as Filament resources/widgets and apply the brand theme; the design shows the target look.
+
+Layout: `grid-template-columns: 248px 1fr`, `min-height:100vh`, page bg `#f2f5f3`.
+
+- **Sidebar** — `#14261d` bg, `#e6efe9` text. Brand block (Montserrat 800 14px uppercase white + 12px `#7fa88f` "Admin"), then nav links: 14.5px, `padding:9px 12px`, `radius:6px`; active = solid `#188042` white weight 600; inactive `#bcd0c3`, hover `rgba(255,255,255,0.06)` + white. Items: Dashboard, Registrations, Representatives, Sponsors, FAQs, Pages, Emails; bottom group (above a `rgba(255,255,255,0.08)` divider): Event settings, Users & roles. → Filament navigation groups.
+- **Topbar** — white, `height:60px`, `border-bottom:1px solid #dde6df`: page title (Montserrat 700 16px), search input (280px, `#f8faf8` bg, focus border `#188042`), "View site ↗" link, avatar circle (`#188042`, initials) + name.
+- **Stat cards** — `repeat(auto-fit,minmax(200px,1fr))`, white, `1px solid #dde6df`, `radius:8px`, `padding:18px 20px`: 12.5px uppercase `#5a6a61` label, Montserrat 800 30px value, 13px delta (positive `#146a37`, attention `#8a6116`). → Filament StatsOverview widget.
+- **Bar chart** — registrations/week, 150px tall flex columns, `gap:8px`; bars `radius:4px 4px 0 0`, past weeks `#9ecbaf`, current `#188042`; 10.5px `#8a978f` week labels. → Filament ChartWidget.
+- **Recent registrations table** — white bordered card, header row `#f8faf8` 12px uppercase, rows `border-top:1px solid #eef2ef`, hover `#f8faf8`. Status pills (11–12px, 700, `radius:99px`, `padding:3px 10px`): Confirmed `#e2f3e8`/`#146a37`, Pending `#fdf3e2`/`#8a6116`, Waitlist `#eef2ef`/`#5a6a61`. → Registrations resource table.
+- **Right rail (360px)** — solid-green countdown card (Montserrat 800 34px "N days", white-on-green settings button), tasks card (checkboxes `accent-color:#188042`), activity feed (8px green dot + 13.5px line + 12px `#8a978f` timestamp).
+- All data shown is **sample data**.
+
+### 6. Email Template — `email-template.html`
+**Purpose:** boilerplate for all fair emails (confirmations, reminders, announcements). This one IS
+usable as-is — table-based, inline styles, 600px, tested patterns for Gmail/Outlook/Apple Mail.
+- Structure: green `#188042` header bar (swap the text block for a hosted wordmark `<img>`), white body card (eyebrow / headline / body / CTA button), divider, "At a glance" info rows, gray footer with unsubscribe + preferences links.
+- Email-safe fonts only: Arial (headings/buttons) + Georgia (body) — web fonts are unreliable in email.
+- Per-send fill-ins: hidden preheader `<span>`, headline, body paragraphs, CTA label + href, info rows.
+- Hook into Laravel as a Blade mailable layout (`resources/views/emails/layout.blade.php`) with slots for the fill-ins.
+
 ---
 
 ## Interactions & Behavior
@@ -275,9 +321,13 @@ In `assets/` in this bundle — all provided by the client from the existing sit
 | `Landing Page.dc.html` | Landing page design reference |
 | `Interior Page.dc.html` | Secondary page layout + kitchen-sink component inventory |
 | `Maintenance Page.dc.html` | Laravel maintenance (503) page |
+| `Error Pages.dc.html` | 404 / 403 / 500 / 503 error views (one layout, `code` tweak) |
+| `Admin Dashboard.dc.html` | Admin dashboard reference for the Filament panel — dark-green sidebar nav (Dashboard/Registrations/Representatives/Sponsors/FAQs/Pages/Emails + Event settings, Users & roles), topbar with search + user, 4 stat cards, registrations-per-week bar chart, recent-registrations table with status badges (Confirmed `#e2f3e8`/`#146a37`, Pending `#fdf3e2`/`#8a6116`, Waitlist `#eef2ef`/`#5a6a61`), countdown panel, tasks, activity feed. Map to Filament: sidebar = navigation groups, stat cards = widgets (StatsOverview), chart = ChartWidget, table = the Registrations resource table. Theme Filament with the token palette (primary `#188042`, sidebar `#14261d`). All data shown is sample data. |
+| `email-template.html` | Send-ready themed email boilerplate (600px, table-based, inline styles — works in Gmail/Outlook/Apple Mail). Swap the header text block for a hosted wordmark image, fill in preheader/headline/body/CTA per send. |
 | `support.js` | Prototype-only runtime for the design files. **Do not port.** |
 | `image-slot.js` | Prototype-only image placeholder component. **Do not port** — replace with real `<img>` tags. |
 | `assets/` | Client-supplied brand images |
+| `screenshots/` | Full-page PNG of each deliverable for stakeholder review (landing, interior, maintenance, error page — 404 shown, admin dashboard, email). Note: the landing-page Google Maps iframe doesn't render in captures. |
 
 ## Open Questions for the Client
 1. Sponsor logo files (4 schools) — needed as transparent PNG/SVG.

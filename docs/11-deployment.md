@@ -246,9 +246,10 @@ fallback — but each is a visible gap that only Matt can close.
 | Asset | Where it goes | What happens without it |
 |---|---|---|
 | The four sponsor school logos | `/staff/sponsors` → the school → Logo | The tile falls back to the school's name set in the display face. Legible, clearly a placeholder |
-| A wordmark with a transparent background | `public/images/wordmark.jpg` | The current file is a JPEG with a white background, so it sits on the hero photo as a white card with a rounded corner and a shadow. That is the design's own treatment, so it does not look broken — but a transparent PNG or SVG would let it sit on the photograph directly |
-| A higher-resolution cityscape | `public/images/cityscape.jpg` | The current file is fine at desktop widths and soft on a large display. It is the hero background and the maintenance page's full-bleed image |
+| A wordmark with a transparent background | `public/images/wordmark.jpg` | The current file is a JPEG with a white background, so it sits on the hero photo as a white card with a rounded corner and a shadow. That is the design's own treatment, so it does not look broken — but a transparent PNG or SVG would let it sit on the photograph directly. It is now on five pages rather than one: the hero, the maintenance page, and the three error views (doc 16) |
+| A higher-resolution cityscape | `public/images/cityscape.jpg` | The current file is fine at desktop widths and soft on a large display. It is the hero background and the full-bleed image behind all four error views |
 | A map embed pinned to the venue | `/staff/faq` | The handoff's embed centres on Chattanooga generally rather than on the Convention Center. Pointing it at the building is a one-line change once the correct embed URL exists |
+| A hosted wordmark for email | `FAIR_BRAND_LOGO_URL` | Unset, so the email header renders the fair's name as styled text rather than the mark. It must be an **absolute** URL served from `public/` — a Vite asset path does not resolve in a mail client (doc 07 §1) |
 
 **One discrepancy needs Matt's word rather than a file.** The design gives the venue address as
 **1 Carter Plaza**; doc 00 (transcribed from the live site) and the production seed both say

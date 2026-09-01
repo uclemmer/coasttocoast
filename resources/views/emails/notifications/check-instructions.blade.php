@@ -31,6 +31,7 @@
     $whereToSend = [__('Address') => $address];
 @endphp
 <x-emails::layout :title="__('How to pay')"
+                  :eyebrow="trim(($registration->event?->starts_at?->format('F j, Y') ?? '').' · '.$registration->event?->venue_name, ' ·')"
                   :preview="__('Your place is held. Here is where to send the check.')">
 
     <p>{{ __('Hello :name,', ['name' => $registration->rep_name]) }}</p>

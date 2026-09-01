@@ -19,6 +19,7 @@
     ];
 @endphp
 <x-emails::layout :title="__('Registration confirmed')"
+                  :eyebrow="trim(($registration->event?->starts_at?->format('F j, Y') ?? '').' · '.$registration->event?->venue_name, ' ·')"
                   :preview="__('Your place at :event is confirmed.', ['event' => $registration->event?->name])">
 
     <p>{{ __('Hello :name,', ['name' => $registration->rep_name]) }}</p>

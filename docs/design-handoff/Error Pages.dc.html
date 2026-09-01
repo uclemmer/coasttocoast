@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Caveat:wght@700&amp;family=Source+Sans+3:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ffffff;color:#22302a;font-family:'Source Sans 3',Georgia,serif;text-wrap:pretty;overflow-x:clip}
+a{color:#188042;text-underline-offset:3px}
+a:hover{color:#0f5c2e}
+</style>
+</helmet>
+<div style="min-height:100vh;display:grid">
+  <main style="position:relative;display:grid;align-content:center;justify-items:center;text-align:center;padding:clamp(48px,8vw,96px) clamp(20px,5vw,64px);overflow:hidden">
+    <img src="./assets/cityscape.jpg" alt="Aerial view of Chattanooga's riverfront and bridges" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;filter:saturate(1.15)">
+    <div style="position:relative;max-width:760px;display:grid;justify-items:center">
+      <img src="./assets/wordmark.jpg" alt="Coast to Coast College Fair" style="width:min(300px,70vw);height:auto;display:block;border-radius:8px;box-shadow:0 6px 28px rgba(8,24,14,0.45)">
+      <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:clamp(96px,16vw,170px);line-height:1;color:#ffffff;margin-top:28px;letter-spacing:-0.02em;text-shadow:0 2px 4px rgba(8,24,14,0.85), 0 10px 40px rgba(8,24,14,0.65)">{{ code }}</div>
+      <p style="font-family:Caveat,cursive;font-weight:700;font-size:clamp(26px,3.2vw,38px);color:#b8f0ca;margin:6px 0 0;transform:rotate(-2deg);text-shadow:0 1px 3px rgba(8,24,14,0.9), 0 3px 16px rgba(8,24,14,0.7)">{{ script }}</p>
+      <h1 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:clamp(26px,3.6vw,42px);line-height:1.15;text-transform:uppercase;letter-spacing:-0.01em;margin:8px 0 0;color:#ffffff;text-shadow:0 2px 4px rgba(8,24,14,0.85), 0 6px 28px rgba(8,24,14,0.65)">{{ heading }}</h1>
+      <p style="font-size:18px;line-height:1.65;max-width:52ch;margin:18px 0 0;color:#ffffff;text-shadow:0 1px 3px rgba(8,24,14,0.9), 0 3px 14px rgba(8,24,14,0.7)">{{ body }}</p>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:30px">
+        <a href="#" style="white-space:nowrap;text-decoration:none;background:rgba(255,255,255,0.94);color:#146a37;border:2px solid #ffffff;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:13px 26px;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,0.35)" style-hover="background:#ffffff">Back to home</a>
+        <sc-if value="{{ showLogin }}" hint-placeholder-val="{{ false }}">
+          <a href="#" style="white-space:nowrap;text-decoration:none;background:rgba(8,24,14,0.35);color:#ffffff;border:2px solid rgba(255,255,255,0.85);font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:13px 26px;border-radius:6px" style-hover="background:rgba(8,24,14,0.55)">Log in</a>
+        </sc-if>
+        <sc-if value="{{ showContact }}" hint-placeholder-val="{{ true }}">
+          <a href="mailto:contact@coasttocoastcollegefair.com" style="white-space:nowrap;text-decoration:none;background:rgba(8,24,14,0.35);color:#ffffff;border:2px solid rgba(255,255,255,0.85);font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;padding:13px 26px;border-radius:6px" style-hover="background:rgba(8,24,14,0.55)">Contact us</a>
+        </sc-if>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;code&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;404&quot;,&quot;options&quot;:[&quot;404&quot;,&quot;403&quot;,&quot;500&quot;,&quot;503&quot;],&quot;tsType&quot;:&quot;'404'|'403'|'500'|'503'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const code = this.props.code ?? '404';
+    const copy = {
+      '404': { script: "Well, this is awkward", heading: 'Page not found', body: "The page you're looking for has moved or never existed. Check the address, or head back to the fair.", showLogin: false, showContact: false },
+      '403': { script: 'Members only', heading: 'Access denied', body: "You don't have permission to view this page. Log in with a representative account, or head back home.", showLogin: true, showContact: false },
+      '500': { script: "That's on us", heading: 'Something went wrong', body: "An unexpected error occurred on our end. We're on it — try again in a moment, or let us know what happened.", showLogin: false, showContact: true },
+      '503': { script: 'Hang tight', heading: 'Service unavailable', body: "The site is temporarily busy or being updated. Try again in a few minutes — the fair itself is right on schedule.", showLogin: false, showContact: true },
+    };
+    const c = copy[code] || copy['404'];
+    return { code, ...c };
+  }
+}
+</script>
+</body>
+</html>

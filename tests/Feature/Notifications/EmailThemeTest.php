@@ -131,3 +131,72 @@ describe('the laravel-core override', function () {
             ->toContain('max-width:600px');
     });
 });
+
+/**
+ * The handoff's `email-template.html` (docs/16). Every assertion here exists
+ * because the thing it pins failed silently once, or would.
+ */
+describe('the brand design', function () {
+    it('sends in the fair green, not the framework blue it shipped with', function () {
+        // `fair.brand.color_primary` sat on Laravel's stock #1d4ed8 from card
+        // 6.0 until 2026-09-01, and every email went out blue, because the one
+        // surface that reads it had no test that looked at a colour.
+        expect(config('fair.brand.color_primary'))->toBe('#188042');
+
+        Notification::route('mail', 'dana@kenyon.example')->notify(new PaymentReceipt($this->registration));
+
+        expect((string) lastSentEmail()?->getHtmlBody())
+            ->toContain('#188042')
+            ->not->toContain('#1d4ed8');
+    });
+
+    it('shows the subject as a headline in the body', function () {
+        // The design's body card is eyebrow, headline, copy. Before this the
+        // subject reached the reader only in the inbox list.
+        Notification::route('mail', 'dana@kenyon.example')->notify(new PaymentReceipt($this->registration));
+
+        expect((string) lastSentEmail()?->getHtmlBody())
+            ->toContain('font-size:28px')
+            ->toContain('Registration confirmed');
+    });
+
+    it('puts the fair and the venue in the eyebrow when the message has one', function () {
+        Notification::route('mail', 'someone@example.edu')
+            ->notify(new RegistrationOpenAnnouncement($this->fair));
+
+        expect((string) lastSentEmail()?->getHtmlBody())
+            ->toContain($this->fair->starts_at->format('F j, Y').' · '.$this->fair->venue_name);
+    });
+
+    it('uses email-safe fonts only', function () {
+        // The site self-hosts Montserrat, Caveat and Source Sans 3. A web font
+        // in an inbox is unreliable at best and stripped at worst, so the
+        // handoff specifies Arial and Georgia instead — and a Google Fonts
+        // <link> here would leak the recipient to a third party on open, which
+        // is the same objection the public pages answer (doc 10, D-8.1-a).
+        Notification::route('mail', 'dana@kenyon.example')->notify(new PaymentReceipt($this->registration));
+
+        $html = (string) lastSentEmail()?->getHtmlBody();
+
+        expect($html)
+            ->toContain('Georgia')
+            ->toContain('Arial')
+            ->not->toContain('Montserrat')
+            ->not->toContain('Caveat')
+            ->not->toContain('fonts.googleapis.com')
+            ->not->toContain('/build/assets/');
+    });
+
+    it('offers no unsubscribe or preferences link, because neither route exists', function () {
+        // The handoff's footer carries both. postmaster's subscription feature
+        // has not landed, so wiring them would ship two dead links to every
+        // recipient of a campaign. Delete this test when the routes exist —
+        // its job is to keep the omission deliberate rather than forgotten.
+        Notification::route('mail', 'someone@example.edu')
+            ->notify(new RegistrationOpenAnnouncement($this->fair));
+
+        expect((string) lastSentEmail()?->getHtmlBody())
+            ->not->toContain('/unsubscribe')
+            ->not->toContain('/preferences');
+    });
+});

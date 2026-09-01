@@ -1,4 +1,18 @@
-{{-- The staff landing page (docs/13) — replaces the two Filament widgets. --}}
+{{--
+    The staff landing page (docs/13) — replaces the two Filament widgets.
+
+    Laid out from the design handoff's "Admin Dashboard.dc.html" (docs/16):
+    stat cards across the top, then a main column of chart-then-table beside a
+    360px rail. The design draws that as a Filament panel; this app has had no
+    Filament since 2026-08-22, so what it contributes is the information design
+    — what a coordinator should see first, and next to what.
+
+    Two of the design's rail cards are NOT here, and their absence is the
+    decision rather than an omission. "Tasks" is a to-do list and "Activity" is
+    an audit feed; neither has a table behind it, and both are drawn with sample
+    data. Building the widget first and inventing the data to fill it is how a
+    dashboard ends up lying.
+--}}
 <div>
     @if ($this->fair === null)
         <x-ui::alert variant="info">
@@ -47,58 +61,122 @@
             </div>
         @endif
 
-        <div class="mt-8">
-            <x-ui::action-bar :heading="__('Recent registrations')" level="h2"
-                :description="$this->fair->name">
-                <x-ui::button href="{{ route('staff.registrations') }}" variant="secondary" size="sm">
-                    {{ __('All registrations') }}
-                </x-ui::button>
-            </x-ui::action-bar>
+        {{-- `minmax(0,1fr)` on the main column, not `1fr`: a grid track's
+             default minimum is its content, and the table inside this one is
+             wide enough to push the rail off the screen without it. --}}
+        <div class="mt-8 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div class="flex min-w-0 flex-col gap-8">
+                {{--
+                    The design colours the current week's bar differently from
+                    the eleven behind it. `x-ui::chart.bars` colours a series,
+                    not a bar, so that highlight is dropped rather than
+                    hand-rolling a second chart — the package component is the
+                    workspace's first reach, and a per-bar colour is a gap to
+                    raise there if anyone misses it. Little is lost from the
+                    reading: the current week is already the one on the right.
 
-            <div class="mt-4">
-                <x-ui::table>
-                    <x-ui::table.head>
-                        <x-ui::table.heading>{{ __('School') }}</x-ui::table.heading>
-                        <x-ui::table.heading>{{ __('Status') }}</x-ui::table.heading>
-                        <x-ui::table.heading>{{ __('Payment') }}</x-ui::table.heading>
-                        <x-ui::table.heading>{{ __('Price') }}</x-ui::table.heading>
-                        <x-ui::table.heading>{{ __('When') }}</x-ui::table.heading>
-                    </x-ui::table.head>
+                    `:max` is left to the component. Passing one matters when
+                    two charts sit side by side, and there is only ever one here.
+                --}}
+                <x-ui::chart.bars :title="__('Registrations per week')"
+                    :description="__('Last :count weeks', ['count' => 12])"
+                    :height="150"
+                    :labels="$this->weeklyRegistrations['labels']"
+                    :series="[[
+                        'label' => __('Registrations'),
+                        'color' => 'brand',
+                        'values' => $this->weeklyRegistrations['values'],
+                    ]]"
+                    :empty-message="__('Nobody has registered yet')" />
 
-                    @forelse ($this->recent as $registration)
-                        <x-ui::table.row wire:key="recent-{{ $registration->id }}">
-                            <x-ui::table.cell header>{{ $registration->organization?->name }}</x-ui::table.cell>
+                <div>
+                    <x-ui::action-bar :heading="__('Recent registrations')" level="h2"
+                        :description="$this->fair->name">
+                        <x-ui::button href="{{ route('staff.registrations') }}" variant="secondary" size="sm">
+                            {{ __('All registrations') }}
+                        </x-ui::button>
+                    </x-ui::action-bar>
 
-                            <x-ui::table.cell>
-                                <x-ui::badge :variant="match ($registration->status) {
-                                    \App\Enums\RegistrationStatus::Confirmed => 'success',
-                                    \App\Enums\RegistrationStatus::PendingPayment => 'warning',
-                                    default => 'gray',
-                                }">{{ $registration->status->getLabel() }}</x-ui::badge>
-                            </x-ui::table.cell>
+                    <div class="mt-4">
+                        <x-ui::table>
+                            <x-ui::table.head>
+                                <x-ui::table.heading>{{ __('School') }}</x-ui::table.heading>
+                                <x-ui::table.heading>{{ __('Status') }}</x-ui::table.heading>
+                                <x-ui::table.heading>{{ __('Payment') }}</x-ui::table.heading>
+                                <x-ui::table.heading>{{ __('Price') }}</x-ui::table.heading>
+                                <x-ui::table.heading>{{ __('When') }}</x-ui::table.heading>
+                            </x-ui::table.head>
 
-                            <x-ui::table.cell>
-                                {{ $registration->payment_method?->getLabel() ?? __('Free') }}
-                            </x-ui::table.cell>
+                            @forelse ($this->recent as $registration)
+                                <x-ui::table.row wire:key="recent-{{ $registration->id }}">
+                                    <x-ui::table.cell header>{{ $registration->organization?->name }}</x-ui::table.cell>
 
-                            <x-ui::table.cell>
-                                {{ $this->formatMoney($registration->price_cents) }}
-                                @if ($registration->grant)
-                                    <span class="block text-sm text-body">
-                                        {{ $registration->grant->benefitSummary() }}
-                                    </span>
-                                @endif
-                            </x-ui::table.cell>
+                                    <x-ui::table.cell>
+                                        <x-ui::badge :variant="match ($registration->status) {
+                                            \App\Enums\RegistrationStatus::Confirmed => 'success',
+                                            \App\Enums\RegistrationStatus::PendingPayment => 'warning',
+                                            default => 'gray',
+                                        }">{{ $registration->status->getLabel() }}</x-ui::badge>
+                                    </x-ui::table.cell>
 
-                            <x-ui::table.cell>{{ $registration->created_at?->diffForHumans() }}</x-ui::table.cell>
-                        </x-ui::table.row>
-                    @empty
-                        <x-ui::table.row>
-                            <x-ui::table.empty-state :colspan="5" :heading="__('Nobody has registered yet')" />
-                        </x-ui::table.row>
-                    @endforelse
-                </x-ui::table>
+                                    <x-ui::table.cell>
+                                        {{ $registration->payment_method?->getLabel() ?? __('Free') }}
+                                    </x-ui::table.cell>
+
+                                    <x-ui::table.cell>
+                                        {{ $this->formatMoney($registration->price_cents) }}
+                                        @if ($registration->grant)
+                                            <span class="block text-sm text-body">
+                                                {{ $registration->grant->benefitSummary() }}
+                                            </span>
+                                        @endif
+                                    </x-ui::table.cell>
+
+                                    <x-ui::table.cell>{{ $registration->created_at?->diffForHumans() }}</x-ui::table.cell>
+                                </x-ui::table.row>
+                            @empty
+                                <x-ui::table.row>
+                                    <x-ui::table.empty-state :colspan="5" :heading="__('Nobody has registered yet')" />
+                                </x-ui::table.row>
+                            @endforelse
+                        </x-ui::table>
+                    </div>
+                </div>
             </div>
+
+            <aside class="flex flex-col gap-6">
+                {{-- The rail's countdown card. Whole days, not the public page's
+                     ticking clock: the coordinator is reading a deadline, not
+                     watching one. --}}
+                <div class="rounded-lg bg-brand-600 px-6 py-[22px] text-white">
+                    <p class="text-[12.5px] font-semibold uppercase tracking-[0.06em] text-brand-500">
+                        {{ __('Event countdown') }}
+                    </p>
+
+                    @if ($this->daysUntilFair === null)
+                        <p class="mt-2 font-display text-[34px] font-extrabold leading-none">
+                            {{ __('Concluded') }}
+                        </p>
+                        <p class="mt-2 text-sm text-brand-400">
+                            {{ __('Publish next spring\'s fair to restart the clock.') }}
+                        </p>
+                    @else
+                        <p class="mt-2 font-display text-[34px] font-extrabold leading-none">
+                            {{ trans_choice(':count day|:count days', $this->daysUntilFair, [
+                                'count' => $this->daysUntilFair,
+                            ]) }}
+                        </p>
+                        <p class="mt-2 text-sm text-brand-400">
+                            {{ __('until :date', ['date' => $this->fair->starts_at->format('F j, Y · g:i a')]) }}
+                        </p>
+                    @endif
+
+                    <x-ui.button variant="on-green" class="mt-4 px-4 py-2.5 text-[12.5px]"
+                        :href="route('staff.events.edit', $this->fair)">
+                        {{ __('Edit event settings') }}
+                    </x-ui.button>
+                </div>
+            </aside>
         </div>
     @endif
 </div>

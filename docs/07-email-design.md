@@ -56,6 +56,25 @@ Pull colors/logo from the current site during Phase 5 theming; keep them in `con
 (`fair.brand.color_primary`, `fair.brand.logo_url`, `fair.contact.*`) so email and Filament theme share one
 source. Absolute URLs only in email (no Vite assets); logo served from `public/`.
 
+> **Restyled 2026-09-01 onto the design handoff's `email-template.html` — see
+> [16-design-handoff-2026-09.md](16-design-handoff-2026-09.md) §3.** Four things above are now out of
+> date, and the last one is the reason this box exists.
+>
+> - The components are `emails/{button,panel,roster-line}.blade.php`, not
+>   `emails/components/*`; they were flattened before Phase 6 shipped.
+> - `emails/layout.blade.php` carries one `<style>` block, for the 620px breakpoint only. It is a
+>   progressive enhancement: a client that drops it renders the fixed-width desktop layout. Every
+>   rule that matters is still inline.
+> - The layout renders `$title` as a visible headline and takes an optional `$eyebrow` (the fair's
+>   date and venue). The "venue/date line for the active event" this section describes was never
+>   built as a layout-level lookup and should not be — a layout that queries is a layout that can
+>   fail inside a queued job.
+> - **`fair.brand.color_primary` is `#188042`.** It defaulted to Laravel's stock `#1d4ed8` from card
+>   6.0 until 2026-09-01, so every email this app sent went out blue. The sentence above — "email and
+>   Filament theme share one source" — is why nobody caught it: the shared consumer was the reason to
+>   trust the value, and it left with Filament on 2026-08-22, taking the only surface anyone actually
+>   looked at with it. `EmailThemeTest` now asserts the colour.
+
 ## 2. Audiences — who the coordinator can email
 
 The owner's requirement: email different groups — reps registered in previous years, previous-year reps who

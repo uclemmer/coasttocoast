@@ -6,6 +6,12 @@
 > [11-deployment.md](11-deployment.md), and one decision wanting the owner's eye is still flagged in
 > [10-implementation-decisions.md](10-implementation-decisions.md) (D-5.4-a).
 >
+> **The design handoff's second delivery landed 2026-09-01** — the same bundle, extended with error
+> pages, an admin-dashboard reference and an email template. The four error views, the restyled email
+> layout and the two new `/staff` dashboard widgets are in
+> [16-design-handoff-2026-09.md](16-design-handoff-2026-09.md), along with the four places the
+> handoff asks for something this app deliberately does not do — starting with Filament.
+>
 > **Phase 8 rebuilt the public site** after the UI directive changed on 2026-08-19: public UI is
 > Blade + Livewire + Flowbite, Filament is the admin backend only, and the old `SitePanelProvider`
 > and its eight `Page` classes are gone. The visual design comes from the Claude Design handoff in
@@ -36,12 +42,13 @@ cards from 05 under the rules in 06):
 | [07-email-design.md](07-email-design.md) | Themed HTML email template, cross-year audience segmentation, and send tracking via the message log (laravel-core's EmailLog until 2026-08-30, `uclemmer/laravel-postmaster` since — see doc 15) |
 | [09-package-wiring.md](09-package-wiring.md) | How this app consumes `uclemmer/laravel-core` (vcs + tagged release), publishing core's migrations, the permission sync the test suite needs, and why `canAccessPanel` returns `true` for the rep panel |
 | [10-implementation-decisions.md](10-implementation-decisions.md) | Every judgement call an implementing session made without the owner present, with its reasoning and how to reverse it — **read this before questioning why something differs from 01–07** |
-| [design-handoff/](design-handoff/) | The Claude Design handoff the public site was built from (2026-08-19) — the landing, interior and maintenance prototypes, and the token/type/spacing reference that declares colours, typography, spacing and copy final. Start at its [PROVENANCE.md](design-handoff/PROVENANCE.md) |
+| [design-handoff/](design-handoff/) | The Claude Design handoff the public site was built from (2026-08-19, extended 2026-09-01) — the landing, interior, maintenance, error-page, admin-dashboard and email prototypes, and the token/type/spacing reference that declares colours, typography, spacing and copy final. Start at its [PROVENANCE.md](design-handoff/PROVENANCE.md) |
 | [11-deployment.md](11-deployment.md) | Getting it live: host requirements, the deploy sequence, Stripe/Postmark/Twilio setup, backups, the go-live checklist, and the **owner content queue** — the things only Matt can supply |
 | [12-ui-package-adoption.md](12-ui-package-adoption.md) | Adopting `uclemmer/laravel-ui` and retiring the rep panel: what that panel actually owns (all of auth), where each piece goes, and the published theme sheet repointed at the design handoff |
 | [13-staff-admin.md](13-staff-admin.md) | Getting the fair's own admin off Filament and onto `/staff`: why not `/admin`, the pattern established on Sponsors, what Filament was doing for free, and the traps recorded for the six resources still to come |
 | [14-core-04-upgrade.md](14-core-04-upgrade.md) | Upgrading to laravel-core 0.4 and off Filament for good: the eleven vestigial declarations that would have fatalled, the four tests ported, and the `@source` line whose compiled-CSS diff turned out to be a Blade comment |
 | [15-core-05-and-postmaster.md](15-core-05-and-postmaster.md) | Core 0.5 removes its email log; the message log arrives from `uclemmer/laravel-postmaster`. The model alias, why `email_log_id` keeps its name, the two-pass data migration, the `core.admin.plugins` seam gaining its first entry, and the `v0.1.3` upgrade — where a version bump owed five unpublished migrations and failed at runtime in the Stripe tests rather than at install |
+| [16-design-handoff-2026-09.md](16-design-handoff-2026-09.md) | The handoff's second delivery: the four error views over one shell, the email template restyled onto the brand green it had never been sent in, the admin dashboard's information design landed on `/staff` because the file it is drawn as no longer exists here, and the two widgets that were left unbuilt rather than filled with invented data |
 
 **Golden rules** (duplicated from the docs because they matter):
 

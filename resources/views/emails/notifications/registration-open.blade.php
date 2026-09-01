@@ -13,6 +13,7 @@
 @endphp
 {{-- A campaign, not a receipt: the footer carries the CAN-SPAM line. --}}
 <x-emails::layout :title="__('Registration is open')"
+                  :eyebrow="trim(($event->starts_at?->format('F j, Y') ?? '').' · '.$event->venue_name, ' ·')"
                   :campaign="true"
                   :preview="__('Registration for :event is now open.', ['event' => $event->name])">
 

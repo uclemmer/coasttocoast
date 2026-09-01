@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Source+Sans+3:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f2f5f3;color:#22302a;font-family:'Source Sans 3',Georgia,serif;text-wrap:pretty}
+a{color:#188042;text-underline-offset:3px}
+a:hover{color:#0f5c2e}
+</style>
+</helmet>
+<div style="display:grid;grid-template-columns:248px 1fr;min-height:100vh" data-screen-label="Admin Dashboard">
+
+  <aside style="background:#14261d;color:#e6efe9;display:flex;flex-direction:column;padding:20px 0">
+    <div style="padding:4px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;color:#ffffff;line-height:1.35">Coast to Coast<br>College Fair</div>
+      <div style="font-size:12px;color:#7fa88f;margin-top:4px">Admin</div>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:2px;padding:14px 12px;flex:1">
+      <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;background:#188042;color:#ffffff;font-weight:600;font-size:14.5px">Dashboard</a>
+      <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:#bcd0c3;font-size:14.5px" style-hover="background:rgba(255,255,255,0.06);color:#ffffff">Registrations</a>
+      <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:#bcd0c3;font-size:14.5px" style-hover="background:rgba(255,255,255,0.06);color:#ffffff">Representatives</a>
+      <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:#bcd0c3;font-size:14.5px" style-hover="background:rgba(255,255,255,0.06);color:#ffffff">Sponsors</a>
+      <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:#bcd0c3;font-size:14.5px" style-hover="background:rgba(255,255,255,0.06);color:#ffffff">FAQs</a>
+      <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:#bcd0c3;font-size:14.5px" style-hover="background:rgba(255,255,255,0.06);color:#ffffff">Pages</a>
+      <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:#bcd0c3;font-size:14.5px" style-hover="background:rgba(255,255,255,0.06);color:#ffffff">Emails</a>
+    </nav>
+    <div style="padding:14px 12px;border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;gap:2px">
+      <a href="#" style="text-decoration:none;padding:9px 12px;border-radius:6px;color:#bcd0c3;font-size:14.5px" style-hover="background:rgba(255,255,255,0.06);color:#ffffff">Event settings</a>
+      <a href="#" style="text-decoration:none;padding:9px 12px;border-radius:6px;color:#bcd0c3;font-size:14.5px" style-hover="background:rgba(255,255,255,0.06);color:#ffffff">Users &amp; roles</a>
+    </div>
+  </aside>
+
+  <div style="display:flex;flex-direction:column;min-width:0">
+    <header style="background:#ffffff;border-bottom:1px solid #dde6df;display:flex;align-items:center;gap:16px;padding:0 28px;height:60px">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:16px">Dashboard</div>
+      <div style="flex:1"></div>
+      <input placeholder="Search registrations, reps, sponsors…" style="width:280px;border:1.5px solid #dde6df;border-radius:6px;padding:8px 12px;font-family:inherit;font-size:13.5px;color:#22302a;background:#f8faf8" style-focus="border-color:#188042;outline:none">
+      <a href="#" target="_blank" style="font-size:13.5px;font-weight:600;text-decoration:none">View site ↗</a>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:50%;background:#188042;color:#ffffff;display:grid;place-items:center;font-family:Montserrat,sans-serif;font-weight:700;font-size:13px">UC</div>
+        <div style="font-size:13.5px;font-weight:600">Uriah</div>
+      </div>
+    </header>
+
+    <main style="padding:28px;display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;align-items:end;gap:16px;flex-wrap:wrap">
+        <div>
+          <h1 style="font-family:Montserrat,sans-serif;font-weight:800;font-size:24px;margin:0">Good morning, Uriah</h1>
+          <p style="margin:6px 0 0;color:#5a6a61;font-size:14.5px">Here's where the {{ eventLabel }} fair stands.</p>
+        </div>
+        <div style="flex:1"></div>
+        <a href="#" style="text-decoration:none;background:#188042;color:#ffffff;font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;padding:11px 20px;border-radius:6px" style-hover="background:#0f5c2e">Export registrations</a>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+        <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+          <div style="background:#ffffff;border:1px solid #dde6df;border-radius:8px;padding:18px 20px">
+            <div style="font-size:12.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#5a6a61">{{ s.label }}</div>
+            <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:30px;margin-top:8px">{{ s.value }}</div>
+            <div style="font-size:13px;margin-top:6px;color:{{ s.deltaColor }}">{{ s.delta }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:24px;min-width:0">
+          <div style="background:#ffffff;border:1px solid #dde6df;border-radius:8px;padding:20px 24px">
+            <div style="display:flex;align-items:baseline;gap:12px">
+              <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px">Registrations per week</div>
+              <div style="font-size:13px;color:#5a6a61">Last 12 weeks</div>
+            </div>
+            <div style="display:flex;align-items:end;gap:8px;height:150px;margin-top:18px">
+              <sc-for list="{{ weeks }}" as="w" hint-placeholder-count="12">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:end" title="{{ w.label }}: {{ w.count }}">
+                  <div style="width:100%;background:{{ w.color }};border-radius:4px 4px 0 0;height:{{ w.pct }}"></div>
+                  <div style="font-size:10.5px;color:#8a978f">{{ w.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#ffffff;border:1px solid #dde6df;border-radius:8px;overflow:hidden">
+            <div style="display:flex;align-items:center;padding:16px 24px;border-bottom:1px solid #dde6df">
+              <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px">Recent registrations</div>
+              <div style="flex:1"></div>
+              <a href="#" style="font-size:13.5px;font-weight:600;text-decoration:none">View all →</a>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:14px">
+              <thead>
+                <tr style="background:#f8faf8">
+                  <th style="text-align:left;padding:10px 24px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:#5a6a61">Name</th>
+                  <th style="text-align:left;padding:10px 12px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:#5a6a61">Institution</th>
+                  <th style="text-align:left;padding:10px 12px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:#5a6a61">Type</th>
+                  <th style="text-align:left;padding:10px 12px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:#5a6a61">Status</th>
+                  <th style="text-align:right;padding:10px 24px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:#5a6a61">Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+                  <tr style="border-top:1px solid #eef2ef" style-hover="background:#f8faf8">
+                    <td style="padding:12px 24px;font-weight:600">{{ r.name }}</td>
+                    <td style="padding:12px 12px;color:#5a6a61">{{ r.inst }}</td>
+                    <td style="padding:12px 12px;color:#5a6a61">{{ r.type }}</td>
+                    <td style="padding:12px 12px"><span style="display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:{{ r.badgeBg }};color:{{ r.badgeFg }}">{{ r.status }}</span></td>
+                    <td style="padding:12px 24px;text-align:right;color:#8a978f;font-size:13px">{{ r.when }}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:24px">
+          <div style="background:#188042;color:#ffffff;border-radius:8px;padding:22px 24px">
+            <div style="font-size:12.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#b8f0ca">Event countdown</div>
+            <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:34px;margin-top:8px">{{ daysOut }} days</div>
+            <div style="font-size:14px;margin-top:4px;color:#dff2e5">until April 20, 2027 · 6:30 PM</div>
+            <a href="#" style="display:inline-block;margin-top:16px;text-decoration:none;background:rgba(255,255,255,0.94);color:#146a37;font-family:Montserrat,sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.04em;text-transform:uppercase;padding:9px 16px;border-radius:6px" style-hover="background:#ffffff">Edit event settings</a>
+          </div>
+
+          <div style="background:#ffffff;border:1px solid #dde6df;border-radius:8px;padding:20px 24px">
+            <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px">Tasks</div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;font-size:14px">
+              <label style="display:flex;gap:10px;align-items:start"><input type="checkbox" style="width:17px;height:17px;accent-color:#188042;margin-top:2px">Approve 4 pending representative accounts</label>
+              <label style="display:flex;gap:10px;align-items:start"><input type="checkbox" style="width:17px;height:17px;accent-color:#188042;margin-top:2px">Upload 2026 sponsor logos</label>
+              <label style="display:flex;gap:10px;align-items:start"><input type="checkbox" style="width:17px;height:17px;accent-color:#188042;margin-top:2px">Send reminder email to unconfirmed registrants</label>
+              <label style="display:flex;gap:10px;align-items:start"><input type="checkbox" style="width:17px;height:17px;accent-color:#188042;margin-top:2px">Review FAQ edits from staff</label>
+            </div>
+          </div>
+
+          <div style="background:#ffffff;border:1px solid #dde6df;border-radius:8px;padding:20px 24px">
+            <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px">Activity</div>
+            <div style="display:flex;flex-direction:column;gap:14px;margin-top:14px">
+              <sc-for list="{{ activity }}" as="a" hint-placeholder-count="4">
+                <div style="display:flex;gap:12px;align-items:start">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#188042;margin-top:6px;flex:none"></div>
+                  <div style="font-size:13.5px;line-height:1.5"><span style="font-weight:600">{{ a.who }}</span> {{ a.what }}<div style="color:#8a978f;font-size:12px;margin-top:2px">{{ a.when }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960}}">
+class Component extends DCLogic {
+  renderVals() {
+    const eventDate = new Date('2027-04-20T18:30:00-04:00');
+    const daysOut = Math.max(0, Math.ceil((eventDate - Date.now()) / 86400000));
+    const counts = [12, 18, 15, 24, 31, 28, 42, 39, 55, 61, 74, 88];
+    const max = Math.max(...counts);
+    const weekLabels = ['6/8','6/15','6/22','6/29','7/6','7/13','7/20','7/27','8/3','8/10','8/17','8/24'];
+    const badge = {
+      Confirmed: ['#e2f3e8', '#146a37'],
+      Pending: ['#fdf3e2', '#8a6116'],
+      Waitlist: ['#eef2ef', '#5a6a61'],
+    };
+    const mk = (name, inst, type, status, when) => ({ name, inst, type, status, when, badgeBg: badge[status][0], badgeFg: badge[status][1] });
+    return {
+      eventLabel: '2027',
+      daysOut,
+      stats: [
+        { label: 'Registrations', value: '1,284', delta: '+88 this week', deltaColor: '#146a37' },
+        { label: 'Representatives', value: '96', delta: '4 pending approval', deltaColor: '#8a6116' },
+        { label: 'Colleges attending', value: '112', delta: '+6 this month', deltaColor: '#146a37' },
+        { label: 'Sponsors', value: '14', delta: '2 renewals due', deltaColor: '#8a6116' },
+      ],
+      weeks: counts.map((count, i) => ({ count, label: weekLabels[i], pct: Math.round((count / max) * 100) + '%', color: i === counts.length - 1 ? '#188042' : '#9ecbaf' })),
+      rows: [
+        mk('Maya Thompson', 'East Ridge High School', 'Student', 'Confirmed', 'Today, 9:41 AM'),
+        mk('James Okafor', 'University of Tennessee', 'Representative', 'Pending', 'Today, 8:15 AM'),
+        mk('Sofia Ramirez', 'Hixson High School', 'Student', 'Confirmed', 'Yesterday'),
+        mk('Daniel Wu', 'Emory University', 'Representative', 'Confirmed', 'Yesterday'),
+        mk('Ava Patterson', 'Signal Mountain HS', 'Student', 'Waitlist', 'Aug 29'),
+        mk('Marcus Bell', 'Chattanooga State', 'Representative', 'Confirmed', 'Aug 28'),
+      ],
+      activity: [
+        { who: 'Sarah K.', what: 'approved rep account for Vanderbilt University', when: '25 minutes ago' },
+        { who: 'System', what: 'sent confirmation emails to 32 registrants', when: '2 hours ago' },
+        { who: 'Uriah C.', what: 'updated the FAQ page', when: 'Yesterday, 4:20 PM' },
+        { who: 'Sarah K.', what: 'added sponsor "First Horizon Bank"', when: 'Yesterday, 11:02 AM' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -87,15 +87,21 @@ return [
     | Brand
     |--------------------------------------------------------------------------
     |
-    | Shared by the Filament theme and the email layout. The logo must be an
-    | ABSOLUTE url served from public/ — a Vite-hashed asset path does not
-    | resolve in a mail client (doc 07 §1). Card 6.0 fills the real values in
-    | once Phase 5 has pulled the colours off the current site.
+    | The email layout's brand green. Nothing else reads it: Filament left on
+    | 2026-08-22 and the web pages take their colours from the `@theme` block
+    | in resources/css/app.css, which an inbox cannot see.
+    |
+    | The value is the design handoff's `green-600`, which the handoff marks
+    | final. It stayed on Laravel's stock blue until 2026-09-01 because the one
+    | surface reading it had no test that looked at the colour (docs/16).
+    |
+    | The logo must be an ABSOLUTE url served from public/ — a Vite-hashed
+    | asset path does not resolve in a mail client (doc 07 §1).
     |
     */
 
     'brand' => [
-        'color_primary' => env('FAIR_BRAND_COLOR', '#1d4ed8'),
+        'color_primary' => env('FAIR_BRAND_COLOR', '#188042'),
         'logo_url' => env('FAIR_BRAND_LOGO_URL'),
     ],
 

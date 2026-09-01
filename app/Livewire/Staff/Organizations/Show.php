@@ -14,7 +14,7 @@ use Livewire\Component;
 use Throwable;
 
 /**
- * One school, and its representatives (docs/13) — replaces the admin panel's
+ * One organization, and its representatives (docs/13) — replaces the admin panel's
  * ViewOrganization page and its RepresentativesRelationManager.
  *
  * Four membership decisions live here: approve a claim, deny one, retire a rep,
@@ -23,7 +23,7 @@ use Throwable;
  * approving sends mail, retiring changes who a campaign reaches. The Filament
  * relation manager made the same choice for the same reason.
  */
-#[Layout('components.layouts.staff', ['title' => 'School'])]
+#[Layout('components.layouts.staff', ['title' => 'Organization'])]
 class Show extends Component
 {
     use ActsForStaff;
@@ -121,11 +121,11 @@ class Show extends Component
     }
 
     /**
-     * Resolve the rep **within this school**, authorise, call the service.
+     * Resolve the rep **within this organization**, authorise, call the service.
      *
      * Scoped rather than `User::find()`: the id arrives from the browser, and
      * without the scope a crafted one would retire somebody at a different
-     * school. The relation manager scoped to its owner for us.
+     * organization. The relation manager scoped to its owner for us.
      */
     protected function runMembership(?int $userId, callable $operation, string $success, ?string $modal = null): void
     {
@@ -134,7 +134,7 @@ class Show extends Component
         $rep = $userId === null ? null : $this->record->users()->find($userId);
 
         if ($rep === null) {
-            $this->toast(__('That representative could not be found at this school.'), 'danger');
+            $this->toast(__('That representative could not be found at this organization.'), 'danger');
 
             return;
         }

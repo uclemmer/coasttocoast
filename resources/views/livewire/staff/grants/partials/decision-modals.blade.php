@@ -30,7 +30,7 @@
         @if ($benefitType === \App\Enums\GrantBenefit::CustomPrice->value)
             {{-- Dollars in the box, cents in the column. --}}
             <x-ui::forms.input name="customPriceDollars" wire:model="customPriceDollars" type="number"
-                step="0.01" min="0" :label="__('Price this school pays')" :hint="__('In dollars.')" />
+                step="0.01" min="0" :label="__('Price this organization pays')" :hint="__('In dollars.')" />
         @endif
 
         @if ($benefitType === \App\Enums\GrantBenefit::PercentOff->value)
@@ -50,10 +50,10 @@
 
 <x-ui::modal id="deny-grant" :title="__('Deny this application')" size="lg">
     <form wire:submit="deny" class="space-y-4">
-        {{-- Required, because "denied" with nothing else is how you lose a
-             school for good. The service refuses a blank one too. --}}
+        {{-- Required, because "denied" with nothing else is how you lose an
+             organization for good. The service refuses a blank one too. --}}
         <x-ui::forms.textarea name="reason" wire:model="reason" rows="3" :label="__('Reason')"
-            :hint="__('Included in the email the school receives.')" required />
+            :hint="__('Included in the email the organization receives.')" required />
 
         <div class="flex items-center gap-3 pt-2">
             <x-ui::button type="submit" variant="danger">{{ __('Deny') }}</x-ui::button>
@@ -68,7 +68,7 @@
 <x-ui::modal id="revoke-grant" :title="__('Revoke this grant?')" size="lg">
     <form wire:submit="revoke" class="space-y-4">
         <p class="text-sm text-body">
-            {{ __('The school pays list price from now on. Only possible because nothing has used it yet.') }}
+            {{ __('The organization pays list price from now on. Only possible because nothing has used it yet.') }}
         </p>
 
         <x-ui::forms.textarea name="reason" wire:model="reason" rows="3" :label="__('Reason')"

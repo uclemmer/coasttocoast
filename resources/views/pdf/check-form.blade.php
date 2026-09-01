@@ -2,9 +2,9 @@
     The mail-in registration form (card 4.2), rendered by dompdf.
 
     Same constraints as the receipt: tables and inline styles, because dompdf
-    has no flexbox or grid. Reads the registration's snapshot, so a school with
+    has no flexbox or grid. Reads the registration's snapshot, so an organization with
     a grant is asked for what it actually owes rather than the list price — a
-    full-price check from a half-price school means a refund nobody wanted.
+    full-price check from a half-price organization means a refund nobody wanted.
 --}}
 @php
     use App\Support\Money;
@@ -36,7 +36,7 @@
     <table class="lines">
         <tr>
             <td class="label">Registration number</td>
-            {{-- Quoted on the check, because a check carrying only a school
+            {{-- Quoted on the check, because a check carrying only an organization
                  name is how a payment ends up unmatched in a drawer. --}}
             <td><strong>{{ str_pad((string) $registration->getKey(), 6, '0', STR_PAD_LEFT) }}</strong></td>
         </tr>

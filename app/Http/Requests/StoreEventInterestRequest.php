@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * "Tell me when registration opens" (R2.7).
  *
  * Asks for as little as possible on purpose. This is the person who found the
- * site the week after registration closed; demanding an account, or a school
+ * site the week after registration closed; demanding an account, or an organization
  * they may not be able to spell the official name of, is how the lead is lost.
  */
 class StoreEventInterestRequest extends FormRequest

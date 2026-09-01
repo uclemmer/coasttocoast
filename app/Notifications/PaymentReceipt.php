@@ -16,7 +16,7 @@ use Illuminate\Notifications\Notification;
  * Sent once a registration is confirmed, by whichever route got it there — the
  * Stripe webhook, a check the coordinator recorded, or a grant that covered
  * the fee. All three fire `RegistrationConfirmed`, so all three produce this
- * one email, and a school cannot tell from the receipt which path it took
+ * one email, and an organization cannot tell from the receipt which path it took
  * except by what the receipt says.
  *
  * The PDF is attached rather than linked: a finance office needs the file, and

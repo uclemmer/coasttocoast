@@ -9,7 +9,7 @@ use App\Support\Permissions;
 /**
  * Admin-side authorization for registrations.
  *
- * A representative's access to their own school's registrations is a different
+ * A representative's access to their own organization's registrations is a different
  * question — an active membership rather than a permission — and is answered
  * on the portal pages (card 3.1/3.3), because "may this person see this row"
  * and "may this coordinator administer every row" are not the same predicate

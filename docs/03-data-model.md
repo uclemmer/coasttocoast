@@ -241,7 +241,7 @@ by every caller:
 |---|---|
 | `MembershipStatus::actsForOrganization()` | whether this rep may register, apply for a grant, or edit the org profile |
 | `RegistrationStatus::occupying()` / `occupiesASeat()` | the set that blocks a duplicate, counts against `capacity`, and pins a grant as used |
-| `GrantStatus::discountsPrice()` | only `Approved` ever changes what a school pays |
+| `GrantStatus::discountsPrice()` | only `Approved` ever changes what an organization pays |
 | `GrantStatus::blockingReapplication()` | every status except `Withdrawn` — a denial is final for that fair |
 | `Audience::lapsed()` / `isEmailOnly()` | which cases subtract this event's registrants; which resolve to bare addresses |
 | `DeliveryStatus::fromEmailLog()` | translates laravel-core's `sending\|sent\|failed`, degrading unknown values to `Pending` rather than throwing |
@@ -266,7 +266,7 @@ re-running never overwrites edited copy:
 | `SponsorSeeder` | the 4 sponsor schools + Meg Conner | both |
 | `FaqSeeder` | 11 questions from doc 00 | both |
 | `EventSeeder` | the fair calendar: 2022–2026 published and past, 2027 unpublished | both |
-| `FairFixtureSeeder` | schools, reps, three years of registrations, grants in every status, the awkward cases | **dev only** |
+| `FairFixtureSeeder` | organizations, reps, three years of registrations, grants in every status, the awkward cases | **dev only** |
 
 ### The fair calendar
 
@@ -287,7 +287,7 @@ carries a per-row `price_cents` for exactly this reason. A past fair's list pric
 input, and it is editable in the admin panel.
 
 2027 is seeded **unpublished** — an unpublished event can never take money, so a placeholder date and
-price cannot quietly charge a school the wrong fee. `FairFixtureSeeder` publishes and opens it in
+price cannot quietly charge an organization the wrong fee. `FairFixtureSeeder` publishes and opens it in
 development only, because a workable current fair beats a faithful one locally.
 
 ### Two fairs in one year
@@ -320,8 +320,8 @@ non-duplicates.
 
 Three things about the fixture set are load-bearing rather than decorative, and card 6.3's audience
 tests depend on all three: two *past* published fairs (`LastEvent` and `AnyPreviousEvent` are
-indistinguishable with one year of history), schools that lapsed after each of them, and two
-schools with no active rep — one with an `admissions_email` (generic fallback) and one without (the
+indistinguishable with one year of history), organizations that lapsed after each of them, and two
+organizations with no active rep — one with an `admissions_email` (generic fallback) and one without (the
 recipient that gets dropped with a log).
 
 The 2027 event seeds **unpublished** with `TODO-OWNER` in its name because its date and price are

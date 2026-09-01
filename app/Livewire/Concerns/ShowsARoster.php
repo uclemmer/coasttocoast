@@ -17,8 +17,8 @@ use Livewire\WithPagination;
  * was reviewed (doc 00), which is exactly what happens when they are two.
  *
  * The query itself is `Registration::onRoster()` — confirmed, and not hidden by
- * the coordinator. An awaiting-payment school has no business here: the roster
- * is a promise that the school will be there.
+ * the coordinator. An awaiting-payment organization has no business here: the roster
+ * is a promise that the organization will be there.
  */
 trait ShowsARoster
 {
@@ -68,7 +68,7 @@ trait ShowsARoster
     }
 
     /**
-     * The initial for a school with no logo (R1.3).
+     * The initial for an organization with no logo (R1.3).
      *
      * Generated inline rather than fetched from an avatar service: a
      * third-party image would leak every visitor's request off-site and break

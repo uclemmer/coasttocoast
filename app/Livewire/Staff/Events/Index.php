@@ -99,7 +99,7 @@ class Index extends Component
 
         /*
          * `EventPolicy::delete()` refuses once registrations exist, so this is
-         * the check that stops a fair being deleted out from under the schools
+         * the check that stops a fair being deleted out from under the organizations
          * that signed up for it. Filament resolved it implicitly; here it is
          * the one line between a coordinator and a very bad afternoon.
          */

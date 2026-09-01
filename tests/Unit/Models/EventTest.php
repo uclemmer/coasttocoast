@@ -112,7 +112,7 @@ describe('isFull', function () {
 
     it('counts awaiting-payment registrations against capacity, not only confirmed', function () {
         // Counting confirmed alone would let a run of mailed checks oversell
-        // the room, and every oversell is a school turned away afterwards.
+        // the room, and every oversell is an organization turned away afterwards.
         $event = Event::factory()->withCapacity(2)->create();
         Registration::factory()->forEvent($event)->create();
         Registration::factory()->forEvent($event)->pendingCheck()->create();
@@ -164,7 +164,7 @@ describe('priceFor', function () {
 
     it('rounds a percentage discount down to the cent', function () {
         // 33% off $215.00 is $144.05, not $144.06 — the half cent goes to the
-        // school. 21500 * 0.67 = 14405.0 exactly, so use a rate that does not
+        // organization. 21500 * 0.67 = 14405.0 exactly, so use a rate that does not
         // divide evenly to prove the floor.
         Grant::factory()->percentOff(35)->for($this->event)->for($this->organization)->create();
 
@@ -193,7 +193,7 @@ describe('priceFor', function () {
         'withdrawn' => 'withdrawn',
     ]);
 
-    it('ignores another school\'s grant', function () {
+    it('ignores another organization\'s grant', function () {
         $other = Organization::factory()->create();
         Grant::factory()->free()->for($this->event)->for($other)->create();
 

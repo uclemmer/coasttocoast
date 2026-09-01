@@ -20,8 +20,8 @@ use UClemmer\LaravelPostmaster\Messages\Message as LoggedMessage;
  * campaign.
  *
  * Every foreign key is nullable by design - interest-list recipients have no
- * school and no account, lapsed recipients have no current registration, and
- * the generic admissions_email fallback has a school but nobody behind it. The
+ * organization and no account, lapsed recipients have no current registration, and
+ * the generic admissions_email fallback has an organization but nobody behind it. The
  * snapshots are what was actually used, so a later profile edit cannot rewrite
  * the record of who we mailed.
  *

@@ -5,8 +5,8 @@ namespace App\Services\Audiences;
 /**
  * One person a campaign will reach (doc 07 §2).
  *
- * `generic` is the flag that matters: true means this is a school's
- * `admissions_email` rather than a named representative, because the school
+ * `generic` is the flag that matters: true means this is an organization's
+ * `admissions_email` rather than a named representative, because the organization
  * has none active. Those recipients get the same email, but the coordinator
  * should be able to see at a glance how much of a send is going to nobody in
  * particular.

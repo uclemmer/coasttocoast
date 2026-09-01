@@ -29,7 +29,7 @@ class MessagePolicy
     }
 
     /**
-     * A sent campaign is immutable. It is the record of what a hundred schools
+     * A sent campaign is immutable. It is the record of what a hundred organizations
      * were told, and the delivery table beneath it only means anything if the
      * message has not changed since.
      */

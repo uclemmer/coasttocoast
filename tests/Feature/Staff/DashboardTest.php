@@ -21,7 +21,7 @@ it('says so plainly when no fair is active', function () {
     expect(livewire(Dashboard::class)->instance()->numbers())->toBeNull();
 });
 
-it('counts confirmed schools and what they have paid', function () {
+it('counts confirmed organizations and what they have paid', function () {
     $fair = Fair::factory()->published()->priced(21500)->create();
     Registration::factory()->count(2)->forEvent($fair)->create(['price_cents' => 21500]);
 
@@ -33,7 +33,7 @@ it('counts confirmed schools and what they have paid', function () {
 
 /*
  * The money comes from registrations, not the payments table, so "collected"
- * agrees with the price each school was quoted. The two answer different
+ * agrees with the price each organization was quoted. The two answer different
  * questions and would disagree by whatever is in flight.
  */
 it('separates money awaited from money collected, and names the checks', function () {

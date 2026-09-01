@@ -9,7 +9,7 @@ beforeEach(function () {
 });
 
 describe('capturing interest', function () {
-    it('records an email and an optional school name', function () {
+    it('records an email and an optional organization name', function () {
         // The gap in the current site: registration is shut most of the year
         // and the page is a dead end (doc 00).
         $this->post(route('events.interest', $this->fair), [

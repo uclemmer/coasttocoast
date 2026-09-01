@@ -77,7 +77,7 @@
             @empty
                 <x-ui::table.row>
                     <x-ui::table.empty-state :colspan="7" :heading="__('No fairs yet')">
-                        {{ __('A fair has to exist before schools can register for it.') }}
+                        {{ __('A fair has to exist before organizations can register for it.') }}
                         <x-slot:action>
                             <x-ui::button href="{{ route('staff.events.create') }}" variant="brand" size="sm">
                                 {{ __('Add a fair') }}
@@ -93,6 +93,6 @@
          rather than letting the refusal arrive as a bare 403. --}}
     <x-ui::confirm-modal id="delete-event" :title="__('Remove this fair?')" :confirm="__('Remove')"
         variant="danger" wire:click="delete">
-        {{ __('Only possible while no school has registered. This cannot be undone.') }}
+        {{ __('Only possible while no organization has registered. This cannot be undone.') }}
     </x-ui::confirm-modal>
 </div>

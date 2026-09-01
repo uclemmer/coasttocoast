@@ -14,7 +14,7 @@
     </x-ui::action-bar>
 
     <form wire:submit="save" class="mt-6 max-w-3xl space-y-6">
-        <x-ui::section :heading="__('Which school, which fair')"
+        <x-ui::section :heading="__('Which organization, which fair')"
             :description="__('Neither can be changed afterwards: moving a registration to another fair would carry a price nobody agreed for it.')">
             <div class="grid gap-4 sm:grid-cols-3">
                 <x-ui::forms.select name="event_id" wire:model="event_id" :label="__('Fair')" required>
@@ -24,10 +24,10 @@
                     @endforeach
                 </x-ui::forms.select>
 
-                <x-ui::forms.select name="organization_id" wire:model="organization_id" :label="__('School')" required>
-                    <option value="">{{ __('Choose a school…') }}</option>
-                    @foreach ($this->schools as $school)
-                        <option value="{{ $school->id }}">{{ $school->name }}</option>
+                <x-ui::forms.select name="organization_id" wire:model="organization_id" :label="__('Organization')" required>
+                    <option value="">{{ __('Choose an organization…') }}</option>
+                    @foreach ($this->organizations as $organization)
+                        <option value="{{ $organization->id }}">{{ $organization->name }}</option>
                     @endforeach
                 </x-ui::forms.select>
 
@@ -52,7 +52,7 @@
 
         <x-ui::section :heading="__('Notes')">
             <x-ui::forms.textarea name="notes" wire:model="notes" rows="4" :label="__('Internal notes')"
-                :hint="__('Not shown to the school.')" />
+                :hint="__('Not shown to the organization.')" />
         </x-ui::section>
 
         <div class="flex items-center gap-3">

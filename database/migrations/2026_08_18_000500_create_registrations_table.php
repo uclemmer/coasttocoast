@@ -49,7 +49,7 @@ return new class extends Migration
             $table->timestamps();
 
             // The duplicate rule (R2.7) is no second non-cancelled registration
-            // for the same school and fair, which no portable unique index can
+            // for the same organization and fair, which no portable unique index can
             // say. RegistrationService::create() enforces it; this index is what
             // makes that check, the roster query and the capacity count cheap.
             $table->index(['event_id', 'organization_id', 'status']);

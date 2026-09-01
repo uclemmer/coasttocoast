@@ -33,7 +33,7 @@ describe('casts', function () {
 });
 
 describe('relationships', function () {
-    it('resolves the school, event, requester, decider and registrations', function () {
+    it('resolves the organization, event, requester, decider and registrations', function () {
         $organization = Organization::factory()->create();
         $event = Event::factory()->create();
         $requester = User::factory()->rep($organization)->create();
@@ -57,7 +57,7 @@ describe('usage', function () {
 
     it('is used once a live registration is priced under it', function () {
         // A used grant can no longer be revoked: the money has settled or is in
-        // the post, and clawing the discount back means invoicing a school for
+        // the post, and clawing the discount back means invoicing an organization for
         // a discount granted in writing.
         $grant = Grant::factory()->free()->create();
         Registration::factory()->free()->create(['grant_id' => $grant->id]);

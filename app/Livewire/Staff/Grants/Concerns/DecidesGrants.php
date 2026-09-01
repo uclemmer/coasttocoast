@@ -16,10 +16,10 @@ use Throwable;
  * the Filament resource put them in one place for the same reason.
  *
  * THERE IS NO CREATE OR EDIT, and that is the design, carried over verbatim
- * from `GrantResource`'s docblock: a grant is *applied for* by a school through
+ * from `GrantResource`'s docblock: a grant is *applied for* by an organization through
  * the portal and *decided* here. An edit form would let someone set
  * `status = approved` without choosing a benefit — which `Event::priceFor()`
- * reads as "no discount", so the school would be told it had a grant and then
+ * reads as "no discount", so the organization would be told it had a grant and then
  * charged in full. Routing every change through `GrantService` makes that
  * unrepresentable, and this trait exists to keep it that way.
  *
@@ -124,7 +124,7 @@ trait DecidesGrants
         }
 
         // Required because "denied", with nothing else, is how you lose a
-        // school for good. The service refuses a blank one too.
+        // organization for good. The service refuses a blank one too.
         $this->validate(['reason' => ['required', 'string']]);
 
         $this->runDecision(

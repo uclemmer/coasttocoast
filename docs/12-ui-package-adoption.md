@@ -22,7 +22,7 @@ across 11 files**, and it owns **the whole authentication surface**:
 | Login, logout | Filament | `laravel-core` (routes exist, currently disabled) |
 | Password reset | Filament | `laravel-core` |
 | Two-factor | — | `laravel-core` gains it for free |
-| **Registration** | Filament + D9 school claim/create | **app-owned** — the logic is entirely app-specific |
+| **Registration** | Filament + D9 organization claim/create | **app-owned** — the logic is entirely app-specific |
 | **Email verification** | Filament | **app-owned** — see below |
 | Profile (phone, SMS opt-in, self-retire) | Filament | app-owned; core's account routes cover only the generic half |
 | Dashboard, registrations, grants, org profile | Filament resources | Livewire + `laravel-ui` |
@@ -142,7 +142,7 @@ Only `auth/` was kept — `vendor:publish --tag=core-views` copies everything th
 package has, and each published file stops receiving updates.
 
 **Registration is app-owned**, in `App\Livewire\Auth\Register`, because signing
-up claims or creates a school and that decides whether the account is active
+up claims or creates an organization and that decides whether the account is active
 immediately (D9). The component collects fields and calls
 `OrganizationService::claim()` / `::createWithFounder()` — which path makes
 somebody active stays one decision in one place, exactly as it was under
@@ -150,9 +150,9 @@ Filament.
 
 Two things it does differently from the Filament page, both forced:
 
-- **The school picker is a search box and a list, not a select.** Filament gave
+- **The organization picker is a search box and a list, not a select.** Filament gave
   this a server-searching select for free. A plain `<select>` would render every
-  school in the country into the page, and a `datalist` cannot report *which*
+  organization in the country into the page, and a `datalist` cannot report *which*
   row was chosen — only what was typed, which is not an id.
 - **Validation is built in `rules()` rather than `#[Validate]` attributes.** An
   attribute cannot be conditional, and requiring both `organization_id` and
@@ -201,7 +201,7 @@ Two things worth knowing about the port:
 
 - **`actsForOrganization()` is checked inside every action, not only in the
   view.** A hidden button is a UI convenience, not a guard.
-- **`withdraw()` scopes its lookup to the school's own grants** rather than
+- **`withdraw()` scopes its lookup to the organization's own grants** rather than
   `find()`. The id arrives from the browser, and a confirmation dialog is not
   authorization.
 
@@ -248,7 +248,7 @@ found-and-refused — the second answer is an oracle confirming the id is real.
 confirmation dialog is not authorization.
 
 **Scoping tests now assert against the component's collection, not the page.**
-A fair's *name* can legitimately appear on a portal page without that school's
+A fair's *name* can legitimately appear on a portal page without that organization's
 record being visible — the grants page lists every fair you could apply for — so
 string-matching HTML was testing the wrong thing.
 

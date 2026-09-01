@@ -89,7 +89,7 @@ class EventSeeder extends Seeder
             // open questions; standing answer A4 in doc 10 authorised a
             // placeholder). Left UNPUBLISHED on purpose: an unpublished event
             // cannot take money, so a forgotten placeholder cannot quietly
-            // charge a school the wrong fee. Publishing it is the
+            // charge an organization the wrong fee. Publishing it is the
             // coordinator's deliberate act once the real figures are known.
             [
                 'slug' => 'college-fair-2027',

@@ -26,7 +26,7 @@ use Livewire\WithPagination;
  * RecipientsRelationManager.
  *
  * THE DELIVERY TABLE IS READ-ONLY and paginated, because a campaign to every
- * school is hundreds of rows. It is the first paginated screen in /staff, so it
+ * organization is hundreds of rows. It is the first paginated screen in /staff, so it
  * is the one that needed the package's paginator views published.
  */
 #[Layout('components.layouts.staff', ['title' => 'Campaign'])]
@@ -56,7 +56,7 @@ class Show extends Component
      * How many the audience resolves to right now.
      *
      * Recomputed rather than read off the record, because an audience is a
-     * query and its answer moves as schools register.
+     * query and its answer moves as organizations register.
      */
     #[Computed]
     public function audienceCount(): int

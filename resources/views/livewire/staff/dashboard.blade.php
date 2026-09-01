@@ -23,7 +23,7 @@
         @php($numbers = $this->numbers)
 
         <x-ui::stat-group :columns="3">
-            <x-ui::stat :label="__('Confirmed schools')" :value="(string) $numbers['confirmed']"
+            <x-ui::stat :label="__('Confirmed organizations')" :value="(string) $numbers['confirmed']"
                 :description="$this->fair->capacity === null
                     ? $this->fair->name
                     : __(':left of :capacity places left', [
@@ -33,9 +33,9 @@
                 :sentiment="$this->fair->isFull() ? 'bad' : 'good'" />
 
             {{-- From registrations, not the payments table: this is the price
-                 each school was quoted and confirmed against. --}}
+                 each organization was quoted and confirmed against. --}}
             <x-ui::stat :label="__('Collected')" :value="$this->formatMoney($numbers['collected'])"
-                :description="__('Confirmed registrations, at the price each school was quoted')"
+                :description="__('Confirmed registrations, at the price each organization was quoted')"
                 sentiment="good" />
 
             {{-- Checks are money in the post, not money lost. --}}
@@ -100,7 +100,7 @@
                     <div class="mt-4">
                         <x-ui::table>
                             <x-ui::table.head>
-                                <x-ui::table.heading>{{ __('School') }}</x-ui::table.heading>
+                                <x-ui::table.heading>{{ __('Organization') }}</x-ui::table.heading>
                                 <x-ui::table.heading>{{ __('Status') }}</x-ui::table.heading>
                                 <x-ui::table.heading>{{ __('Payment') }}</x-ui::table.heading>
                                 <x-ui::table.heading>{{ __('Price') }}</x-ui::table.heading>

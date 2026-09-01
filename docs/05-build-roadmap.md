@@ -180,7 +180,7 @@ table's filters (D-2.2-e).
 **Decisions (doc 10):** the services fire domain events instead of sending mail, and card 6.1 hangs
 the comms matrix off them (D-2.3-a); `createManualEntry()` is a separate method rather than a
 nullable actor, so skipping the membership gate has to be asked for by name (D-2.3-b);
-`confirmPayment()` is idempotent, because Stripe redelivers and a second receipt is what schools
+`confirmPayment()` is idempotent, because Stripe redelivers and a second receipt is what organizations
 notice (D-2.3-c); creation runs in a transaction so two reps registering in the same second cannot
 both win (D-2.3-d).
 
@@ -193,7 +193,7 @@ implements apply / approve / deny / revoke / withdraw plus `hasLiveApplication()
 `currentApplication()`, with `App\Exceptions\GrantNotAllowed` and five domain events. 41 tests in
 `tests/Unit/Services/GrantServiceTest.php`.
 
-**Decisions:** applications close when the fair happens, not when registration does — a school
+**Decisions:** applications close when the fair happens, not when registration does — an organization
 lining funding up early is the point (D-2.6-a); `approve()` validates the benefit parameters rather
 than trusting the form, because an incomplete benefit silently falls through to list price
 (D-2.6-b); only withdrawal frees the one-per-fair slot (D-2.6-c).
@@ -212,7 +212,7 @@ rebuilt, and a test asserts this app has no parallel `ContentBlock` or `ContactS
 **Depends on:** 2.2. Widgets: confirmed count vs. capacity, revenue collected vs. pending-check amounts, recent registrations. All for the "active" (next upcoming published) event.
 **Tests:** widget queries against seeded fixtures return correct numbers.
 
-**Status: done (2026-08-18).** `ActiveFairOverview` (confirmed schools vs. capacity, collected,
+**Status: done (2026-08-18).** `ActiveFairOverview` (confirmed organizations vs. capacity, collected,
 awaiting payment) and `RecentRegistrations`, both scoped to the active fair. 10 tests in
 `tests/Feature/Admin/DashboardWidgetsTest.php`. Suite 368, Pint clean. **Phase 2 complete.**
 
@@ -252,16 +252,16 @@ rather than every registration ever taken when nothing is published (D-2.5-b).
 | Card | Shipped |
 |---|---|
 | 3.0 | `App\Filament\Rep\Pages\Auth\Register` (create-or-claim signup), `OrganizationService::createWithFounder()` / `claim()`, `OrganizationCreated` + `MembershipClaimed` events, self-retire on the profile page |
-| 3.1 | Rep `RegistrationResource` (school-scoped list + detail), `OrganizationProfile` page, `Auth\EditProfile` (phone, SMS opt-in, self-retire), `App\Support\Phone`, `ActsForAnOrganization` concern |
+| 3.1 | Rep `RegistrationResource` (organization-scoped list + detail), `OrganizationProfile` page, `Auth\EditProfile` (phone, SMS opt-in, self-retire), `App\Support\Phone`, `ActsForAnOrganization` concern |
 | 3.2 | Three-step wizard on the rep `CreateRegistration` page |
 | 3.3 | `ReceiptPdf` + `resources/views/pdf/receipt.blade.php`, download action on the detail page |
 | 3.4 | `EventInterestController`, `StoreEventInterestRequest` (honeypot), throttled route |
 | 3.5 | Rep `GrantResource` + apply/withdraw actions, doc 01 Appendix A copy verbatim |
 
 **Decisions (doc 10, D-3.x):** portal authorization lives on the rep resources rather than in the
-policies, which answer a coordinator's question rather than a school's (D-3.1-a); another school's
+policies, which answer a coordinator's question rather than an organization's (D-3.1-a); another organization's
 registration is a 404, not a 403, so the response does not confirm the row exists; the portal lists
-the *school's* registrations so a new admissions officer inherits the history rather than an empty
+the *organization's* registrations so a new admissions officer inherits the history rather than an empty
 page (D-3.1-b); phone numbers are normalised rather than rejected, and having one is not consent to
 be texted (D-3.1-c); the wizard displays the price and has no field for it (D-3.2-a); the receipt
 renders from the snapshot and only once confirmed (D-3.3-a); the interest form dedupes
@@ -523,7 +523,7 @@ the *current* roster. **Keep one component serving both pages.** Keep the initia
 (D-5.3-c) and lazy-loaded images with real alt text.
 
 The roster must render server-side, not after a round trip (D-5.3-b): a search engine, and a rep
-checking whether their school is already listed, both need it in the HTML.
+checking whether their organization is already listed, both need it in the HTML.
 
 If a roster swaps DOM after load, Flowbite's initialisers need re-running — `initFlowbite()` in a
 `livewire:navigated` listener. Noted in `resources/js/app.js`.

@@ -27,7 +27,7 @@
 @php
     $widths = [
         'md' => 'max-w-md',   // log in, forgot password — a handful of fields
-        'xl' => 'max-w-xl',   // sign up — two sections and a school picker
+        'xl' => 'max-w-xl',   // sign up — two sections and an organization picker
     ];
 @endphp
 

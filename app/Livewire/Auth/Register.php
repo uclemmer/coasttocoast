@@ -22,12 +22,12 @@ use Livewire\Component;
  *
  * **The two paths, and the asymmetry between them, are the design:**
  *
- *  - **Claim an existing school** → membership `pending`. Anyone can say they
- *    represent Vanderbilt, and on the other side of that claim sit the school's
+ *  - **Claim an existing organization** → membership `pending`. Anyone can say they
+ *    represent Vanderbilt, and on the other side of that claim sit the organization's
  *    registration history, its grants and its place on the roster. A
  *    coordinator approves.
- *  - **Add a new school** → membership `active` immediately. There is nobody to
- *    vouch for a school only this person knows about, so making them wait would
+ *  - **Add a new organization** → membership `active` immediately. There is nobody to
+ *    vouch for an organization only this person knows about, so making them wait would
  *    mean waiting on nothing. The coordinator is alerted, with the duplicate
  *    warning attached.
  *
@@ -38,14 +38,14 @@ use Livewire\Component;
  *
  * The duplicate check **warns and never blocks** (R2.7). "Boston University"
  * and "Boston College" normalize differently on purpose, but near-misses are
- * real, and a false positive that stops a school registering is worse than one
+ * real, and a false positive that stops an organization registering is worse than one
  * a coordinator merges later.
  *
- * WHY THE SCHOOL PICKER IS A SEARCH BOX AND A LIST rather than a `<select>`:
+ * WHY THE ORGANIZATION PICKER IS A SEARCH BOX AND A LIST rather than a `<select>`:
  * Filament gave this a server-searching select for free. A plain select would
- * mean rendering every school in the country into the page, and a `datalist`
+ * mean rendering every organization in the country into the page, and a `datalist`
  * cannot tell us which row was chosen — only what was typed, which is not an
- * id. So the search runs server-side, capped, and the chosen school is held as
+ * id. So the search runs server-side, capped, and the chosen organization is held as
  * an id the user can see and clear.
  */
 #[Layout('components.layouts.auth', ['title' => 'Create your account', 'width' => 'xl'])]
@@ -64,7 +64,7 @@ class Register extends Component
     /** Either `claim` or `create`. Drives which half of the form shows. */
     public string $organization_choice = 'claim';
 
-    /** Claim path: what the user typed, and which school they settled on. */
+    /** Claim path: what the user typed, and which organization they settled on. */
     public string $organization_search = '';
 
     public ?int $organization_id = null;
@@ -84,10 +84,10 @@ class Register extends Component
     public string $website = '';
 
     /**
-     * Schools matching what has been typed, for the claim path.
+     * Organizations matching what has been typed, for the claim path.
      *
-     * Capped at 25. An uncapped `like` over every school is a slow query and an
-     * unusable list; somebody who cannot find their school in 25 needs a better
+     * Capped at 25. An uncapped `like` over every organization is a slow query and an
+     * unusable list; somebody who cannot find their organization in 25 needs a better
      * search term, not more rows.
      *
      * @return Collection<int, Organization>
@@ -106,7 +106,7 @@ class Register extends Component
             ->get(['id', 'name']);
     }
 
-    /** The school currently chosen on the claim path, if any. */
+    /** The organization currently chosen on the claim path, if any. */
     #[Computed]
     public function chosen(): ?Organization
     {
@@ -116,7 +116,7 @@ class Register extends Component
     }
 
     /**
-     * Schools whose normalized name already matches what is being typed on the
+     * Organizations whose normalized name already matches what is being typed on the
      * create path. Warns; never blocks.
      *
      * @return Collection<int, string>
@@ -162,7 +162,7 @@ class Register extends Component
 
         /*
          * One transaction over the account and the membership. A user created
-         * without a school is an account that can log in and do nothing, with
+         * without an organization is an account that can log in and do nothing, with
          * no path back to either registration branch — worse than a failed
          * signup, because the email address is now taken.
          */
@@ -243,9 +243,9 @@ class Register extends Component
     protected function validationAttributes(): array
     {
         return [
-            'organization_id' => __('school'),
-            'organization_name' => __('school name'),
-            'organization_website' => __('school website'),
+            'organization_id' => __('organization'),
+            'organization_name' => __('organization name'),
+            'organization_website' => __('organization website'),
             'organization_admissions_email' => __('admissions office email'),
         ];
     }

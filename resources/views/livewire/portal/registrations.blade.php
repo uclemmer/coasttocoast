@@ -38,7 +38,7 @@
         @empty
             <x-ui::table.row>
                 <x-ui::table.empty-state :colspan="5" heading="{{ __('No registrations yet') }}">
-                    {{ __('When your school registers for a fair, it will appear here with its payment status.') }}
+                    {{ __('When your organization registers for a fair, it will appear here with its payment status.') }}
                 </x-ui::table.empty-state>
             </x-ui::table.row>
         @endforelse

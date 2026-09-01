@@ -71,7 +71,7 @@ class CreateRegistration extends Component
     }
 
     /**
-     * Fairs this school can actually register for right now: open, and not
+     * Fairs this organization can actually register for right now: open, and not
      * already held.
      *
      * @return Collection<int, Event>
@@ -95,7 +95,7 @@ class CreateRegistration extends Component
         return $this->event_id === null ? null : Event::query()->find($this->event_id);
     }
 
-    /** What this school pays, in cents. Always from the server. */
+    /** What this organization pays, in cents. Always from the server. */
     #[Computed]
     public function price(): int
     {
@@ -112,7 +112,7 @@ class CreateRegistration extends Component
     }
 
     /**
-     * The sentence above the payment choice. Says what the school pays and,
+     * The sentence above the payment choice. Says what the organization pays and,
      * when a grant applies, why it differs from the list price — a discount
      * nobody explains is a discount somebody queries.
      */
@@ -172,7 +172,7 @@ class CreateRegistration extends Component
                         && $service->alreadyRegistered($event, $organization)) {
                         // Checked here as well as in the service so the rep is
                         // told against the field rather than by a thrown error.
-                        $fail(__('Your school is already registered for this fair.'));
+                        $fail(__('Your organization is already registered for this fair.'));
                     }
                 },
             ],

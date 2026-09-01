@@ -9,7 +9,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 /**
  * A claim was refused. The organization is passed separately because by the
  * time this fires the rep no longer points at it — and the email has to name
- * the school they asked about.
+ * the organization they asked about.
  */
 class MembershipDenied
 {

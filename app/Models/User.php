@@ -30,7 +30,7 @@ use UClemmer\LaravelCore\Support\Contracts\HasRoles;
  * There is deliberately no `is_admin` column — see docs/01-requirements.md D6.
  *
  * A rep belongs to exactly one organization and carries a membership lifecycle
- * (D9): `pending` while a claim on an existing school awaits approval, `active`
+ * (D9): `pending` while a claim on an existing organization awaits approval, `active`
  * once it holds, `retired` when they move on. Coordinators have no organization
  * at all, so a null `membership_status` means "not a representative" rather
  * than "status unknown".
@@ -71,7 +71,7 @@ class User extends Authenticatable implements HasRoles, MustVerifyEmail
     }
 
     /**
-     * The school this rep speaks for. Null for coordinators.
+     * The organization this rep speaks for. Null for coordinators.
      *
      * @return BelongsTo<Organization, $this>
      */
@@ -149,7 +149,7 @@ class User extends Authenticatable implements HasRoles, MustVerifyEmail
     }
 
     /**
-     * Reps who currently speak for a school. This is the set campaigns deliver
+     * Reps who currently speak for an organization. This is the set campaigns deliver
      * to (doc 07 §2 rule 1).
      *
      * @param  Builder<User>  $query

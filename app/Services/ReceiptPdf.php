@@ -7,7 +7,7 @@ use App\Models\Registration;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
- * The printable receipt a school gives its finance office (card 3.3).
+ * The printable receipt an organization gives its finance office (card 3.3).
  *
  * Renders from the registration's own snapshot — `price_cents`, `rep_name`,
  * the grant that was applied — rather than recomputing anything. A receipt
@@ -16,7 +16,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
  * do.
  *
  * Only confirmed registrations get one. A receipt for money that has not
- * arrived is exactly the document a school would file and forget about.
+ * arrived is exactly the document an organization would file and forget about.
  */
 class ReceiptPdf
 {

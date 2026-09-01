@@ -5,7 +5,7 @@
 --}}
 <div>
     <x-ui::action-bar :heading="__('Fee assistance')"
-        :description="__('Applications from schools, and the three decisions you can make on them.')" level="h2" />
+        :description="__('Applications from organizations, and the three decisions you can make on them.')" level="h2" />
 
     @if ($this->pendingCount > 0)
         {{-- An alert rather than a sidebar badge: the staff nav is a flat list
@@ -29,7 +29,7 @@
                     <x-slot:search>
                         <div class="flex flex-wrap items-end gap-3">
                             <x-ui::forms.input name="search" wire:model.live.debounce.300ms="search" type="search"
-                                :label="__('Search schools')" :placeholder="__('Search by school name')" />
+                                :label="__('Search organizations')" :placeholder="__('Search by organization name')" />
 
                             <x-ui::forms.select name="status" wire:model.live="status" :label="__('Status')">
                                 <option value="">{{ __('All') }}</option>
@@ -50,7 +50,7 @@
             </x-slot:before>
 
             <x-ui::table.head>
-                <x-ui::table.heading>{{ __('School') }}</x-ui::table.heading>
+                <x-ui::table.heading>{{ __('Organization') }}</x-ui::table.heading>
                 <x-ui::table.heading>{{ __('Fair') }}</x-ui::table.heading>
                 <x-ui::table.heading>{{ __('Status') }}</x-ui::table.heading>
                 <x-ui::table.heading>{{ __('Benefit') }}</x-ui::table.heading>

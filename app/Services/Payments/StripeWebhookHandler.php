@@ -84,7 +84,7 @@ class StripeWebhookHandler
              * Amount mismatch. Flag; do NOT confirm.
              *
              * The only ways to get here are a tampered session or a bug in our
-             * own pricing, and both mean the figure the school agreed to and
+             * own pricing, and both mean the figure the organization agreed to and
              * the figure that moved are different. Confirming would bless it;
              * the coordinator has to look.
              */
@@ -105,7 +105,7 @@ class StripeWebhookHandler
     /**
      * The session timed out without payment.
      *
-     * The registration deliberately stays `pending_payment`: the school still
+     * The registration deliberately stays `pending_payment`: the organization still
      * holds its place and the "pay now" button on the portal still works. Only
      * the attempt failed.
      *
@@ -122,7 +122,7 @@ class StripeWebhookHandler
      * Owned here rather than by the admin action, so a refund issued from the
      * Stripe dashboard and one issued from our panel leave the database in the
      * same state. A partial refund moves the payment but NOT the registration:
-     * the school is still coming, it just paid less.
+     * the organization is still coming, it just paid less.
      *
      * @param  array<string, mixed>  $charge
      */
@@ -153,7 +153,7 @@ class StripeWebhookHandler
 
         $payment->registration?->forceFill([
             'status' => RegistrationStatus::Refunded,
-            // Drops the school off the public roster, which is the point: a
+            // Drops the organization off the public roster, which is the point: a
             // refunded registration is one that is not attending.
             'show_on_roster' => false,
         ])->save();

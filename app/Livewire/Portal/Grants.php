@@ -18,7 +18,7 @@ use Livewire\Component;
 use Throwable;
 
 /**
- * Fee assistance grants, from the school's side (card 3.5) — the Livewire
+ * Fee assistance grants, from the organization's side (card 3.5) — the Livewire
  * replacement for the rep panel's GrantResource and its ListGrants page
  * (docs/12).
  *
@@ -58,7 +58,7 @@ class Grants extends Component
     }
 
     /**
-     * This school's requests, newest first.
+     * This organization's requests, newest first.
      *
      * @return Collection<int, Grant>
      */
@@ -79,7 +79,7 @@ class Grants extends Component
     }
 
     /**
-     * Fairs still ahead of us that this school has not already applied for.
+     * Fairs still ahead of us that this organization has not already applied for.
      *
      * Deliberately not limited to fairs with registration open: lining funding
      * up before registration opens is the point of applying early (doc 10,
@@ -159,7 +159,7 @@ class Grants extends Component
         }
 
         /*
-         * Scoped to this school's grants, not `find()`. Without the scope a
+         * Scoped to this organization's grants, not `find()`. Without the scope a
          * crafted id would withdraw somebody else's request — the id arrives
          * from the browser, and a confirmation dialog is not authorization.
          */
@@ -193,7 +193,7 @@ class Grants extends Component
      *
      * A method on the component rather than on the model: this is presentation
      * for one screen, and putting it on `Grant` would invite the coordinator's
-     * admin screens to reuse copy written for a school to read.
+     * admin screens to reuse copy written for an organization to read.
      */
     public function statusCopy(Grant $grant): string
     {

@@ -11,7 +11,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 
 /**
- * A school editing its own details (card 3.1) — the Livewire replacement for
+ * An organization editing its own details (card 3.1) — the Livewire replacement for
  * the rep panel's OrganizationProfile page (docs/12).
  *
  * **Active reps only.** A pending or retired rep reaching this URL gets a 403
@@ -20,14 +20,14 @@ use Livewire\WithFileUploads;
  * `mount()`, before anything renders.
  *
  * The admissions contact is worth the helper text it gets: it is what campaigns
- * fall back to when a school has no active rep, which is exactly the situation
- * a school in the middle of a staff change is about to be in.
+ * fall back to when an organization has no active rep, which is exactly the situation
+ * an organization in the middle of a staff change is about to be in.
  *
- * `name` is editable on purpose. Schools rebrand, and the model re-derives
+ * `name` is editable on purpose. Organizations rebrand, and the model re-derives
  * `normalized_name` on save, so the duplicate check and the roster import keep
  * working afterwards.
  */
-#[Layout('components.layouts.portal', ['title' => 'Your school'])]
+#[Layout('components.layouts.portal', ['title' => 'Your organization'])]
 class OrganizationProfile extends Component
 {
     use ActsForAnOrganization;

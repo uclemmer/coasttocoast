@@ -7,8 +7,8 @@ use App\Models\User;
 use App\Support\Permissions;
 
 /**
- * The school directory is coordinator territory. Reps edit their *own*
- * school's profile through the portal, which is a different check — an active
+ * The organization directory is coordinator territory. Reps edit their *own*
+ * organization's profile through the portal, which is a different check — an active
  * membership, not a permission — and lives on the portal page rather than here
  * (card 3.1).
  */
@@ -35,7 +35,7 @@ class OrganizationPolicy
     }
 
     /**
-     * A school with any history is never deleted — the foreign keys cascade
+     * An organization with any history is never deleted — the foreign keys cascade
      * and would take its registrations and grants with them. Merging is the
      * operation that removes a duplicate safely, because it repoints first.
      */
@@ -53,8 +53,8 @@ class OrganizationPolicy
     }
 
     /**
-     * Folding a duplicate into another school. Separate from `delete` because
-     * it is safe on a school that has history — that is the point of it.
+     * Folding a duplicate into another organization. Separate from `delete` because
+     * it is safe on an organization that has history — that is the point of it.
      */
     public function merge(User $user, Organization $organization): bool
     {

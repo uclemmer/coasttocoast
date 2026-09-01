@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * A rep signed up and created a school that was not in the directory (D9).
+ * A rep signed up and created an organization that was not in the directory (D9).
  *
  * Carries `$possibleDuplicates` because the coordinator's alert is the place
  * that warning is actually useful: the rep saw it at signup and pressed on

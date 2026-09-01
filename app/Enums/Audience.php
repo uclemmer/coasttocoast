@@ -42,14 +42,14 @@ enum Audience: string
     public function getDescription(): string
     {
         return match ($this) {
-            self::ThisEventConfirmed => __('Schools with a confirmed registration for this fair.'),
-            self::ThisEventPendingCheck => __('Schools that chose to pay by check and whose check has not arrived.'),
-            self::ThisEventAll => __('Schools with any live registration for this fair — confirmed or awaiting payment.'),
-            self::LastEvent => __('Schools that registered for the most recent past fair.'),
-            self::LapsedLastEvent => __('Schools that registered for the most recent past fair but have not registered for this one.'),
-            self::AnyPreviousEvent => __('Schools that registered for any past fair.'),
-            self::LapsedAnyPrevious => __('The win-back list: schools that have attended before but have not registered for this one.'),
-            self::InterestList => __('People who asked to be told when registration opens. Email only — no school attached.'),
+            self::ThisEventConfirmed => __('Organizations with a confirmed registration for this fair.'),
+            self::ThisEventPendingCheck => __('Organizations that chose to pay by check and whose check has not arrived.'),
+            self::ThisEventAll => __('Organizations with any live registration for this fair — confirmed or awaiting payment.'),
+            self::LastEvent => __('Organizations that registered for the most recent past fair.'),
+            self::LapsedLastEvent => __('Organizations that registered for the most recent past fair but have not registered for this one.'),
+            self::AnyPreviousEvent => __('Organizations that registered for any past fair.'),
+            self::LapsedAnyPrevious => __('The win-back list: organizations that have attended before but have not registered for this one.'),
+            self::InterestList => __('People who asked to be told when registration opens. Email only — no organization attached.'),
         };
     }
 
@@ -68,7 +68,7 @@ enum Audience: string
     /**
      * Whether this audience resolves to raw email addresses rather than to
      * organizations and their reps. Only the interest list does — it exists
-     * precisely for people who have no school record yet.
+     * precisely for people who have no organization record yet.
      */
     public function isEmailOnly(): bool
     {

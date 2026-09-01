@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  * envelope and types what she found. The recording and the confirmation happen
  * together, in one transaction, because a check marked received on a
  * registration that stayed `pending_payment` is the failure mode that gets a
- * school turned away at the door.
+ * organization turned away at the door.
  */
 class CheckPaymentService
 {
@@ -77,7 +77,7 @@ class CheckPaymentService
     /**
      * Whether the coordinator paid attention to a short check.
      *
-     * Not enforced — a school that underpays by a dollar should not be blocked
+     * Not enforced — an organization that underpays by a dollar should not be blocked
      * from attending over it — but surfaced, because the alternative is
      * noticing in April.
      */

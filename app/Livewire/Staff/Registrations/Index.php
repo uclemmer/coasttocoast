@@ -129,7 +129,7 @@ class Index extends Component
             $handle = fopen('php://output', 'wb');
 
             fputcsv($handle, [
-                'School', 'Fair', 'Status', 'Payment method', 'Price', 'Grant',
+                'Organization', 'Fair', 'Status', 'Payment method', 'Price', 'Grant',
                 'Contact name', 'Contact email', 'Contact phone',
                 'On roster', 'Registered', 'Confirmed',
             ]);

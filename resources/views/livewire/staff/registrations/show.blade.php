@@ -58,7 +58,7 @@
             </x-ui::description-list>
 
             <p class="mt-3 max-w-prose text-sm text-body">
-                {{ __('Status, price, school and fair are not editable here. Each is the outcome of a decision that has to go through the registration service, so receipts are sent and the price snapshot stays honest.') }}
+                {{ __('Status, price, organization and fair are not editable here. Each is the outcome of a decision that has to go through the registration service, so receipts are sent and the price snapshot stays honest.') }}
             </p>
         </x-ui::section>
 

@@ -121,11 +121,11 @@ class Event extends Model
         return match ($grant->benefit_type) {
             GrantBenefit::Free => 0,
             // A custom price is an absolute figure, not a discount, and a
-            // coordinator may set it above list (a school offering to pay more
+            // coordinator may set it above list (an organization offering to pay more
             // is not our problem to prevent).
             GrantBenefit::CustomPrice => max(0, (int) $grant->custom_price_cents),
             // Round DOWN, so a 33%-off grant on $215.00 charges $144.05 rather
-            // than $144.06. The half cent goes to the school, not to the fair.
+            // than $144.06. The half cent goes to the organization, not to the fair.
             GrantBenefit::PercentOff => (int) floor($this->price_cents * (100 - (int) $grant->percent_off) / 100),
             // An approved grant with no benefit recorded is a data fault, not a
             // free ride: charge list price and let the coordinator notice.
@@ -189,7 +189,7 @@ class Event extends Model
      *
      * Counts occupying registrations - confirmed plus awaiting payment -
      * rather than confirmed alone. Counting only confirmed would let a run of
-     * mailed checks oversell the venue, and every one of those is a school
+     * mailed checks oversell the venue, and every one of those is an organization
      * that has to be turned away after the fact.
      */
     public function isFull(): bool

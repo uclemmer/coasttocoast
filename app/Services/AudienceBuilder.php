@@ -18,18 +18,18 @@ use Illuminate\Support\Facades\Log;
  * Who a campaign goes to (doc 07 §2).
  *
  * The design in one sentence: **audiences qualify organizations and deliver to
- * people.** A school earns its place on a list through its registration
- * history; the recipients are that school's *active* representatives. That
+ * people.** An organization earns its place on a list through its registration
+ * history; the recipients are that organization's *active* representatives. That
  * indirection is what makes the cross-year lists work at all — reps come and
- * go, and "last year's schools" has to keep meaning something after the person
+ * go, and "last year's organizations" has to keep meaning something after the person
  * who registered them has left.
  *
  * Four rules follow from it, and every one is a test:
  *
- *  1. **Pending and retired reps are never emailed** (R2.10). A school with no
+ *  1. **Pending and retired reps are never emailed** (R2.10). An organization with no
  *     active rep falls back to one `generic` recipient at its
  *     `admissions_email`; with neither, it is dropped and the drop is logged,
- *     because a school vanishing silently from a win-back list is how it stops
+ *     because an organization vanishing silently from a win-back list is how it stops
  *     being invited.
  *  2. **Dedupe by account, then by address.** A rep active across three past
  *     years qualifies three times and receives one email.
@@ -40,7 +40,7 @@ use Illuminate\Support\Facades\Log;
  *     mailing list cannot disagree about which fair was last.
  *
  * Resolution happens at SEND time, not compose time (rule 6): schedule a note
- * to lapsed schools and whoever is lapsed when it fires is who gets it.
+ * to lapsed organizations and whoever is lapsed when it fires is who gets it.
  */
 class AudienceBuilder
 {
@@ -179,7 +179,7 @@ class AudienceBuilder
             ->with('activeReps')
             ->get();
 
-        // One query for the whole set rather than one per school, so that the
+        // One query for the whole set rather than one per organization, so that the
         // registration id can be attached without an N+1.
         $registrationIds = $reference instanceof Event
             ? Registration::query()
@@ -229,16 +229,16 @@ class AudienceBuilder
     }
 
     /**
-     * The fallback for a school with nobody active, or null when it has no
+     * The fallback for an organization with nobody active, or null when it has no
      * general address either.
      */
     protected function generic(Organization $organization, ?int $registrationId): ?RecipientDto
     {
         if (blank($organization->admissions_email)) {
-            // Logged, never silent. A school dropping off a win-back list
+            // Logged, never silent. An organization dropping off a win-back list
             // without a trace is how it stops being invited (doc 07: "no
             // silent caps").
-            Log::info('Campaign audience dropped a school with no active reps and no admissions email.', [
+            Log::info('Campaign audience dropped an organization with no active reps and no admissions email.', [
                 'organization_id' => $organization->getKey(),
                 'organization' => $organization->name,
             ]);
@@ -258,7 +258,7 @@ class AudienceBuilder
     }
 
     /**
-     * The interest list: addresses with no school and no account behind them.
+     * The interest list: addresses with no organization and no account behind them.
      *
      * @return Collection<int, RecipientDto>
      */

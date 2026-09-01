@@ -11,21 +11,21 @@ use App\Services\ReceiptPdf;
 
 beforeEach(function () {
 
-    $this->school = Organization::factory()->named('Kenyon College')->create([
+    $this->organization = Organization::factory()->named('Kenyon College')->create([
         'address_line1' => '100 College Drive',
         'city' => 'Gambier',
         'state' => 'OH',
         'postal_code' => '43022',
     ]);
-    $this->rep = User::factory()->rep($this->school)->create();
+    $this->rep = User::factory()->rep($this->organization)->create();
     $this->fair = Fair::factory()->registrationOpen()->priced(21500)->create();
 
     $this->actingAs($this->rep);
 });
 
 describe('the receipt', function () {
-    it('renders a PDF carrying the school, the fair and the amount', function () {
-        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)
+    it('renders a PDF carrying the organization, the fair and the amount', function () {
+        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['price_cents' => 21500, 'rep_name' => 'Dana Whitfield']);
         Payment::factory()->for($registration)->create(['amount_cents' => 21500]);
 
@@ -36,7 +36,7 @@ describe('the receipt', function () {
     });
 
     it('names the file after the fair and the registration', function () {
-        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
         expect(app(ReceiptPdf::class)->filenameFor($registration))
             ->toBe('receipt-'.$this->fair->slug.'-'.$registration->id.'.pdf');
@@ -46,7 +46,7 @@ describe('the receipt', function () {
         // A receipt that recalculated would quietly disagree with the invoice
         // the moment the fair's price changed. That is the one thing a receipt
         // must never do.
-        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)
+        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['price_cents' => 19500]);
 
         $this->fair->update(['price_cents' => 30000]);
@@ -59,8 +59,8 @@ describe('the receipt', function () {
     });
 
     it('renders for a registration a grant made free', function () {
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
-        $registration = Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->school)
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
+        $registration = Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['grant_id' => $grant->id]);
 
         expect(app(ReceiptPdf::class)->render($registration))->toStartWith('%PDF-');
@@ -72,7 +72,7 @@ describe('availability', function () {
         // A receipt for money that has not arrived is exactly the document a
         // finance office files and forgets about.
         $registration = Registration::factory()->{$state}()->forEvent($this->fair)
-            ->forOrganization($this->school)->create();
+            ->forOrganization($this->organization)->create();
 
         expect(app(ReceiptPdf::class)->isAvailableFor($registration))->toBe($available);
     })->with([
@@ -84,9 +84,9 @@ describe('availability', function () {
     ]);
 
     it('offers the download on a confirmed registration and hides it otherwise', function () {
-        $confirmed = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        $confirmed = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
         $pending = Registration::factory()->pendingCheck()->forEvent($this->fair)
-            ->forOrganization($this->school)->create();
+            ->forOrganization($this->organization)->create();
 
         expect(livewire(ViewRegistration::class, ['registration' => $confirmed])->instance()->hasReceipt())->toBeTrue();
 
@@ -94,7 +94,7 @@ describe('availability', function () {
     });
 
     it('downloads through the portal', function () {
-        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
         $response = livewire(ViewRegistration::class, ['registration' => $registration])
             ->call('receipt');

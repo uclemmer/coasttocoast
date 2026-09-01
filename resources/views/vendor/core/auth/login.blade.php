@@ -30,13 +30,13 @@
 
     {{--
         Registration is this application's, not the package's: signing up
-        claims or creates a school and that decides whether the account is
+        claims or creates an organization and that decides whether the account is
         active immediately (D9). So this links at the app's own route rather
         than `core.register`, which stays disabled.
     --}}
     @if (Route::has('register'))
         <p class="mt-6 border-t border-default pt-6 text-center text-sm text-ink-600">
-            {{ __('Representing a school for the first time?') }}
+            {{ __('Representing an organization for the first time?') }}
             <a href="{{ route('register') }}" class="font-medium text-fg-brand hover:underline">
                 {{ __('Create an account') }}
             </a>

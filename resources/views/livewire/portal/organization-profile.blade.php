@@ -1,10 +1,10 @@
 <div class="max-w-3xl">
     <h1 class="mb-6 font-display text-2xl font-bold tracking-tight text-heading">
-        {{ $organization?->name ?? __('Your school') }}
+        {{ $organization?->name ?? __('Your organization') }}
     </h1>
 
     <form wire:submit="save" class="space-y-6">
-        <x-ui::section heading="{{ __('School') }}">
+        <x-ui::section heading="{{ __('Organization') }}">
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                     <x-ui::forms.input name="name" label="{{ __('Name') }}" wire:model="name" required />
@@ -20,14 +20,14 @@
                 <p class="mt-3 text-sm text-body">
                     {{ __('Current logo:') }}
                     <img src="{{ asset('storage/' . $organization->logo_path) }}"
-                        alt="{{ __('Logo for :school', ['school' => $organization->name]) }}"
+                        alt="{{ __('Logo for :organization', ['organization' => $organization->name]) }}"
                         class="mt-1 h-12 w-12 rounded-base object-cover">
                 </p>
             @endif
         </x-ui::section>
 
         <x-ui::section heading="{{ __('Admissions contact') }}"
-            description="{{ __('A general address and number for your office. We use these to reach your school if nobody there has an account with us.') }}">
+            description="{{ __('A general address and number for your office. We use these to reach your organization if nobody there has an account with us.') }}">
             <div class="grid gap-4 sm:grid-cols-3">
                 <x-ui::forms.input name="admissions_office" label="{{ __('Office') }}"
                     wire:model="admissions_office" />

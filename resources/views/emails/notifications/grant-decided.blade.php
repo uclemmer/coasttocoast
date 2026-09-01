@@ -7,7 +7,7 @@
 
     @if ($approved)
         {{-- Mirrors the portal's status line word for word (doc 01 Appendix A),
-             so a school reading both does not find them disagreeing. --}}
+             so an organization reading both does not find them disagreeing. --}}
         <p>{{ __('Good news — your registration fee for :event is :benefit. The discount is applied automatically when you register.', [
             'event' => $grant->event?->name,
             'benefit' => $grant->benefitSummary(),
@@ -21,7 +21,7 @@
             'event' => $grant->event?->name,
         ]) }}</p>
 
-        {{-- Always included. "Denied", with nothing else, is how a school is
+        {{-- Always included. "Denied", with nothing else, is how an organization is
              lost for good. --}}
         @if (filled($grant->denial_reason))
             <p>{{ $grant->denial_reason }}</p>

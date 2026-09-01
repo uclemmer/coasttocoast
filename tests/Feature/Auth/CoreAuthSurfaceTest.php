@@ -102,7 +102,7 @@ it('rejects a wrong password without signing anyone in', function () {
 });
 
 /*
- * Core's registration stays off: signing up here claims or creates a school,
+ * Core's registration stays off: signing up here claims or creates an organization,
  * and that decides whether the account is active immediately (D9). The route
  * must not exist, or two registration paths would disagree about that.
  */

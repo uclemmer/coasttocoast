@@ -147,7 +147,7 @@ Filament used to do invisibly.
 Three decisions over `GrantService`, shared by the queue and the detail screen
 through `Grants\Concerns\DecidesGrants`. No create or edit, deliberately — an
 edit form could set `status = approved` without a benefit, which
-`Event::priceFor()` reads as "no discount", so the school would be told it had a
+`Event::priceFor()` reads as "no discount", so the organization would be told it had a
 grant and then charged in full.
 
 Four things worth carrying to the remaining four:
@@ -186,15 +186,15 @@ mail goes out, not in bulk afterwards: if it dies halfway the people already
 told are marked and a re-run continues. A coordinator unsure whether the first
 press worked should be able to press again.
 
-### Schools, and the collision that must not be a toast
+### Organizations, and the collision that must not be a toast
 
 `OrganizationService::merge()` repoints representatives, registrations and
 grants and then deletes the husk — a delete could never do this, because the
 foreign keys cascade and would take real financial history with them.
 
-It reports back any fair where the merge has left the school holding **two live
+It reports back any fair where the merge has left the organization holding **two live
 registrations**, and those are deliberately not resolved automatically: which of
-two paid registrations a school keeps is a decision about money. Filament raised
+two paid registrations an organization keeps is a decision about money. Filament raised
 a `->persistent()` notification. A toast auto-dismisses, so the rebuild keeps
 the warning in an `x-ui::alert` on the component until somebody dismisses it by
 hand, and a test asserts it survives the next interaction.
@@ -213,7 +213,7 @@ Two smaller things:
 ### Campaigns, and two guards in the right order
 
 A sent campaign is immutable: no edit screen reaches one and it cannot be
-deleted. It is the record of what a hundred schools were told, and the delivery
+deleted. It is the record of what a hundred organizations were told, and the delivery
 table beside it only means something if the message still says what was sent.
 
 **The already-sent check runs BEFORE `authorize()`, and the order is the point.**
@@ -251,7 +251,7 @@ the hundreds.
 
 Manual entry does not write the model — `RegistrationService::createManualEntry()`
 does, so the same rules the portal follows apply: duplicates refused, price read
-from the fair and any approved grant. A duplicate is reported on the school
+from the fair and any approved grant. A duplicate is reported on the organization
 field, because that is the field to change.
 
 There is no delete. A registration is cancelled through the service so the seat
@@ -261,7 +261,7 @@ is released and the record of what happened survives.
 
 The two Filament widgets became one Livewire page at `/staff`. The money numbers
 come from **registrations, not the payments table**: "collected" means the price
-each school was quoted and confirmed against, so it agrees with what the
+each organization was quoted and confirmed against, so it agrees with what the
 coordinator told them. The payments table answers a different question and would
 disagree by whatever is in flight. Checks are separated out as money in the post
 rather than money lost.

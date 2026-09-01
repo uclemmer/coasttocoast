@@ -13,22 +13,22 @@ use Livewire\Component;
 use Throwable;
 
 /**
- * The school directory (R3.3a) — the Livewire replacement for the admin
+ * The organization directory (R3.3a) — the Livewire replacement for the admin
  * panel's OrganizationResource list (docs/13).
  *
  * THE MERGE IS THE INTERESTING ONE, and the reasoning is carried over whole.
- * Duplicate schools are inevitable — two reps sign up a year apart and one of
- * them types "The" — and the fix has to preserve both schools' registration
+ * Duplicate organizations are inevitable — two reps sign up a year apart and one of
+ * them types "The" — and the fix has to preserve both organizations' registration
  * history, which a delete never can because the foreign keys cascade.
  * `OrganizationService::merge()` repoints everything first and reports back any
  * fair where the merge has left two live registrations.
  *
  * Those collisions are **not** resolved automatically and are **not** a toast.
- * Which of two paid registrations a school keeps is a decision about money, and
+ * Which of two paid registrations an organization keeps is a decision about money, and
  * a message about it has to survive the next click — Filament used
  * `->persistent()`; here it is an alert that stays on the page.
  */
-#[Layout('components.layouts.staff', ['title' => 'Schools', 'heading' => 'Schools'])]
+#[Layout('components.layouts.staff', ['title' => 'Organizations', 'heading' => 'Organizations'])]
 class Index extends Component
 {
     use ActsForStaff;
@@ -43,7 +43,7 @@ class Index extends Component
     public string $keepId = '';
 
     /**
-     * Fairs where a merge has left the school holding two live registrations.
+     * Fairs where a merge has left the organization holding two live registrations.
      *
      * Kept on the component rather than raised as a toast: a toast is gone by
      * the time somebody works out what to do about it.
@@ -82,7 +82,7 @@ class Index extends Component
     }
 
     /**
-     * Schools a merge can fold the current one into.
+     * Organizations a merge can fold the current one into.
      *
      * @return Collection<int, Organization>
      */
@@ -123,7 +123,7 @@ class Index extends Component
         $losing = Organization::query()->find($this->merging);
 
         if ($losing === null) {
-            $this->toast(__('That school could not be found.'), 'danger');
+            $this->toast(__('That organization could not be found.'), 'danger');
 
             return;
         }
@@ -137,7 +137,7 @@ class Index extends Component
         $keep = Organization::query()->findOrFail($this->keepId);
 
         /*
-         * Merging a school into itself is refused by the service, not by a
+         * Merging an organization into itself is refused by the service, not by a
          * rule here. Restating it as validation would be a second copy of the
          * same decision, and the service's message is already written to be
          * read — the same reasoning the grant decisions follow.
@@ -183,7 +183,7 @@ class Index extends Component
         $organization = Organization::query()->find($this->deleting);
 
         if ($organization === null) {
-            $this->toast(__('That school could not be found.'), 'danger');
+            $this->toast(__('That organization could not be found.'), 'danger');
 
             return;
         }
@@ -196,7 +196,7 @@ class Index extends Component
         unset($this->organizations);
 
         $this->dispatch('ui-modal-close', id: 'delete-organization');
-        $this->toast(__('School removed.'));
+        $this->toast(__('Organization removed.'));
     }
 
     public function render(): View

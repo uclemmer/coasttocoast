@@ -22,8 +22,8 @@ beforeEach(function () {
     Mail::mailer('array')->getSymfonyTransport()->flush();
 
     $this->fair = Fair::factory()->published()->priced(21500)->create(['name' => 'College Fair 2027']);
-    $this->school = Organization::factory()->named('Kenyon College')->create();
-    $this->registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)
+    $this->organization = Organization::factory()->named('Kenyon College')->create();
+    $this->registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)
         ->create(['rep_email' => 'dana@kenyon.example', 'price_cents' => 21500]);
 });
 

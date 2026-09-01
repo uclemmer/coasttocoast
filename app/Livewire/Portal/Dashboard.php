@@ -19,10 +19,10 @@ use Livewire\Component;
  * Filament's rep panel used its stock Dashboard, which rendered an empty page
  * with no widgets — a rep signing in landed on nothing and had to find the
  * navigation. This replaces it with the two questions somebody actually signs
- * in to answer: what is my school registered for, and where did my fee
+ * in to answer: what is my organization registered for, and where did my fee
  * assistance request get to.
  *
- * Browsable by everyone, including pending and retired reps. Their school's
+ * Browsable by everyone, including pending and retired reps. Their organization's
  * history is theirs to look at; the membership banner explains why the buttons
  * elsewhere are missing.
  */
@@ -80,7 +80,7 @@ class Dashboard extends Component
     }
 
     /**
-     * The next fair this school has NOT registered for, if there is one.
+     * The next fair this organization has NOT registered for, if there is one.
      *
      * The dashboard's one call to action. Absent when they are already
      * registered for everything ahead — a button that leads to "you have

@@ -14,7 +14,7 @@ use Livewire\Component;
  * One grant application in full (docs/13) — replaces the admin panel's
  * ViewGrant page and its infolist.
  *
- * The justification is why this screen exists. It is the school's case for
+ * The justification is why this screen exists. It is the organization's case for
  * needing help, it does not fit in a table cell, and it is the thing a
  * coordinator is actually reading before deciding.
  */

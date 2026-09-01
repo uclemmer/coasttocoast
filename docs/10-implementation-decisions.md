@@ -39,8 +39,8 @@ status we have not seen.
 **Context.** Doc 03 says `capacity` is an "optional cap on confirmed registrations".
 
 **Decision.** `Event::isFull()` counts *occupying* registrations: confirmed **plus** pending payment.
-Counting confirmed alone lets a run of mailed checks oversell the room, and every oversell is a
-school that has to be turned away after it has already been told it has a place. The same set backs
+Counting confirmed alone lets a run of mailed checks oversell the room, and every oversell is an
+organization that has to be turned away after it has already been told it has a place. The same set backs
 the duplicate check and the grant-used check, so there is one definition
 (`RegistrationStatus::occupying()`).
 
@@ -54,14 +54,14 @@ whose `benefit_type` is null.
 
 **Decision.** Charge list price. An approved grant with no recorded benefit is a data fault, and the
 alternatives are worse: charging zero gives away a registration on the strength of a bug, and
-throwing takes the wizard down for a school that did nothing wrong. Covered by a test.
+throwing takes the wizard down for an organization that did nothing wrong. Covered by a test.
 
 ### D-1.2-d — Percentage discounts round **down**
 
 **Context.** Doc 03 says "percent_off → rounded down" without saying which way the half cent goes.
 
 **Decision.** `floor()`, so 33% off $215.01 charges $144.05. The fraction of a cent goes to the
-school. Pinned by a test with a rate that does not divide evenly.
+organization. Pinned by a test with a rate that does not divide evenly.
 
 ### D-1.2-e — Duplicate and one-grant-per-event rules are service-level, not unique indexes
 
@@ -78,7 +78,7 @@ under-constrained, and it is not an oversight.
 
 **Decision.** Lowercase, strip punctuation, collapse whitespace, drop a leading `the `. Deliberately
 does **not** strip institution words: "Boston University" and "Boston College" are different
-schools, and a merge prompt that conflates them is worse than a missed warning. The model derives
+organizations, and a merge prompt that conflates them is worse than a missed warning. The model derives
 the column on save, so no caller can forget it.
 
 ### D-1.2-g — `message_recipients.email_log_id` has no foreign key
@@ -114,7 +114,7 @@ door with a changelog entry. Identity comes from `config/fair.php` (`COORDINATOR
 
 **Decision.** `EventSeeder` writes it with `is_published = false` and `TODO-OWNER` in the name.
 An unpublished event is never registration-open, so a placeholder the owner forgets about cannot
-quietly charge a school the wrong fee — publishing it is a deliberate act once the real figures are
+quietly charge an organization the wrong fee — publishing it is a deliberate act once the real figures are
 known. `FairFixtureSeeder` publishes and opens it in development only, because a local app with no
 current fair is not worth running.
 
@@ -196,7 +196,7 @@ itself. The original approach did not merely look worse — it silently saved **
 because a field marked `dehydrated(false)` is stripped from the form data before the mutation hook
 ever sees it. Keeping the conversion on the component also means create and edit cannot drift apart:
 there is one place, not two. `App\Support\Money` owns the arithmetic, and rounds rather than
-truncating — `215.10 * 100` is `21509.999999999996` in IEEE 754, and a cast would charge a school a
+truncating — `215.10 * 100` is `21509.999999999996` in IEEE 754, and a cast would charge an organization a
 cent less than it agreed to, forever.
 
 ### D-2.1-b — The slug is suggested on create only
@@ -265,13 +265,13 @@ latter is the coordinator's to override.
 
 **Decision.** An already-confirmed registration returns unchanged and fires nothing. Stripe
 redelivers a webhook until it gets a 2xx, and a second `RegistrationConfirmed` means a second
-receipt — which schools notice and the coordinator has to apologise for. Pinned by a test that calls
+receipt — which organizations notice and the coordinator has to apologise for. Pinned by a test that calls
 it twice and asserts one dispatch.
 
 ### D-2.3-d — Registration creation runs inside a transaction
 
 **Decision.** The duplicate check, the capacity check and the insert share one `DB::transaction`.
-Two reps of the same school pressing register in the same second would otherwise both read "no
+Two reps of the same organization pressing register in the same second would otherwise both read "no
 existing registration" and both write one, and the resulting pair of invoices is exactly the
 situation R2.7 exists to prevent.
 
@@ -280,7 +280,7 @@ situation R2.7 exists to prevent.
 **Context.** Card 2.6 says applications are allowed "only while the event registration is open or
 upcoming".
 
-**Decision.** `GrantService::apply()` refuses only once `starts_at` is in the past. A school lining
+**Decision.** `GrantService::apply()` refuses only once `starts_at` is in the past. An organization lining
 its funding up *before* registration opens is the normal case and the whole point of applying early,
 so gating on the registration window would block the most legitimate applicant.
 
@@ -288,14 +288,14 @@ so gating on the registration window would block the most legitimate applicant.
 
 **Decision.** A `custom_price` grant with no price, or a `percent_off` grant with no percentage (or
 one outside 1-100), is refused. Left unchecked, `Event::priceFor()` falls through to list price: the
-school would be told in writing that it had a grant and then charged in full. The method also clears
+organization would be told in writing that it had a grant and then charged in full. The method also clears
 the parameters that do not belong to the chosen benefit, so a grant cannot carry contradictory
 figures.
 
 ### D-2.6-c — Withdrawal is the only status that frees the one-per-fair slot
 
 **Decision.** `GrantStatus::blockingReapplication()` covers pending, approved, denied **and**
-revoked. A school that changes its mind may apply again with a better case; a school that was denied
+revoked. An organization that changes its mind may apply again with a better case; an organization that was denied
 may not reapply for the same fair, because that decision is the coordinator's and reapplying would be
 a way around it.
 
@@ -316,14 +316,14 @@ exists to preserve. Profile fields fill gaps in the survivor but never overwrite
 entered.
 
 It returns the registrations that now collide on a fair instead of resolving them. Which of two
-paid registrations a school keeps is a decision about money; the coordinator gets a persistent
+paid registrations an organization keeps is a decision about money; the coordinator gets a persistent
 warning and decides.
 
 ### D-2.2-c — The Registration edit form exposes only roster visibility, notes and the fair contact
 
-**Decision.** Status, price, school and fair are not editable fields. Editing `status` by hand would
+**Decision.** Status, price, organization and fair are not editable fields. Editing `status` by hand would
 skip the events that send receipts; editing `price_cents` would break the snapshot that proves what
-a school agreed to pay (N1); moving a registration to another fair would carry a price nobody agreed
+an organization agreed to pay (N1); moving a registration to another fair would carry a price nobody agreed
 for it. Cancelling is an action that goes through the service, and `RegistrationPolicy::delete()`
 always returns false.
 
@@ -333,7 +333,7 @@ always returns false.
 Filament write the row. That keeps one set of rules: the coordinator still gets the duplicate check
 and the grant-aware price snapshot, and what she skips she skips because the service was asked to,
 not because this page found a different route to the database. A refusal is re-thrown as a
-`ValidationException` on the field it belongs to, so a duplicate reads as a message about the school.
+`ValidationException` on the field it belongs to, so a duplicate reads as a message about the organization.
 
 ### D-2.2-e — CSV export is streamed, not queued
 
@@ -344,9 +344,9 @@ comfortably within budget, and the alternative would not be the same feature.
 
 ### D-2.6-d — The Grants resource has no create or edit page
 
-**Decision.** Only `index` and `view`. A grant is applied for by a school and decided by the
+**Decision.** Only `index` and `view`. A grant is applied for by an organization and decided by the
 coordinator through three actions. An edit form would let someone set `status = approved` without a
-benefit — which `Event::priceFor()` reads as "no discount", so the school would be told in writing it
+benefit — which `Event::priceFor()` reads as "no discount", so the organization would be told in writing it
 had a grant and then be charged in full. Routing every change through `GrantService` makes that
 unrepresentable rather than merely discouraged. The revoke action hides itself once a grant is used,
 because an action that always fails is worse than no action.
@@ -364,19 +364,19 @@ is money in the post rather than money lost.
 rather than every registration ever taken when no fair is published. A dashboard that leads with last
 year's tail tells the coordinator nothing about today.
 
-### D-3.0-a — Signup asymmetry: creating a school activates, claiming one waits
+### D-3.0-a — Signup asymmetry: creating an organization activates, claiming one waits
 
 **Decision.** `OrganizationService::createWithFounder()` makes the founder `active` immediately;
 `claim()` makes them `pending`. Doc 01 D9 specifies this, and it is worth restating why the two
 differ: anyone can say they represent Vanderbilt, and on the other side of that claim sit the
-school's registration history, its grants and its place on the roster. There is nobody to vouch for
-a school only the founder knows about, so making *them* wait would mean waiting on nothing. Both
+organization's registration history, its grants and its place on the roster. There is nobody to vouch for
+an organization only the founder knows about, so making *them* wait would mean waiting on nothing. Both
 paths alert the coordinator; the create path carries the duplicate warning the rep pressed past.
 
 ### D-3.0-b — A denied claim detaches the account rather than deleting or freezing it
 
 **Decision.** `denyClaim()` sets `organization_id` and `membership_status` to null. The person
-survives with a working account and no school. The realistic denial is a typo — somebody claimed
+survives with a working account and no organization. The realistic denial is a typo — somebody claimed
 "Boston University" meaning "Boston College" — and a lingering `pending` membership would block them
 from claiming the right one.
 
@@ -386,17 +386,17 @@ from claiming the right one.
 coordinator administer every row".
 
 **Decision.** The rep resources override `canViewAny()` / `canView()` and ask a different question:
-"is this my school's row". Loosening the policies to accommodate the portal would have made one
+"is this my organization's row". Loosening the policies to accommodate the portal would have made one
 predicate answer two questions and eventually get one of them wrong. Row-level scoping is enforced
-twice over — `getEloquentQuery()` filters to the rep's `organization_id`, so another school's
+twice over — `getEloquentQuery()` filters to the rep's `organization_id`, so another organization's
 registration is a **404 rather than a 403**, which does not confirm that the row exists.
 
-A user with no school gets `whereRaw('1 = 0')`, never `where('organization_id', null)`.
+A user with no organization gets `whereRaw('1 = 0')`, never `where('organization_id', null)`.
 
-### D-3.1-b — The portal lists the school's registrations, not the rep's
+### D-3.1-b — The portal lists the organization's registrations, not the rep's
 
 **Decision.** Scoped by `organization_id`, not `user_id`. A new admissions officer inheriting the
-job should see their school's history rather than an empty page and the impression that nothing was
+job should see their organization's history rather than an empty page and the impression that nothing was
 ever done. This is D8 (the organization is the unit that registers) made visible.
 
 ### D-3.1-c — Phone numbers are normalised, not rejected
@@ -455,7 +455,7 @@ tripped honeypot is deliberately vague, so a bot cannot learn which field caught
 
 Addresses are lowercased before `updateOrCreate`, so somebody who signs up as `Dana@` and then
 `dana@` is not both told they are on the list and mailed twice. A second submission still improves
-what we know — it fills in the school name if the first left it blank.
+what we know — it fills in the organization name if the first left it blank.
 
 ### D-4.1-a — The gateway takes a registration, never an amount
 
@@ -481,7 +481,7 @@ declined card, an outage mid-signup.
 
 **Decision.** `CheckPaymentService::markReceived()` writes the payment and calls
 `RegistrationService::confirmPayment()` inside one `DB::transaction`. A check marked received on a
-registration that stayed `pending_payment` is the failure mode that gets a school turned away at the
+registration that stayed `pending_payment` is the failure mode that gets an organization turned away at the
 door. It calls the *same* `confirmPayment()` the Stripe webhook does, so both paths fire the same
 events and produce the same receipt.
 
@@ -497,7 +497,7 @@ refunded. The webhook handler does, which means a refund issued from our panel a
 the Stripe dashboard leave the database in exactly the same state — the only way the two can be
 trusted to agree.
 
-A **partial** refund moves the payment but not the registration: the school is still coming, it just
+A **partial** refund moves the payment but not the registration: the organization is still coming, it just
 paid less. A full refund sets `Refunded` and clears `show_on_roster`, because a refunded
 registration is one that is not attending.
 
@@ -523,7 +523,7 @@ who can reach the URL can confirm a registration.
 **Decision.** When `amount_total` differs from the registration's snapshot, the handler appends a
 `PAYMENT MISMATCH` note, fails the payment row, logs an error and leaves the registration
 `pending_payment`. The only routes here are a tampered session or a bug in our own pricing, and both
-mean the figure the school agreed to and the figure that moved are different. Confirming would bless
+mean the figure the organization agreed to and the figure that moved are different. Confirming would bless
 it.
 
 ### D-4.3-d — Webhook routes live in their own file
@@ -607,15 +607,15 @@ cross-year campaign audiences will use.
 
 **Decision.** `protected static bool $isLazy = false`. Filament lazy-loads widgets by default, which
 is right in an admin panel and wrong here: the roster *is* the page, and its job is to be read — by a
-search engine, by a rep checking whether their school is already listed, and by anyone whose
+search engine, by a rep checking whether their organization is already listed, and by anyone whose
 JavaScript did not run. A list that only exists after a round-trip is invisible to all three.
 
 ### D-5.3-c — The logo placeholder is a generated inline SVG
 
-**Decision.** A school with no logo gets a data-URI SVG carrying its initial (R1.3). Generated rather
+**Decision.** An organization with no logo gets a data-URI SVG carrying its initial (R1.3). Generated rather
 than fetched from an avatar service: a third-party image would leak every visitor's request off-site
 and break the page when that service is down, for a letter in a circle. Images are lazy-loaded and
-carry the school name as alt text.
+carry the organization name as alt text.
 
 ### D-5.4-a — The contact consent is a stated notice, not an unvalidated checkbox — **flagged**
 
@@ -706,13 +706,13 @@ the time a decision lands, and a grant nobody knows about is a discount nobody c
 ### D-6.3-a — `AudienceBuilder` returns DTOs, and dedupes on account before address
 
 **Decision.** `RecipientDto` rather than models or arrays, because a recipient is sometimes a user,
-sometimes a school's `admissions_email` with nobody behind it, and sometimes a bare address off the
+sometimes an organization's `admissions_email` with nobody behind it, and sometimes a bare address off the
 interest list. `dedupeKey()` prefers the account id and falls back to a lowercased address, so a rep
 active across three past years qualifies three times and is mailed once.
 
 The `generic` flag is surfaced in the composer's preview, so a coordinator can see how much of a
-send is going to nobody in particular. A school with neither an active rep nor an admissions email
-is dropped **and logged** — doc 07's "no silent caps": a school vanishing from a win-back list
+send is going to nobody in particular. An organization with neither an active rep nor an admissions email
+is dropped **and logged** — doc 07's "no silent caps": an organization vanishing from a win-back list
 without a trace is how it stops being invited.
 
 ### D-6.4-a — `sent_at` is stamped before the fan-out
@@ -720,10 +720,10 @@ without a trace is how it stops being invited.
 **Decision.** `SendEventBroadcast` marks the message sent, then loops. If the process dies halfway
 through a hundred notifications, a retry that re-resolved the audience and re-sent would be far
 worse than one that stops. The job also no-ops entirely on an already-sent message, so a queue
-retrying after a timeout cannot mail a hundred schools twice.
+retrying after a timeout cannot mail a hundred organizations twice.
 
 A sent campaign is then immutable: no edit, no delete, both in the policy and in the resource. It is
-the record of what a hundred schools were told, and the delivery table beneath it only means
+the record of what a hundred organizations were told, and the delivery table beneath it only means
 anything if the message has not changed since.
 
 ### D-6.4-b — The test send uses a throwaway recipient row
@@ -745,14 +745,14 @@ unsure whether the first press worked.
 registration — the window is open, the rep is active, the price comes from the current grant — and
 none of them apply to recording something that happened in 2025.
 
-It matches schools on the **normalized name**, so "The Ohio State University" in a fifteen-year-old
+It matches organizations on the **normalized name**, so "The Ohio State University" in a fifteen-year-old
 export lands on the "Ohio State University" already in the directory. It fills gaps in an existing
 profile but never overwrites one. It refuses to invent a fair from a spreadsheet cell — an event with
 no date, venue or price would leave the roster and the audiences to cope. And it is idempotent by
 (event, organization), so the owner fixes a column and runs it again.
 
 Only `organization_name` and `event_slug` are required. Everything else is optional because a
-fifteen-year-old export will be missing things, and a partial record of a school that attended is
+fifteen-year-old export will be missing things, and a partial record of an organization that attended is
 worth far more than no record. Every lookup uses `?? null` for the same reason — a CSV with just the
 two required columns must not take the import down on row one.
 
@@ -1217,7 +1217,7 @@ below.
 
 **Symptom.** Signing in as the coordinator landed on `/portal`, showing:
 
-> Your account is not attached to a school. Contact the fair coordinator to be added.
+> Your account is not attached to an organization. Contact the fair coordinator to be added.
 
 They *are* the fair coordinator. Every anchor on that page was checked: no link to `/staff` or
 `/admin` anywhere. The only route to their own screens was typing the URL.
@@ -1234,9 +1234,9 @@ string, so fixing it at the source means a package change and a release. The des
 every way in at once — the post-login redirect, the `redirectUsersTo('/portal')` that bounces an
 authenticated user off `/login`, and a stale bookmark to a deeper portal page.
 
-**Deliberately narrow, on both halves of the condition.** A *rep* with no school still gets the
+**Deliberately narrow, on both halves of the condition.** A *rep* with no organization still gets the
 message, because for them it is true and actionable, and `/staff` would 403 them. A staff member who
-*does* have a school is left alone — they have real business in the portal. The gate is
+*does* have an organization is left alone — they have real business in the portal. The gate is
 `Permissions::ACCESS`, the same permission `ActsForStaff` and `User::canAccessPanel()` ask, so the
 three cannot drift about who counts as staff.
 
@@ -1248,13 +1248,13 @@ renders — registration is not rendering, and asserting a redirect target alone
 
 **One existing assertion changed rather than being deleted.** "keeps a coordinator out of nothing —
 admin and the portal are independent" asserted `assertOk()` on `/portal`. The independence it was
-about still holds; what changed is that a coordinator with no school is now redirected. It now makes
-its point with a coordinator who *has* a school — the case that claim was really about, and the one
+about still holds; what changed is that a coordinator with no organization is now redirected. It now makes
+its point with a coordinator who *has* an organization — the case that claim was really about, and the one
 the redirect leaves alone.
 
 **A guard worth knowing about, met while writing that test.** `User` is `$guarded = ['*']` with
 `organization_id` not fillable, so `$user->update(['organization_id' => ...])` silently does nothing.
-That is deliberate — it is what stops a rep mass-assigning themselves into another school — and it
+That is deliberate — it is what stops a rep mass-assigning themselves into another organization — and it
 cost one debugging round. Assign the property and `save()`.
 ---
 

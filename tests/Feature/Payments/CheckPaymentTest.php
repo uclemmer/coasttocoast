@@ -17,10 +17,10 @@ use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
     $this->coordinator = coordinator();
-    $this->school = Organization::factory()->named('Kenyon College')->create();
+    $this->organization = Organization::factory()->named('Kenyon College')->create();
     $this->fair = Fair::factory()->registrationOpen()->priced(21500)->create();
     $this->registration = Registration::factory()->pendingCheck()
-        ->forEvent($this->fair)->forOrganization($this->school)
+        ->forEvent($this->fair)->forOrganization($this->organization)
         ->create(['price_cents' => 21500]);
 });
 
@@ -30,13 +30,13 @@ describe('the printable form', function () {
     });
 
     it('is offered to the rep while the check is outstanding', function () {
-        $this->actingAs(User::factory()->rep($this->school)->create());
+        $this->actingAs(User::factory()->rep($this->organization)->create());
 
         expect(livewire(RepViewRegistration::class, ['registration' => $this->registration])->instance()->needsCheckForm())->toBeTrue();
     });
 
     it('disappears once the check has arrived', function () {
-        $this->actingAs(User::factory()->rep($this->school)->create());
+        $this->actingAs(User::factory()->rep($this->organization)->create());
 
         app(CheckPaymentService::class)->markReceived($this->registration, $this->coordinator);
 
@@ -44,7 +44,7 @@ describe('the printable form', function () {
     });
 
     it('downloads through the portal', function () {
-        $this->actingAs(User::factory()->rep($this->school)->create());
+        $this->actingAs(User::factory()->rep($this->organization)->create());
 
         $response = livewire(RepViewRegistration::class, ['registration' => $this->registration])
             ->call('checkForm');
@@ -56,7 +56,7 @@ describe('the printable form', function () {
 describe('recording a check', function () {
     it('confirms the registration and records the payment together', function () {
         // A check marked received on a registration that stayed
-        // pending_payment is the failure that gets a school turned away.
+        // pending_payment is the failure that gets an organization turned away.
         $payment = app(CheckPaymentService::class)->markReceived(
             registration: $this->registration,
             coordinator: $this->coordinator,
@@ -96,7 +96,7 @@ describe('recording a check', function () {
     });
 
     it('respects a grant-reduced amount', function () {
-        $grant = Grant::factory()->customPrice(5000)->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->customPrice(5000)->for($this->fair)->for($this->organization)->create();
         $discounted = Registration::factory()->pendingCheck()->forEvent($this->fair)
             ->forOrganization(Organization::factory()->create())
             ->create(['price_cents' => 5000, 'grant_id' => $grant->id]);

@@ -14,15 +14,15 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 /**
- * Add or edit a school (R3.3a) — replaces the admin panel's CreateOrganization
+ * Add or edit an organization (R3.3a) — replaces the admin panel's CreateOrganization
  * and EditOrganization pages (docs/13).
  *
  * The duplicate warning is **surfaced, not blocking** (R2.7). "Boston
  * University" and "Boston College" normalize differently on purpose, so a match
  * is worth a second look rather than a veto — the coordinator knows which
- * schools are genuinely distinct and the normaliser does not.
+ * organizations are genuinely distinct and the normaliser does not.
  */
-#[Layout('components.layouts.staff', ['title' => 'School'])]
+#[Layout('components.layouts.staff', ['title' => 'Organization'])]
 class Edit extends Component
 {
     use ActsForStaff;
@@ -82,11 +82,11 @@ class Edit extends Component
     }
 
     /**
-     * Schools whose normalised name matches this one.
+     * Organizations whose normalised name matches this one.
      *
      * Recomputed as the name is typed, so the warning appears while there is
      * still a chance to stop rather than after saving a second "The Baylor
-     * School".
+     * Organization".
      *
      * @return Collection<int, Organization>
      */
@@ -157,7 +157,7 @@ class Edit extends Component
         $this->logo = null;
         $this->removeLogo = false;
 
-        session()->flash('status', __('School saved.'));
+        session()->flash('status', __('Organization saved.'));
 
         $this->redirect(route('staff.organizations.show', $organization), navigate: false);
     }
@@ -173,7 +173,7 @@ class Edit extends Component
     public function render(): View
     {
         return view('livewire.staff.organizations.edit', [
-            'pageHeading' => $this->isEditing() ? $this->organization->name : __('Add a school'),
+            'pageHeading' => $this->isEditing() ? $this->organization->name : __('Add an organization'),
         ]);
     }
 }

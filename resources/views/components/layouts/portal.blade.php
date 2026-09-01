@@ -80,7 +80,7 @@
         ['portal.dashboard', __('Overview')],
         ['portal.registrations', __('Registrations')],
         ['portal.grants', __('Fee assistance')],
-        ['portal.organization', __('Your school')],
+        ['portal.organization', __('Your organization')],
         ['portal.profile', __('Your details')],
     ] as [$route, $label])
                     @php $current = request()->routeIs($route); @endphp

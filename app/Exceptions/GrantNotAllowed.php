@@ -24,7 +24,7 @@ class GrantNotAllowed extends RuntimeException
 
     public static function repBelongsToAnotherOrganization(): self
     {
-        return new self(__('You can only apply for a grant for the school your account belongs to.'));
+        return new self(__('You can only apply for a grant for the organization your account belongs to.'));
     }
 
     public static function alreadyApplied(Organization $organization, Event $event): self
@@ -55,7 +55,7 @@ class GrantNotAllowed extends RuntimeException
     }
 
     /**
-     * The one rule that protects a school rather than the process: once a
+     * The one rule that protects an organization rather than the process: once a
      * registration has been priced under a grant, the discount has been given
      * in writing and cannot be taken back.
      */
@@ -74,6 +74,6 @@ class GrantNotAllowed extends RuntimeException
 
     public static function denialReasonRequired(): self
     {
-        return new self(__('Give a reason — it is included in the email the school receives.'));
+        return new self(__('Give a reason — it is included in the email the organization receives.'));
     }
 }

@@ -46,20 +46,20 @@
     @if ($this->actsForOrganization())
         <x-ui::section heading="{{ __('Stepping down') }}">
             <p class="text-sm text-body">
-                {{ __('If you no longer represent :school, you can step down. You keep your account and its history.', ['school' => $this->currentOrganization()?->name]) }}
+                {{ __('If you no longer represent :organization, you can step down. You keep your account and its history.', ['organization' => $this->currentOrganization()?->name]) }}
             </p>
 
             <div class="mt-4">
                 <x-ui::button variant="danger" type="button"
                     x-on:click="$dispatch('ui-modal-open', { id: 'confirm-retire' })">
-                    {{ __('I no longer represent this school') }}
+                    {{ __('I no longer represent this organization') }}
                 </x-ui::button>
             </div>
         </x-ui::section>
 
         <x-ui::confirm-modal id="confirm-retire" title="{{ __('Step down as a representative?') }}"
             confirm="{{ __('Step down') }}" wire:click="retire">
-            {{ __("You will keep your account and be able to see :school's past registrations, but you will no longer be able to register it, apply for grants, or edit its details. The coordinator can undo this.", ['school' => $this->currentOrganization()?->name]) }}
+            {{ __("You will keep your account and be able to see :organization's past registrations, but you will no longer be able to register it, apply for grants, or edit its details. The coordinator can undo this.", ['organization' => $this->currentOrganization()?->name]) }}
         </x-ui::confirm-modal>
     @endif
 </div>

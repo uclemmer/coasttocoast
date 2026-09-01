@@ -1,6 +1,6 @@
 {{--
     Representative sign-up (D9). See App\Livewire\Auth\Register for why the two
-    paths differ and why the school picker is a search box rather than a select.
+    paths differ and why the organization picker is a search box rather than a select.
 
     Rendered as a full-page Livewire component, so Livewire injects its own
     assets here and the layout's @livewireScripts is belt-and-braces rather
@@ -35,11 +35,11 @@
             </div>
         </x-ui::section>
 
-        <x-ui::section heading="{{ __('Your school') }}" level="h2">
+        <x-ui::section heading="{{ __('Your organization') }}" level="h2">
             <div class="space-y-4">
                 <fieldset>
                     <legend class="mb-2.5 block text-sm font-medium text-heading">
-                        {{ __('Is your school already registered with us?') }}
+                        {{ __('Is your organization already registered with us?') }}
                     </legend>
 
                     <div class="space-y-2">
@@ -50,7 +50,7 @@
                     </div>
                 </fieldset>
 
-                {{-- ── Claim an existing school ─────────────────────────── --}}
+                {{-- ── Claim an existing organization ─────────────────────────── --}}
                 @if ($organization_choice === 'claim')
                     @if ($this->chosen)
                         <div
@@ -66,10 +66,10 @@
                                 wire:click="clearChoice">{{ __('Change') }}</x-ui::button>
                         </div>
                     @else
-                        <x-ui::forms.input name="organization_search" label="{{ __('Find your school') }}"
+                        <x-ui::forms.input name="organization_search" label="{{ __('Find your organization') }}"
                             wire:model.live.debounce.300ms="organization_search"
-                            placeholder="{{ __('Start typing a school name') }}"
-                            hint="{{ __('Search by name, then choose your school from the results.') }}" />
+                            placeholder="{{ __('Start typing an organization name') }}"
+                            hint="{{ __('Search by name, then choose your organization from the results.') }}" />
 
                         @if ($this->matches->isNotEmpty())
                             <x-ui::list-group>
@@ -82,7 +82,7 @@
                             </x-ui::list-group>
                         @elseif (strlen(trim($organization_search)) >= 2)
                             <p class="text-sm text-ink-600">
-                                {{ __('No schools match that. If yours is not listed, choose "No — add it" above.') }}
+                                {{ __('No organizations match that. If yours is not listed, choose "No — add it" above.') }}
                             </p>
                         @endif
 
@@ -93,24 +93,24 @@
                     @endif
                 @endif
 
-                {{-- ── Add a new school ─────────────────────────────────── --}}
+                {{-- ── Add a new organization ─────────────────────────────────── --}}
                 @if ($organization_choice === 'create')
-                    <x-ui::forms.input name="organization_name" label="{{ __('School name') }}"
+                    <x-ui::forms.input name="organization_name" label="{{ __('Organization name') }}"
                         wire:model.live.blur="organization_name" required />
 
                     @if ($this->duplicateWarning->isNotEmpty())
                         {{-- Warns, never blocks (R2.7). --}}
                         <x-ui::alert variant="warning">
-                            {{ __('We already have :names. If that is your school, choose "Yes" above instead.', ['names' => $this->duplicateWarning->join(', ')]) }}
+                            {{ __('We already have :names. If that is your organization, choose "Yes" above instead.', ['names' => $this->duplicateWarning->join(', ')]) }}
                         </x-ui::alert>
                     @endif
 
                     <x-ui::forms.input name="organization_website" type="url"
-                        label="{{ __('School website') }}" wire:model="organization_website" />
+                        label="{{ __('Organization website') }}" wire:model="organization_website" />
 
                     <x-ui::forms.input name="organization_admissions_email" type="email"
                         label="{{ __('Admissions office email') }}" wire:model="organization_admissions_email"
-                        hint="{{ __('A general address we can use if nobody from your school has an account with us.') }}" />
+                        hint="{{ __('A general address we can use if nobody from your organization has an account with us.') }}" />
                 @endif
             </div>
         </x-ui::section>

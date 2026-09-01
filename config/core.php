@@ -66,7 +66,7 @@ return [
 
         /*
          * Core's own registration stays OFF, deliberately. Signing up here is
-         * not "create a user": it claims or creates a school, and which of
+         * not "create a user": it claims or creates an organization, and which of
          * those it is decides whether the account is active immediately or
          * waits on a coordinator (D9). That logic is this application's, so
          * registration is app-owned - see routes/web.php and docs/12.

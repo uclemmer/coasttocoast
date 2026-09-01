@@ -20,7 +20,7 @@ use Livewire\Component;
  *
  * A SENT CAMPAIGN CANNOT BE EDITED. `mount()` refuses one outright rather than
  * rendering a form that will not save: it is the record of what a hundred
- * schools were told, and the delivery table beside it only means something if
+ * organizations were told, and the delivery table beside it only means something if
  * the message still says what was sent.
  *
  * THE AUDIENCE COUNT IS LIVE, so changing the audience updates the number

@@ -23,7 +23,7 @@ use Livewire\Component;
  *
  * THE MONEY NUMBERS COME FROM REGISTRATIONS, NOT FROM THE PAYMENTS TABLE, and
  * that is deliberate rather than lazy. "Collected" here means the price each
- * school was quoted and has confirmed against, so it agrees with what the
+ * organization was quoted and has confirmed against, so it agrees with what the
  * coordinator told them; the payments table answers a different question and
  * would disagree by whatever is in flight.
  *

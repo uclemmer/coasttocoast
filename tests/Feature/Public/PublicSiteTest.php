@@ -145,13 +145,13 @@ describe('the countdown', function () {
 describe('the roster', function () {
     beforeEach(function () {
         $this->fair = Fair::factory()->published()->create();
-        $this->school = Organization::factory()->named('Kenyon College')->create();
+        $this->organization = Organization::factory()->named('Kenyon College')->create();
     });
 
-    it('lists confirmed schools only', function () {
-        // Test-inventory item 21. The roster is a promise the school will be
+    it('lists confirmed organizations only', function () {
+        // Test-inventory item 21. The roster is a promise the organization will be
         // there, so an unpaid registration has no business on it.
-        Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
         $pending = Organization::factory()->named('Pending College')->create();
         Registration::factory()->pendingCheck()->forEvent($this->fair)->forOrganization($pending)->create();
@@ -166,9 +166,9 @@ describe('the roster', function () {
             ->assertDontSee('Cancelled University');
     });
 
-    it('respects the coordinator hiding a school, and drops a refunded one', function () {
+    it('respects the coordinator hiding an organization, and drops a refunded one', function () {
         Registration::factory()->hiddenFromRoster()->forEvent($this->fair)
-            ->forOrganization($this->school)->create();
+            ->forOrganization($this->organization)->create();
 
         $refunded = Organization::factory()->named('Refunded College')->create();
         Registration::factory()->refunded()->forEvent($this->fair)->forOrganization($refunded)->create();
@@ -183,9 +183,9 @@ describe('the roster', function () {
         // The bug doc 00 recorded: the Last Year page was showing the current
         // roster. One component serves both, against different fairs.
         $lastYear = Fair::factory()->past(1)->create();
-        $lastYearSchool = Organization::factory()->named('Berry College')->create();
-        Registration::factory()->forEvent($lastYear)->forOrganization($lastYearSchool)->create();
-        Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        $lastYearOrganization = Organization::factory()->named('Berry College')->create();
+        Registration::factory()->forEvent($lastYear)->forOrganization($lastYearOrganization)->create();
+        Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
         $this->get('/representatives')->assertSee('Kenyon College')->assertDontSee('Berry College');
         $this->get('/last-year')->assertSee('Berry College')->assertDontSee('Kenyon College');
@@ -194,13 +194,13 @@ describe('the roster', function () {
     it('renders its rows server-side, for search engines and for no-JavaScript', function () {
         // The roster IS the page. A list that only exists after a round trip
         // is invisible to both (doc 10, D-5.3-b).
-        Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
         $this->get('/representatives')->assertSee('Kenyon College');
     });
 
     it('searches by institution name', function () {
-        Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
         $other = Organization::factory()->named('Rhodes College')->create();
         Registration::factory()->forEvent($this->fair)->forOrganization($other)->create();
 
@@ -216,10 +216,10 @@ describe('the roster', function () {
         livewire(LastYearRoster::class)->assertSuccessful();
     });
 
-    it('falls back to an initial when a school has no logo', function () {
+    it('falls back to an initial when an organization has no logo', function () {
         // R1.3. Generated inline rather than fetched from an avatar service,
         // which would leak every visitor's request to a third party.
-        Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
         expect(livewire(RepresentativesRoster::class)->html())
             ->toMatch('/>\s*K\s*</');

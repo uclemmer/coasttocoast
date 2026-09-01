@@ -9,7 +9,7 @@
         <x-ui::stat-group>
             <x-ui::stat label="{{ __('Upcoming registrations') }}" :value="$this->upcoming->count()" />
             <x-ui::stat label="{{ __('Fee assistance pending') }}" :value="$this->pendingGrants->count()" />
-            <x-ui::stat label="{{ __('Your school') }}" :value="$this->currentOrganization()->name" />
+            <x-ui::stat label="{{ __('Your organization') }}" :value="$this->currentOrganization()->name" />
         </x-ui::stat-group>
     @endif
 

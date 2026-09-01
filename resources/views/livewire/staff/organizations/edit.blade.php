@@ -1,13 +1,13 @@
-{{-- Add or edit a school (docs/13). --}}
+{{-- Add or edit an organization (docs/13). --}}
 <div>
     <x-ui::action-bar :heading="$pageHeading">
         <x-ui::button href="{{ route('staff.organizations') }}" variant="secondary">
-            {{ __('Back to schools') }}
+            {{ __('Back to organizations') }}
         </x-ui::button>
     </x-ui::action-bar>
 
     <form wire:submit="save" class="mt-6 max-w-3xl space-y-6">
-        <x-ui::section :heading="__('School')">
+        <x-ui::section :heading="__('Organization')">
             {{-- `.live`, debounced: the warning is worth having while there is
                  still a chance to stop, not after a second "The Baylor School"
                  has been saved. --}}
@@ -17,7 +17,7 @@
                 Surfaced, not blocking (R2.7). "Boston University" and "Boston
                 College" normalize differently on purpose, so a match is worth a
                 second look rather than a veto — the coordinator knows which
-                schools are genuinely distinct and the normaliser does not.
+                organizations are genuinely distinct and the normaliser does not.
             --}}
             @if ($this->possibleDuplicates->isNotEmpty())
                 <div class="mt-2">
@@ -51,7 +51,7 @@
         </x-ui::section>
 
         <x-ui::section :heading="__('Admissions contact')"
-            :description="__('Used when the school has no active representative — the campaign fallback.')">
+            :description="__('Used when the organization has no active representative — the campaign fallback.')">
             <div class="grid gap-4 sm:grid-cols-3">
                 <x-ui::forms.input name="admissions_office" wire:model="admissions_office" :label="__('Office')" />
                 <x-ui::forms.input name="admissions_email" wire:model="admissions_email" type="email"
@@ -72,7 +72,7 @@
         </x-ui::section>
 
         <div class="flex items-center gap-3">
-            <x-ui::button type="submit" variant="brand">{{ __('Save school') }}</x-ui::button>
+            <x-ui::button type="submit" variant="brand">{{ __('Save organization') }}</x-ui::button>
             <span wire:loading wire:target="save" class="text-sm text-body">{{ __('Saving…') }}</span>
         </div>
     </form>

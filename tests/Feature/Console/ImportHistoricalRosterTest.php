@@ -41,7 +41,7 @@ function writeRoster(string $path, array $rows, ?array $header = null): void
 }
 
 describe('importing', function () {
-    it('creates schools and confirmed registrations from a CSV', function () {
+    it('creates organizations and confirmed registrations from a CSV', function () {
         writeRoster($this->csv, [[
             'organization_name' => 'Kenyon College',
             'website' => 'https://kenyon.example',
@@ -55,12 +55,12 @@ describe('importing', function () {
 
         $this->artisan('fair:import-roster', ['file' => $this->csv])->assertSuccessful();
 
-        $school = Organization::query()->where('name', 'Kenyon College')->firstOrFail();
-        $registration = Registration::query()->where('organization_id', $school->id)->firstOrFail();
+        $organization = Organization::query()->where('name', 'Kenyon College')->firstOrFail();
+        $registration = Registration::query()->where('organization_id', $organization->id)->firstOrFail();
 
-        expect($school->admissions_email)->toBe('admissions@kenyon.example')
+        expect($organization->admissions_email)->toBe('admissions@kenyon.example')
             // Nobody in this application created it.
-            ->and($school->created_by)->toBeNull()
+            ->and($organization->created_by)->toBeNull()
             ->and($registration->status)->toBe(RegistrationStatus::Confirmed)
             ->and($registration->user_id)->toBeNull()
             ->and($registration->rep_email)->toBe('dana@kenyon.example')
@@ -68,7 +68,7 @@ describe('importing', function () {
             ->and($registration->price_cents)->toBe(21500);
     });
 
-    it('matches an existing school by normalized name rather than duplicating it', function () {
+    it('matches an existing organization by normalized name rather than duplicating it', function () {
         // "The Ohio State University" in a fifteen-year-old export should land
         // on "Ohio State University" already in the directory.
         $existing = Organization::factory()->named('Ohio State University')->create();
@@ -138,7 +138,7 @@ describe('importing', function () {
     });
 
     it('imports a row with nothing but a name and a fair', function () {
-        // A partial record of a school that attended is worth far more than no
+        // A partial record of an organization that attended is worth far more than no
         // record.
         writeRoster($this->csv, [[
             'organization_name' => 'Sparse College',
@@ -222,7 +222,7 @@ describe('what the import is for', function () {
 
         $builder = app(AudienceBuilder::class);
 
-        // No accounts exist for imported schools, so every recipient is the
+        // No accounts exist for imported organizations, so every recipient is the
         // generic admissions-email fallback — which is exactly why that
         // fallback had to exist.
         expect($builder->resolve(Audience::LastEvent, $thisYear)->pluck('organizationName')->all())
@@ -243,8 +243,8 @@ describe('what the import is for', function () {
 
         $this->artisan('fair:import-roster', ['file' => $this->csv])->assertSuccessful();
 
-        $school = Organization::query()->where('name', 'Kenyon College')->firstOrFail();
-        $rep = User::factory()->rep($school)->create(['email' => 'dana@kenyon.example']);
+        $organization = Organization::query()->where('name', 'Kenyon College')->firstOrFail();
+        $rep = User::factory()->rep($organization)->create(['email' => 'dana@kenyon.example']);
 
         $recipients = app(AudienceBuilder::class)->resolve(Audience::LastEvent, $thisYear);
 

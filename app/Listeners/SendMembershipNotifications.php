@@ -14,7 +14,7 @@ use App\Notifications\MembershipDecided;
  *
  * The two coordinator alerts here are the load-bearing ones. A claim sitting
  * unapproved is somebody staring at "awaiting approval" with no idea whether
- * anyone has seen it; a new school created without one is a duplicate nobody
+ * anyone has seen it; a new organization created without one is a duplicate nobody
  * spots until two invoices go out.
  */
 class SendMembershipNotifications
@@ -22,10 +22,10 @@ class SendMembershipNotifications
     public function organizationCreated(OrganizationCreated $event): void
     {
         AdminAlerts::send(new AdminAlert(
-            subject: __('New school added: :organization', ['organization' => $event->organization->name]),
-            headline: __('A representative added a school we did not have'),
+            subject: __('New organization added: :organization', ['organization' => $event->organization->name]),
+            headline: __('A representative added an organization we did not have'),
             rows: [
-                __('School') => $event->organization->name,
+                __('Organization') => $event->organization->name,
                 __('Added by') => $event->founder->name.' <'.$event->founder->email.'>',
                 __('Website') => $event->organization->website,
                 // The warning the rep saw and pressed past (R2.7). They are
@@ -49,7 +49,7 @@ class SendMembershipNotifications
             headline: __('Somebody is waiting to be confirmed'),
             rows: [
                 __('Person') => $event->rep->name.' <'.$event->rep->email.'>',
-                __('School') => $event->organization->name,
+                __('Organization') => $event->organization->name,
             ],
             url: url('/admin/organizations'),
             linkLabel: __('Approve or deny'),

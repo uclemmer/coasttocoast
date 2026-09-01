@@ -11,7 +11,7 @@ use App\Models\Registration;
 use App\Models\User;
 
 /*
- * The staff school screens (docs/13).
+ * The staff organization screens (docs/13).
  *
  * Ported from OrganizationResourceTest. The merge tests are the ones that
  * matter: a merge repoints real financial history, and the collision case is
@@ -24,7 +24,7 @@ beforeEach(function () {
 });
 
 describe('the directory', function () {
-    it('lists schools and finds them by name', function () {
+    it('lists organizations and finds them by name', function () {
         Organization::factory()->named('Baylor School')->create();
         Organization::factory()->named('McCallie School')->create();
 
@@ -33,9 +33,9 @@ describe('the directory', function () {
         expect($found->pluck('name')->all())->toBe(['Baylor School']);
     });
 
-    it('filters to schools with nobody speaking for them', function () {
+    it('filters to organizations with nobody speaking for them', function () {
         // Zero active reps means campaigns fall back to admissions_email, or
-        // drop the school entirely.
+        // drop the organization entirely.
         $orphan = Organization::factory()->create();
         $staffed = Organization::factory()->create();
         User::factory()->rep($staffed)->create();
@@ -68,9 +68,9 @@ describe('the directory', function () {
 
 describe('editing a profile', function () {
     it('saves the admissions contact and address', function () {
-        $school = Organization::factory()->create();
+        $organization = Organization::factory()->create();
 
-        livewire(EditOrganization::class, ['organization' => $school])
+        livewire(EditOrganization::class, ['organization' => $organization])
             ->set('admissions_office', 'Office of Admission')
             ->set('admissions_email', 'admission@example.edu')
             ->set('admissions_phone', '423-555-0100')
@@ -79,23 +79,23 @@ describe('editing a profile', function () {
             ->call('save')
             ->assertHasNoErrors();
 
-        expect($school->refresh())
+        expect($organization->refresh())
             ->admissions_office->toBe('Office of Admission')
             ->admissions_email->toBe('admission@example.edu')
             ->city->toBe('Chattanooga');
     });
 
-    it('re-derives the matching name when the school is renamed', function () {
+    it('re-derives the matching name when the organization is renamed', function () {
         // The normalised form is what duplicate detection compares, so it has
         // to follow a rename rather than keeping the name it was created with.
-        $school = Organization::factory()->named('Example College')->create();
+        $organization = Organization::factory()->named('Example College')->create();
 
-        livewire(EditOrganization::class, ['organization' => $school])
+        livewire(EditOrganization::class, ['organization' => $organization])
             ->set('name', 'The Example University')
             ->call('save')
             ->assertHasNoErrors();
 
-        expect($school->refresh()->normalized_name)->toBe('example university');
+        expect($organization->refresh()->normalized_name)->toBe('example university');
     });
 
     /*
@@ -144,7 +144,7 @@ describe('the merge action', function () {
     });
 
     /*
-     * Which of two paid registrations a school keeps is a decision about money,
+     * Which of two paid registrations an organization keeps is a decision about money,
      * not a data-cleanup step. Filament raised a PERSISTENT notification for
      * this; a toast auto-dismisses, so the rebuild keeps it on the page until
      * somebody dismisses it by hand.
@@ -181,31 +181,31 @@ describe('the merge action', function () {
         expect($page->get('collisions'))->toBe([]);
     });
 
-    it('refuses to merge a school into itself', function () {
+    it('refuses to merge an organization into itself', function () {
         // Refused by the service, and its message is surfaced rather than
         // replaced — so there is no second copy of the rule here to drift.
-        $school = Organization::factory()->create();
+        $organization = Organization::factory()->create();
 
         livewire(OrganizationIndex::class)
-            ->call('startMerge', $school->id)
-            ->set('keepId', (string) $school->id)
+            ->call('startMerge', $organization->id)
+            ->set('keepId', (string) $organization->id)
             ->call('merge')
             ->assertDispatched('ui-toast', fn (string $e, array $p): bool => $p['variant'] === 'danger');
 
-        expect(Organization::query()->whereKey($school->id)->exists())->toBeTrue();
+        expect(Organization::query()->whereKey($organization->id)->exists())->toBeTrue();
     });
 
-    it('is refused for a user who cannot manage schools', function () {
-        $school = Organization::factory()->create();
+    it('is refused for a user who cannot manage organizations', function () {
+        $organization = Organization::factory()->create();
         $rep = User::factory()->rep()->create();
 
-        expect($rep->can('merge', $school))->toBeFalse()
-            ->and($this->coordinator->can('merge', $school))->toBeTrue();
+        expect($rep->can('merge', $organization))->toBeFalse()
+            ->and($this->coordinator->can('merge', $organization))->toBeTrue();
     });
 });
 
 describe('deleting', function () {
-    it('refuses a school with any history, because the keys cascade', function () {
+    it('refuses an organization with any history, because the keys cascade', function () {
         $withHistory = Organization::factory()->create();
         Registration::factory()->forOrganization($withHistory)->create();
 
@@ -228,22 +228,22 @@ describe('deleting', function () {
 
 describe('the representatives list', function () {
     beforeEach(function () {
-        $this->school = Organization::factory()->create();
+        $this->organization = Organization::factory()->create();
     });
 
     it('approves a pending claim', function () {
-        $pending = User::factory()->pendingRep($this->school)->create();
+        $pending = User::factory()->pendingRep($this->organization)->create();
 
-        livewire(ShowOrganization::class, ['organization' => $this->school])
+        livewire(ShowOrganization::class, ['organization' => $this->organization])
             ->call('approveClaim', $pending->id);
 
         expect($pending->refresh()->membership_status)->toBe(MembershipStatus::Active);
     });
 
     it('denies a claim, detaching the person so they can claim elsewhere', function () {
-        $pending = User::factory()->pendingRep($this->school)->create();
+        $pending = User::factory()->pendingRep($this->organization)->create();
 
-        livewire(ShowOrganization::class, ['organization' => $this->school])
+        livewire(ShowOrganization::class, ['organization' => $this->organization])
             ->call('startDeny', $pending->id)
             ->set('reason', 'Not on the staff list we were sent.')
             ->call('denyClaim');
@@ -251,35 +251,35 @@ describe('the representatives list', function () {
         expect($pending->refresh()->organization_id)->toBeNull();
     });
 
-    it('retires an active rep without touching the school history', function () {
-        $rep = User::factory()->rep($this->school)->create();
-        Registration::factory()->forOrganization($this->school)->create(['user_id' => $rep->id]);
+    it('retires an active rep without touching the organization history', function () {
+        $rep = User::factory()->rep($this->organization)->create();
+        Registration::factory()->forOrganization($this->organization)->create(['user_id' => $rep->id]);
 
-        livewire(ShowOrganization::class, ['organization' => $this->school])
+        livewire(ShowOrganization::class, ['organization' => $this->organization])
             ->call('startRetire', $rep->id)
             ->call('retire');
 
         expect($rep->refresh()->isRetired())->toBeTrue()
-            ->and($this->school->registrations()->count())->toBe(1);
+            ->and($this->organization->registrations()->count())->toBe(1);
     });
 
     it('reinstates a retired rep', function () {
-        $rep = User::factory()->retiredRep($this->school)->create();
+        $rep = User::factory()->retiredRep($this->organization)->create();
 
-        livewire(ShowOrganization::class, ['organization' => $this->school])->call('reinstate', $rep->id);
+        livewire(ShowOrganization::class, ['organization' => $this->organization])->call('reinstate', $rep->id);
 
         expect($rep->refresh()->membership_status)->toBe(MembershipStatus::Active);
     });
 
     /*
-     * The id arrives from the browser. Without scoping to this school, a
-     * crafted one would retire somebody at a different school entirely — the
+     * The id arrives from the browser. Without scoping to this organization, a
+     * crafted one would retire somebody at a different organization entirely — the
      * relation manager scoped to its owner for us.
      */
-    it('refuses a representative belonging to another school', function () {
+    it('refuses a representative belonging to another organization', function () {
         $elsewhere = User::factory()->rep(Organization::factory()->create())->create();
 
-        livewire(ShowOrganization::class, ['organization' => $this->school])
+        livewire(ShowOrganization::class, ['organization' => $this->organization])
             ->call('startRetire', $elsewhere->id)
             ->call('retire');
 
@@ -288,9 +288,9 @@ describe('the representatives list', function () {
 
     it('surfaces the service refusal rather than a generic failure', function () {
         // Retiring somebody who is already retired.
-        $rep = User::factory()->retiredRep($this->school)->create();
+        $rep = User::factory()->retiredRep($this->organization)->create();
 
-        livewire(ShowOrganization::class, ['organization' => $this->school])
+        livewire(ShowOrganization::class, ['organization' => $this->organization])
             ->call('startRetire', $rep->id)
             ->call('retire')
             ->assertDispatched('ui-toast', fn (string $event, array $params): bool => $params['variant'] === 'danger');
@@ -299,6 +299,6 @@ describe('the representatives list', function () {
     it('keeps a user without the permission out', function () {
         $this->actingAs(User::factory()->rep()->create());
 
-        livewire(ShowOrganization::class, ['organization' => $this->school])->assertForbidden();
+        livewire(ShowOrganization::class, ['organization' => $this->organization])->assertForbidden();
     });
 });

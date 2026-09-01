@@ -9,13 +9,13 @@ use Symfony\Component\HttpFoundation\Response;
 use UClemmer\LaravelCore\Admin\Permissions as AdminPermissions;
 
 /**
- * Bounce a staff member with no school out of the rep portal and into `/staff`.
+ * Bounce a staff member with no organization out of the rep portal and into `/staff`.
  *
  * **The bug this fixes.** `config/core.php` sets
  * `core.auth.routes.redirect_to => '/portal'` and its comment says "reps land in
  * the portal" — but core's `LoginController::redirectTo()` reads that as a
  * single string for *everybody*. The coordinator therefore signed in and landed
- * on a portal dashboard reading "Your account is not attached to a school.
+ * on a portal dashboard reading "Your account is not attached to an organization.
  * Contact the fair coordinator to be added", with no link anywhere on the page
  * to `/staff` or `/admin`. They are the fair coordinator, and the only way to
  * their own screens was typing the URL. Found in a browser pass (docs/10,
@@ -29,8 +29,8 @@ use UClemmer\LaravelCore\Admin\Permissions as AdminPermissions;
  * away from `/login`, and a stale bookmark — in one place.
  *
  * **Deliberately narrow: staff AND no organization.** A rep genuinely waiting
- * to be attached to a school must still get that message, because for them it
- * is true and actionable. And a staff member who *does* have a school has real
+ * to be attached to an organization must still get that message, because for them it
+ * is true and actionable. And a staff member who *does* have an organization has real
  * business in the portal, so they are left alone. The gate is
  * `AdminPermissions::ACCESS` — the same permission `ActsForStaff` and
  * `User::canAccessPanel()` ask, so the three cannot drift about who is staff.

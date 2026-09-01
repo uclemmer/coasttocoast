@@ -10,9 +10,9 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * The answer to "I represent this school" (D9, R4).
+ * The answer to "I represent this organization" (D9, R4).
  *
- * A denial names the school explicitly and says what to do next, because the
+ * A denial names the organization explicitly and says what to do next, because the
  * realistic denial is a typo — somebody claimed the wrong one of two similarly
  * named institutions — and the person needs to know they can simply sign up
  * again for the right one.
@@ -40,11 +40,11 @@ class MembershipDecided extends Notification implements ShouldQueue
         return $this->themed(
             view: 'emails.notifications.membership-decided',
             subject: $this->approved
-                ? __('You can now register :school for the fair', [
-                    'school' => (string) $this->organization?->name,
+                ? __('You can now register :organization for the fair', [
+                    'organization' => (string) $this->organization?->name,
                 ])
-                : __('About your request to represent :school', [
-                    'school' => (string) $this->organization?->name,
+                : __('About your request to represent :organization', [
+                    'organization' => (string) $this->organization?->name,
                 ]),
             data: [
                 'approved' => $this->approved,

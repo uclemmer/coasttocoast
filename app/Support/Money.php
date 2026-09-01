@@ -19,7 +19,7 @@ final class Money
      *
      * `round()` before casting, not `(int)` alone: 215.10 * 100 is
      * 21509.999999999996 in IEEE 754, and casting that truncates to 21509 —
-     * a school charged a cent less than it agreed to, silently, forever.
+     * an organization charged a cent less than it agreed to, silently, forever.
      */
     public static function toCents(float|int|string|null $dollars): int
     {

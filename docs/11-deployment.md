@@ -147,7 +147,7 @@ Run it under a supervisor that restarts it. Two things worth knowing:
   needed `memory_limit=512M` to render a couple of dozen PDFs in one process (doc 10, D-6.x-a).
   A long-lived worker doing the same is worth giving the same headroom, or `--max-jobs=200` so it
   recycles.
-- **A failed job is a school not told.** Watch `failed_jobs`. laravel-core's queue module surfaces
+- **A failed job is an organization not told.** Watch `failed_jobs`. laravel-core's queue module surfaces
   it in the admin panel (`core.queue.enabled` is on).
 
 ## Scheduled work
@@ -197,7 +197,7 @@ of a receipt. Do not point both at `outbound` to save a step.
 - **Database, nightly, retained 30 days.** It holds every registration, payment record and grant
   decision. `payments` is a financial audit trail; losing it is not recoverable from Stripe alone,
   because the check payments were never in Stripe.
-- **`storage/app/public`**, which holds organization and sponsor logos. Less critical — the schools
+- **`storage/app/public`**, which holds organization and sponsor logos. Less critical — the organizations
   can re-upload — but cheap to include.
 - **`storage/app/private`**, which holds FAQ attachments — the signed W-9 among them. Unlike a logo
   this is a document somebody had to sign, and the database row that points at it is worthless
@@ -278,7 +278,7 @@ exists. `EventSeeder` seeds five past fairs for this purpose — `college-fair-2
 not in the database is skipped with a warning, not created**, so check the summary line rather than
 assuming a clean run imported everything. Everything else is optional.
 
-`price_cents` is per row on purpose: what a school actually paid in 2023 is a fact about that
+`price_cents` is per row on purpose: what an organization actually paid in 2023 is a fact about that
 registration, not about the 2023 fair, whose seeded list price is a reconstruction (doc 03). Supply
 it where the history knows it.
 
@@ -293,10 +293,10 @@ It is idempotent: fix a column and run it again.
 
 | Symptom | First thing to check |
 |---|---|
-| A school paid but is still "awaiting payment" | `stripe_webhook_events` — did the delivery arrive? Then the Stripe dashboard's webhook log |
+| An organization paid but is still "awaiting payment" | `stripe_webhook_events` — did the delivery arrive? Then the Stripe dashboard's webhook log |
 | No email at all | Is the queue worker running? Then `/admin/messages` (the postmaster message log) — a row with status `sending` means the transport never confirmed |
 | A campaign shows every recipient as "queued" forever | `core:prune-email-logs` promotes stale rows to `failed`; if the schedule is not running, nothing ever moves |
-| A school is missing from a campaign | Does it have an **active** rep? A school with only pending or retired reps falls back to `admissions_email`, and with neither is dropped — that drop is logged |
+| An organization is missing from a campaign | Does it have an **active** rep? An organization with only pending or retired reps falls back to `admissions_email`, and with neither is dropped — that drop is logged |
 | Registration says closed when it should be open | Is the fair **published**? An unpublished fair is never open, whatever the window says |
 | A staff or portal page 500s after a deploy | `view:clear`, then `config:clear` — a cached view or config from the previous release. There is no `filament:optimize` any more; that row was stale from before the `/staff` rebuild |
 | The W-9 download 404s | Is the FAQ question **published**? Unpublishing withdraws the file deliberately (doc 10, D-9-c). If it is published, the row is pointing at a file that is not on disk — a restore that brought back the database and not `storage/app/private` |

@@ -22,14 +22,14 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->service = app(GrantService::class);
     $this->fair = Fair::factory()->registrationOpen()->priced(21500)->create();
-    $this->school = Organization::factory()->create();
-    $this->rep = User::factory()->rep($this->school)->create();
+    $this->organization = Organization::factory()->create();
+    $this->rep = User::factory()->rep($this->organization)->create();
     $this->coordinator = User::factory()->coordinator()->create();
 });
 
 describe('applying', function () {
     it('records an application from an active rep', function () {
-        $grant = $this->service->apply($this->fair, $this->school, $this->rep, 'Our travel budget was cut.');
+        $grant = $this->service->apply($this->fair, $this->organization, $this->rep, 'Our travel budget was cut.');
 
         expect($grant->status)->toBe(GrantStatus::Pending)
             ->and($grant->requested_by)->toBe($this->rep->id)
@@ -43,44 +43,44 @@ describe('applying', function () {
     it('fires an event so the coordinator can be told', function () {
         Event::fake([GrantApplied::class]);
 
-        $this->service->apply($this->fair, $this->school, $this->rep, 'Please.');
+        $this->service->apply($this->fair, $this->organization, $this->rep, 'Please.');
 
         Event::assertDispatched(GrantApplied::class);
     });
 
     it('refuses a pending or retired rep', function (string $state) {
-        $rep = User::factory()->{$state}($this->school)->create();
+        $rep = User::factory()->{$state}($this->organization)->create();
 
-        expect(fn () => $this->service->apply($this->fair, $this->school, $rep, 'Please.'))
+        expect(fn () => $this->service->apply($this->fair, $this->organization, $rep, 'Please.'))
             ->toThrow(GrantNotAllowed::class, 'approved representative');
     })->with(['pendingRep', 'retiredRep']);
 
-    it('refuses a rep applying for a school that is not theirs', function () {
+    it('refuses a rep applying for an organization that is not theirs', function () {
         $other = Organization::factory()->create();
 
         expect(fn () => $this->service->apply($this->fair, $other, $this->rep, 'Please.'))
-            ->toThrow(GrantNotAllowed::class, 'the school your account belongs to');
+            ->toThrow(GrantNotAllowed::class, 'the organization your account belongs to');
     });
 
     it('allows an application before registration opens', function () {
         // Lining funding up before registration opens is the point of applying.
         $upcoming = Fair::factory()->registrationNotYetOpen()->create();
 
-        expect($this->service->apply($upcoming, $this->school, $this->rep, 'Please.'))
+        expect($this->service->apply($upcoming, $this->organization, $this->rep, 'Please.'))
             ->status->toBe(GrantStatus::Pending);
     });
 
     it('refuses an application for a fair that has already happened', function () {
         $past = Fair::factory()->past()->create();
 
-        expect(fn () => $this->service->apply($past, $this->school, $this->rep, 'Please.'))
+        expect(fn () => $this->service->apply($past, $this->organization, $this->rep, 'Please.'))
             ->toThrow(GrantNotAllowed::class, 'have closed');
     });
 
     it('refuses a second application while one is live', function (string $state) {
-        Grant::factory()->{$state}()->for($this->fair)->for($this->school)->create();
+        Grant::factory()->{$state}()->for($this->fair)->for($this->organization)->create();
 
-        expect(fn () => $this->service->apply($this->fair, $this->school, $this->rep, 'Please.'))
+        expect(fn () => $this->service->apply($this->fair, $this->organization, $this->rep, 'Please.'))
             ->toThrow(GrantNotAllowed::class, 'already applied');
     })->with([
         'pending' => 'pending',
@@ -90,25 +90,25 @@ describe('applying', function () {
         'revoked' => 'revoked',
     ]);
 
-    it('lets a school apply again after withdrawing', function () {
-        Grant::factory()->withdrawn()->for($this->fair)->for($this->school)->create();
+    it('lets an organization apply again after withdrawing', function () {
+        Grant::factory()->withdrawn()->for($this->fair)->for($this->organization)->create();
 
-        expect($this->service->apply($this->fair, $this->school, $this->rep, 'Better case this time.'))
+        expect($this->service->apply($this->fair, $this->organization, $this->rep, 'Better case this time.'))
             ->status->toBe(GrantStatus::Pending);
     });
 
-    it('does not confuse two fairs or two schools', function () {
-        Grant::factory()->for($this->fair)->for($this->school)->create();
+    it('does not confuse two fairs or two organizations', function () {
+        Grant::factory()->for($this->fair)->for($this->organization)->create();
         $otherFair = Fair::factory()->registrationOpen()->create();
 
-        expect($this->service->apply($otherFair, $this->school, $this->rep, 'Please.'))
+        expect($this->service->apply($otherFair, $this->organization, $this->rep, 'Please.'))
             ->status->toBe(GrantStatus::Pending);
     });
 });
 
 describe('approving', function () {
     beforeEach(function () {
-        $this->grant = $this->service->apply($this->fair, $this->school, $this->rep, 'Please.');
+        $this->grant = $this->service->apply($this->fair, $this->organization, $this->rep, 'Please.');
     });
 
     it('approves a free grant and zeroes the price', function () {
@@ -118,7 +118,7 @@ describe('approving', function () {
             ->and($this->grant->benefit_type)->toBe(GrantBenefit::Free)
             ->and($this->grant->decided_by)->toBe($this->coordinator->id)
             ->and($this->grant->decided_at)->not->toBeNull()
-            ->and($this->fair->priceFor($this->school))->toBe(0);
+            ->and($this->fair->priceFor($this->organization))->toBe(0);
     });
 
     it('approves a custom price', function () {
@@ -126,7 +126,7 @@ describe('approving', function () {
 
         expect($this->grant->refresh()->custom_price_cents)->toBe(5000)
             ->and($this->grant->percent_off)->toBeNull()
-            ->and($this->fair->priceFor($this->school))->toBe(5000);
+            ->and($this->fair->priceFor($this->organization))->toBe(5000);
     });
 
     it('approves a percentage off', function () {
@@ -134,11 +134,11 @@ describe('approving', function () {
 
         expect($this->grant->refresh()->percent_off)->toBe(40)
             ->and($this->grant->custom_price_cents)->toBeNull()
-            ->and($this->fair->priceFor($this->school))->toBe(12900);
+            ->and($this->fair->priceFor($this->organization))->toBe(12900);
     });
 
     it('refuses to approve a custom price with no price', function () {
-        // Otherwise priceFor() falls through to list price and the school is
+        // Otherwise priceFor() falls through to list price and the organization is
         // told it has a grant, then charged in full.
         expect(fn () => $this->service->approve($this->grant, $this->coordinator, GrantBenefit::CustomPrice))
             ->toThrow(GrantNotAllowed::class, 'what the grant is worth');
@@ -183,7 +183,7 @@ describe('approving', function () {
 
 describe('denying', function () {
     beforeEach(function () {
-        $this->grant = $this->service->apply($this->fair, $this->school, $this->rep, 'Please.');
+        $this->grant = $this->service->apply($this->fair, $this->organization, $this->rep, 'Please.');
     });
 
     it('records the decision and the reason', function () {
@@ -197,10 +197,10 @@ describe('denying', function () {
     it('leaves the price at list', function () {
         $this->service->deny($this->grant, $this->coordinator, 'No.');
 
-        expect($this->fair->priceFor($this->school))->toBe(21500);
+        expect($this->fair->priceFor($this->organization))->toBe(21500);
     });
 
-    it('requires a reason, because it goes into the email the school receives', function () {
+    it('requires a reason, because it goes into the email the organization receives', function () {
         expect(fn () => $this->service->deny($this->grant, $this->coordinator, '   '))
             ->toThrow(GrantNotAllowed::class, 'Give a reason');
     });
@@ -216,21 +216,21 @@ describe('denying', function () {
 
 describe('revoking', function () {
     it('revokes an approved, unused grant and restores list price', function () {
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
 
         $this->service->revoke($grant, $this->coordinator, 'Awarded in error.');
 
         expect($grant->refresh()->status)->toBe(GrantStatus::Revoked)
-            ->and($this->fair->priceFor($this->school))->toBe(21500)
+            ->and($this->fair->priceFor($this->organization))->toBe(21500)
             // What it was worth is still on the record.
             ->and($grant->benefit_type)->toBe(GrantBenefit::Free);
     });
 
     it('refuses once a live registration has been priced under it', function () {
         // The discount was given in writing. Clawing it back means invoicing a
-        // school for something it was granted.
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
-        Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->school)
+        // organization for something it was granted.
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
+        Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['grant_id' => $grant->id]);
 
         expect(fn () => $this->service->revoke($grant, $this->coordinator))
@@ -238,15 +238,15 @@ describe('revoking', function () {
     });
 
     it('allows revoking once the registration using it is cancelled', function () {
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
-        Registration::factory()->cancelled()->forEvent($this->fair)->forOrganization($this->school)
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
+        Registration::factory()->cancelled()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['grant_id' => $grant->id]);
 
         expect($this->service->revoke($grant, $this->coordinator))->status->toBe(GrantStatus::Revoked);
     });
 
     it('refuses to revoke anything that is not approved', function (string $state) {
-        $grant = Grant::factory()->{$state}()->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->{$state}()->for($this->fair)->for($this->organization)->create();
 
         expect(fn () => $this->service->revoke($grant, $this->coordinator))
             ->toThrow(GrantNotAllowed::class, 'Only an approved grant');
@@ -254,7 +254,7 @@ describe('revoking', function () {
 
     it('fires the revocation event', function () {
         Event::fake([GrantRevoked::class]);
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
 
         $this->service->revoke($grant, $this->coordinator);
 
@@ -263,32 +263,32 @@ describe('revoking', function () {
 });
 
 describe('withdrawing', function () {
-    it('lets the applying school take a pending application back', function () {
-        $grant = $this->service->apply($this->fair, $this->school, $this->rep, 'Please.');
+    it('lets the applying organization take a pending application back', function () {
+        $grant = $this->service->apply($this->fair, $this->organization, $this->rep, 'Please.');
 
         $this->service->withdraw($grant, $this->rep);
 
         expect($grant->refresh()->status)->toBe(GrantStatus::Withdrawn);
     });
 
-    it('frees the slot so the school can apply again', function () {
-        $grant = $this->service->apply($this->fair, $this->school, $this->rep, 'Please.');
+    it('frees the slot so the organization can apply again', function () {
+        $grant = $this->service->apply($this->fair, $this->organization, $this->rep, 'Please.');
         $this->service->withdraw($grant, $this->rep);
 
-        expect($this->service->apply($this->fair, $this->school, $this->rep, 'Second attempt.'))
+        expect($this->service->apply($this->fair, $this->organization, $this->rep, 'Second attempt.'))
             ->status->toBe(GrantStatus::Pending);
     });
 
     it('refuses to withdraw a decided application', function () {
         // A denial is the coordinator's decision and it stands.
-        $grant = Grant::factory()->denied()->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->denied()->for($this->fair)->for($this->organization)->create();
 
         expect(fn () => $this->service->withdraw($grant, $this->rep))
             ->toThrow(GrantNotAllowed::class, 'already been decided');
     });
 
-    it('refuses a rep from another school', function () {
-        $grant = $this->service->apply($this->fair, $this->school, $this->rep, 'Please.');
+    it('refuses a rep from another organization', function () {
+        $grant = $this->service->apply($this->fair, $this->organization, $this->rep, 'Please.');
         $stranger = User::factory()->rep()->create();
 
         expect(fn () => $this->service->withdraw($grant, $stranger))
@@ -297,7 +297,7 @@ describe('withdrawing', function () {
 
     it('fires the withdrawal event', function () {
         Event::fake([GrantWithdrawn::class]);
-        $grant = $this->service->apply($this->fair, $this->school, $this->rep, 'Please.');
+        $grant = $this->service->apply($this->fair, $this->organization, $this->rep, 'Please.');
 
         $this->service->withdraw($grant, $this->rep);
 
@@ -307,16 +307,16 @@ describe('withdrawing', function () {
 
 describe('lookups', function () {
     it('reports whether a live application exists', function () {
-        expect($this->service->hasLiveApplication($this->fair, $this->school))->toBeFalse();
+        expect($this->service->hasLiveApplication($this->fair, $this->organization))->toBeFalse();
 
-        $grant = $this->service->apply($this->fair, $this->school, $this->rep, 'Please.');
+        $grant = $this->service->apply($this->fair, $this->organization, $this->rep, 'Please.');
 
-        expect($this->service->hasLiveApplication($this->fair, $this->school))->toBeTrue()
-            ->and($this->service->currentApplication($this->fair, $this->school)?->id)->toBe($grant->id);
+        expect($this->service->hasLiveApplication($this->fair, $this->organization))->toBeTrue()
+            ->and($this->service->currentApplication($this->fair, $this->organization)?->id)->toBe($grant->id);
 
         $this->service->withdraw($grant, $this->rep);
 
-        expect($this->service->hasLiveApplication($this->fair, $this->school))->toBeFalse()
-            ->and($this->service->currentApplication($this->fair, $this->school))->toBeNull();
+        expect($this->service->hasLiveApplication($this->fair, $this->organization))->toBeFalse()
+            ->and($this->service->currentApplication($this->fair, $this->organization))->toBeNull();
     });
 });

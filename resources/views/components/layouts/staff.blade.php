@@ -98,7 +98,7 @@
                 @foreach ([
         ['staff.dashboard', __('Overview')],
         ['staff.events', __('Fairs')],
-        ['staff.organizations', __('Schools')],
+        ['staff.organizations', __('Organizations')],
         ['staff.registrations', __('Registrations')],
         ['staff.grants', __('Fee assistance')],
         ['staff.messages', __('Campaigns')],

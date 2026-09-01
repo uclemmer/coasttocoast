@@ -18,13 +18,13 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->service = app(OrganizationService::class);
-    $this->school = Organization::factory()->create();
+    $this->organization = Organization::factory()->create();
     $this->coordinator = User::factory()->coordinator()->create();
 });
 
 describe('approving a claim', function () {
     it('makes a pending rep active', function () {
-        $rep = User::factory()->pendingRep($this->school)->create();
+        $rep = User::factory()->pendingRep($this->organization)->create();
 
         $this->service->approveClaim($rep, $this->coordinator);
 
@@ -35,7 +35,7 @@ describe('approving a claim', function () {
 
     it('fires the event so the rep can be told', function () {
         Event::fake([MembershipApproved::class]);
-        $rep = User::factory()->pendingRep($this->school)->create();
+        $rep = User::factory()->pendingRep($this->organization)->create();
 
         $this->service->approveClaim($rep, $this->coordinator);
 
@@ -43,7 +43,7 @@ describe('approving a claim', function () {
     });
 
     it('refuses a rep who is not pending', function (string $state) {
-        $rep = User::factory()->{$state}($this->school)->create();
+        $rep = User::factory()->{$state}($this->organization)->create();
 
         expect(fn () => $this->service->approveClaim($rep, $this->coordinator))
             ->toThrow(MembershipNotAllowed::class, 'already been decided');
@@ -51,11 +51,11 @@ describe('approving a claim', function () {
 });
 
 describe('denying a claim', function () {
-    it('detaches the rep from the school entirely', function () {
+    it('detaches the rep from the organization entirely', function () {
         // Not left pending forever and not deleted: someone who claimed the
-        // wrong school should be able to sign up again for the right one,
+        // wrong organization should be able to sign up again for the right one,
         // which a lingering pending membership would block.
-        $rep = User::factory()->pendingRep($this->school)->create();
+        $rep = User::factory()->pendingRep($this->organization)->create();
 
         $this->service->denyClaim($rep, $this->coordinator, 'We do not recognise this person.');
 
@@ -64,21 +64,21 @@ describe('denying a claim', function () {
             ->and(User::query()->find($rep->id))->not->toBeNull();
     });
 
-    it('passes the school and reason to the event, since the rep no longer points at it', function () {
+    it('passes the organization and reason to the event, since the rep no longer points at it', function () {
         Event::fake([MembershipDenied::class]);
-        $rep = User::factory()->pendingRep($this->school)->create();
+        $rep = User::factory()->pendingRep($this->organization)->create();
 
         $this->service->denyClaim($rep, $this->coordinator, 'Unknown to us.');
 
         Event::assertDispatched(
             MembershipDenied::class,
-            fn (MembershipDenied $e): bool => $e->organization?->is($this->school) === true
+            fn (MembershipDenied $e): bool => $e->organization?->is($this->organization) === true
                 && $e->reason === 'Unknown to us.',
         );
     });
 
     it('refuses a rep who is not pending', function () {
-        $rep = User::factory()->rep($this->school)->create();
+        $rep = User::factory()->rep($this->organization)->create();
 
         expect(fn () => $this->service->denyClaim($rep, $this->coordinator))
             ->toThrow(MembershipNotAllowed::class);
@@ -87,31 +87,31 @@ describe('denying a claim', function () {
 
 describe('retiring', function () {
     it('revokes org rights while keeping the account and the history', function () {
-        $rep = User::factory()->rep($this->school)->create();
-        Registration::factory()->create(['user_id' => $rep->id, 'organization_id' => $this->school->id]);
+        $rep = User::factory()->rep($this->organization)->create();
+        Registration::factory()->create(['user_id' => $rep->id, 'organization_id' => $this->organization->id]);
 
         $this->service->retire($rep, $this->coordinator);
 
         expect($rep->refresh()->membership_status)->toBe(MembershipStatus::Retired)
             ->and($rep->actsForOrganization())->toBeFalse()
             ->and($rep->retired_by)->toBe($this->coordinator->id)
-            // The account and its history survive — the school's registrations
+            // The account and its history survive — the organization's registrations
             // were never the rep's to take with them.
-            ->and($rep->organization_id)->toBe($this->school->id)
+            ->and($rep->organization_id)->toBe($this->organization->id)
             ->and($rep->registrations()->count())->toBe(1)
-            ->and($this->school->registrations()->count())->toBe(1);
+            ->and($this->organization->registrations()->count())->toBe(1);
     });
 
     it('distinguishes self-retirement from a coordinator retiring someone', function () {
         // The two want different emails: a confirmation versus an explanation.
         Event::fake([MembershipRetired::class]);
-        $rep = User::factory()->rep($this->school)->create();
+        $rep = User::factory()->rep($this->organization)->create();
 
         $this->service->retire($rep, $rep);
 
         Event::assertDispatched(MembershipRetired::class, fn (MembershipRetired $e): bool => $e->selfService);
 
-        $other = User::factory()->rep($this->school)->create();
+        $other = User::factory()->rep($this->organization)->create();
         $this->service->retire($other, $this->coordinator);
 
         Event::assertDispatched(
@@ -121,11 +121,11 @@ describe('retiring', function () {
     });
 
     it('takes a retired rep out of the active-rep set campaigns mail', function () {
-        $rep = User::factory()->rep($this->school)->create();
+        $rep = User::factory()->rep($this->organization)->create();
 
         $this->service->retire($rep, $this->coordinator);
 
-        expect($this->school->activeReps()->count())->toBe(0);
+        expect($this->organization->activeReps()->count())->toBe(0);
     });
 
     it('refuses somebody who is not a member', function () {
@@ -134,7 +134,7 @@ describe('retiring', function () {
     });
 
     it('refuses to retire someone twice', function () {
-        $rep = User::factory()->retiredRep($this->school)->create();
+        $rep = User::factory()->retiredRep($this->organization)->create();
 
         expect(fn () => $this->service->retire($rep, $this->coordinator))
             ->toThrow(MembershipNotAllowed::class);
@@ -143,7 +143,7 @@ describe('retiring', function () {
 
 describe('reinstating', function () {
     it('brings a retired rep back', function () {
-        $rep = User::factory()->retiredRep($this->school)->create();
+        $rep = User::factory()->retiredRep($this->organization)->create();
 
         $this->service->reinstate($rep, $this->coordinator);
 
@@ -153,7 +153,7 @@ describe('reinstating', function () {
     });
 
     it('refuses somebody who has not retired', function () {
-        $rep = User::factory()->rep($this->school)->create();
+        $rep = User::factory()->rep($this->organization)->create();
 
         expect(fn () => $this->service->reinstate($rep, $this->coordinator))
             ->toThrow(MembershipNotAllowed::class, 'has not retired');
@@ -208,7 +208,7 @@ describe('merging duplicates', function () {
     });
 
     it('reports registrations that now collide on the same fair rather than resolving them', function () {
-        // Which of two registrations a school keeps is a judgement about
+        // Which of two registrations an organization keeps is a judgement about
         // money, not a data-cleanup step.
         $fair = Fair::factory()->create();
         Registration::factory()->forEvent($fair)->forOrganization($this->keep)->create();
@@ -230,8 +230,8 @@ describe('merging duplicates', function () {
         expect($this->service->merge($this->duplicate, $this->keep))->toBeEmpty();
     });
 
-    it('refuses to merge a school into itself', function () {
+    it('refuses to merge an organization into itself', function () {
         expect(fn () => $this->service->merge($this->keep, $this->keep))
-            ->toThrow(MembershipNotAllowed::class, 'different school');
+            ->toThrow(MembershipNotAllowed::class, 'different organization');
     });
 });

@@ -24,7 +24,7 @@
     @if ($message->isSent())
         <div class="mt-4">
             <x-ui::alert variant="success">
-                {{ __('Sent :when. A sent campaign cannot be edited or removed — it is the record of what schools were told.', [
+                {{ __('Sent :when. A sent campaign cannot be edited or removed — it is the record of what organizations were told.', [
                     'when' => $message->sent_at?->toDayDateTimeString(),
                 ]) }}
             </x-ui::alert>
@@ -102,7 +102,7 @@
                 </x-slot:after>
 
                 <x-ui::table.head>
-                    <x-ui::table.heading>{{ __('School') }}</x-ui::table.heading>
+                    <x-ui::table.heading>{{ __('Organization') }}</x-ui::table.heading>
                     <x-ui::table.heading>{{ __('Person') }}</x-ui::table.heading>
                     <x-ui::table.heading>{{ __('Email') }}</x-ui::table.heading>
                     <x-ui::table.heading>{{ __('SMS') }}</x-ui::table.heading>

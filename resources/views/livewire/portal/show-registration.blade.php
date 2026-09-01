@@ -60,7 +60,7 @@
             <x-ui::description-list.item term="{{ __('Payment method') }}">
                 {{ $registration->payment_method?->value ?? '—' }}
             </x-ui::description-list.item>
-            {{-- The stored snapshot, not a recalculation: what this school was
+            {{-- The stored snapshot, not a recalculation: what this organization was
                  charged stays what it was charged even if the fair's price
                  moves afterwards. --}}
             <x-ui::description-list.item term="{{ __('Fee') }}">

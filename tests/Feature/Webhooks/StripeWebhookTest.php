@@ -15,9 +15,9 @@ beforeEach(function () {
     config()->set('services.stripe.webhook_secret', 'whsec_test_secret');
 
     $this->fair = Fair::factory()->registrationOpen()->priced(21500)->create();
-    $this->school = Organization::factory()->create();
+    $this->organization = Organization::factory()->create();
     $this->registration = Registration::factory()->pendingStripe()
-        ->forEvent($this->fair)->forOrganization($this->school)
+        ->forEvent($this->fair)->forOrganization($this->organization)
         ->create(['price_cents' => 21500]);
     $this->payment = Payment::factory()->pending()->for($this->registration)->create([
         'amount_cents' => 21500,
@@ -123,7 +123,7 @@ describe('checkout.session.completed', function () {
 
     it('flags an amount mismatch and refuses to confirm', function () {
         // Test-inventory item 5. The only ways here are a tampered session or
-        // a bug in our own pricing, and both mean the figure the school agreed
+        // a bug in our own pricing, and both mean the figure the organization agreed
         // to and the figure that moved are different.
         stripeSignedPost(stripeEvent('checkout.session.completed', [
             'id' => 'cs_test_abc',
@@ -160,7 +160,7 @@ describe('checkout.session.completed', function () {
 
 describe('checkout.session.expired', function () {
     it('fails the attempt but leaves the place held', function () {
-        // The school still has its seat and the "pay now" button still works.
+        // The organization still has its seat and the "pay now" button still works.
         // Only the attempt failed.
         stripeSignedPost(stripeEvent('checkout.session.expired', ['id' => 'cs_test_abc']))->assertOk();
 
@@ -195,7 +195,7 @@ describe('charge.refunded', function () {
     });
 
     it('leaves a partial refund attending', function () {
-        // The school is still coming; it just paid less.
+        // The organization is still coming; it just paid less.
         stripeSignedPost(stripeEvent('charge.refunded', [
             'payment_intent' => 'pi_test_abc',
             'amount_refunded' => 5000,

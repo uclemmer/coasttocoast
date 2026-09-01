@@ -12,15 +12,15 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * A school's registrations — the Livewire replacement for the rep panel's
+ * An organization's registrations — the Livewire replacement for the rep panel's
  * RegistrationResource list page (docs/12).
  *
- * Scoped to the viewer's school, and browsable by pending and retired reps:
- * their school's history is theirs to look at. Only the "register for a fair"
+ * Scoped to the viewer's organization, and browsable by pending and retired reps:
+ * their organization's history is theirs to look at. Only the "register for a fair"
  * button is gated on active membership, and the membership banner explains its
  * absence rather than leaving a page that looks broken.
  *
- * Sorting and searching are deliberately absent. A school has a handful of
+ * Sorting and searching are deliberately absent. An organization has a handful of
  * registrations — one per fair per year — so a toolbar over five rows would be
  * furniture. `table.sort-header` is there in the package if that ever changes.
  */
@@ -35,7 +35,7 @@ class Registrations extends Component
     }
 
     /**
-     * This school's registrations, newest fair first.
+     * This organization's registrations, newest fair first.
      *
      * @return Collection<int, Registration>
      */
@@ -57,7 +57,7 @@ class Registrations extends Component
     }
 
     /**
-     * Whether there is a fair open that this school has not already taken.
+     * Whether there is a fair open that this organization has not already taken.
      *
      * Drives the button. One that leads to "there is nothing to register for"
      * is worse than no button.

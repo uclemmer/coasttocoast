@@ -91,7 +91,7 @@ describe('the production seed', function () {
 
     it('leaves the 2027 fair unpublished because its date and price are placeholders', function () {
         // An unpublished event cannot take money, so a forgotten placeholder
-        // cannot quietly charge a school the wrong fee.
+        // cannot quietly charge an organization the wrong fee.
         $fair = Event::query()->where('slug', 'college-fair-2027')->firstOrFail();
 
         expect($fair->is_published)->toBeFalse()
@@ -99,7 +99,7 @@ describe('the production seed', function () {
             ->and($fair->name)->toContain('TODO-OWNER');
     });
 
-    it('invents no schools, reps, registrations, grants or payments', function () {
+    it('invents no organizations, reps, registrations, grants or payments', function () {
         expect(Organization::query()->count())->toBe(0)
             ->and(Registration::query()->count())->toBe(0)
             ->and(Grant::query()->count())->toBe(0)
@@ -139,7 +139,7 @@ describe('the development seed', function () {
             ->and($fair->isRegistrationOpen())->toBeTrue();
     });
 
-    it('gives the cross-year audiences schools that lapsed after each past fair', function () {
+    it('gives the cross-year audiences organizations that lapsed after each past fair', function () {
         $fair2026 = Event::query()->where('slug', 'college-fair-2026')->firstOrFail();
         $fair2027 = Event::query()->where('slug', 'college-fair-2027')->firstOrFail();
 
@@ -151,14 +151,14 @@ describe('the development seed', function () {
         expect($registeredIn2026->diff($registeredIn2027))->not->toBeEmpty();
     });
 
-    it('gives every membership state a school to live in', function () {
+    it('gives every membership state an organization to live in', function () {
         expect(User::query()->where('membership_status', MembershipStatus::Active)->exists())->toBeTrue()
             ->and(User::query()->where('membership_status', MembershipStatus::Pending)->exists())->toBeTrue()
             ->and(User::query()->where('membership_status', MembershipStatus::Retired)->exists())->toBeTrue();
     });
 
     it('gives the campaign fallback both of its cases', function () {
-        // A school with no active rep but a generic address gets one recipient;
+        // An organization with no active rep but a generic address gets one recipient;
         // one with neither is dropped with a log (doc 07 §2 rule 1).
         $noActiveReps = Organization::query()
             ->whereDoesntHave('users', fn ($q) => $q->where('membership_status', MembershipStatus::Active))
@@ -169,7 +169,7 @@ describe('the development seed', function () {
             ->and($noActiveReps->whereNull('admissions_email'))->not->toBeEmpty();
     });
 
-    it('seeds a pair of schools that normalize to the same name', function () {
+    it('seeds a pair of organizations that normalize to the same name', function () {
         $duplicated = Organization::query()
             ->selectRaw('normalized_name, count(*) as total')
             ->groupBy('normalized_name')

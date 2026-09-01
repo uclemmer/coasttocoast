@@ -100,7 +100,7 @@ class Grant extends Model
      *
      * A used grant cannot be revoked (doc 03, data lifecycle): the money has
      * been settled or is on its way, and moving the goalposts afterwards means
-     * invoicing a school for a discount it was granted in writing.
+     * invoicing an organization for a discount it was granted in writing.
      */
     public function isUsed(): bool
     {
@@ -110,7 +110,7 @@ class Grant extends Model
     /**
      * A one-line description of what was granted, for emails and the portal
      * status timeline. Reads the recorded benefit rather than the resulting
-     * price so the coordinator's actual decision is what the school is told.
+     * price so the coordinator's actual decision is what the organization is told.
      */
     public function benefitSummary(): ?string
     {
@@ -137,7 +137,7 @@ class Grant extends Model
 
     /**
      * Applications that occupy the one-per-organization-per-event slot.
-     * Withdrawn applications do not, so a school that changes its mind can
+     * Withdrawn applications do not, so an organization that changes its mind can
      * apply again (doc 05 card 2.6).
      *
      * @param  Builder<Grant>  $query

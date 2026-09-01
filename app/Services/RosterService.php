@@ -21,8 +21,8 @@ use Illuminate\Database\Eloquent\Collection;
 class RosterService
 {
     /**
-     * The schools appearing at a given fair: confirmed, not hidden by the
-     * coordinator, ordered by school name.
+     * The organizations appearing at a given fair: confirmed, not hidden by the
+     * coordinator, ordered by organization name.
      *
      * @return Collection<int, Registration>
      */

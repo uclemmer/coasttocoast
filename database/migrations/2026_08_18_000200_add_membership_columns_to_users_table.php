@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * All four columns are nullable because coordinators have no organization at
  * all: a null `membership_status` is not "unknown", it is "this person is not
- * a representative". Reps get `pending` when they claim an existing school and
+ * a representative". Reps get `pending` when they claim an existing organization and
  * `active` when they create a new one.
  */
 return new class extends Migration

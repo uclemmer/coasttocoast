@@ -12,7 +12,7 @@ use Livewire\Component;
  * Who is coming to this year's fair (R1.3).
  *
  * Doubles as social proof and as a duplicate check — a rep who finds their
- * school already listed knows not to register it twice.
+ * organization already listed knows not to register it twice.
  */
 class RepresentativesRoster extends Component
 {

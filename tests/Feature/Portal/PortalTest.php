@@ -19,21 +19,21 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 beforeEach(function () {
 
-    $this->school = Organization::factory()->named('Kenyon College')->create();
-    $this->rep = User::factory()->rep($this->school)->create();
+    $this->organization = Organization::factory()->named('Kenyon College')->create();
+    $this->rep = User::factory()->rep($this->organization)->create();
     $this->fair = Fair::factory()->registrationOpen()->priced(21500)->create();
 
     $this->actingAs($this->rep);
 });
 
 describe('the registrations list', function () {
-    it('shows the school\'s registrations, not just this person\'s', function () {
+    it('shows the organization\'s registrations, not just this person\'s', function () {
         // A new admissions officer inheriting the account should see the
-        // school's history, not an empty page (D8).
-        $predecessor = User::factory()->retiredRep($this->school)->create();
-        $theirs = Registration::factory()->forOrganization($this->school)
+        // organization's history, not an empty page (D8).
+        $predecessor = User::factory()->retiredRep($this->organization)->create();
+        $theirs = Registration::factory()->forOrganization($this->organization)
             ->create(['user_id' => $predecessor->id]);
-        $mine = Registration::factory()->forOrganization($this->school)
+        $mine = Registration::factory()->forOrganization($this->organization)
             ->create(['user_id' => $this->rep->id]);
 
         livewire(ListRegistrations::class)
@@ -41,14 +41,14 @@ describe('the registrations list', function () {
             ->assertSee($mine->event->name);
     });
 
-    it('never shows another school\'s registrations', function () {
-        $mine = Registration::factory()->forOrganization($this->school)->create();
+    it('never shows another organization\'s registrations', function () {
+        $mine = Registration::factory()->forOrganization($this->organization)->create();
         $theirs = Registration::factory()->create();
 
         /*
          * Asserted against the scoped collection rather than the rendered page.
          * A fair's NAME can legitimately appear on a portal page without that
-         * school's record being visible - the grants page lists every fair you
+         * organization's record being visible - the grants page lists every fair you
          * could apply for - so string-matching the HTML tests the wrong thing.
          */
         $listed = livewire(ListRegistrations::class)->instance()->registrations();
@@ -57,7 +57,7 @@ describe('the registrations list', function () {
             ->not->toContain($theirs->id);
     });
 
-    it('refuses the page outright to a user with no school', function () {
+    it('refuses the page outright to a user with no organization', function () {
         // Not "shows everything" — the scope's `whereRaw('1 = 0')` guards the
         // query, and this guards the page.
         Registration::factory()->count(3)->create();
@@ -67,7 +67,7 @@ describe('the registrations list', function () {
     });
 
     it('explains a pending membership rather than just hiding the button', function () {
-        $pending = User::factory()->pendingRep($this->school)->create();
+        $pending = User::factory()->pendingRep($this->organization)->create();
         $this->actingAs($pending);
 
         $subheading = livewire(ListRegistrations::class)->html();
@@ -77,7 +77,7 @@ describe('the registrations list', function () {
     });
 
     it('says what a retired rep can and cannot still do', function () {
-        $this->actingAs(User::factory()->retiredRep($this->school)->create());
+        $this->actingAs(User::factory()->retiredRep($this->organization)->create());
 
         expect(livewire(ListRegistrations::class)->html())
             ->toContain('retired')
@@ -87,7 +87,7 @@ describe('the registrations list', function () {
 
 describe('viewing one registration', function () {
     it('shows the fair, the amount and who is staffing the table', function () {
-        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)
+        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['price_cents' => 21500, 'rep_name' => 'Dana Whitfield']);
 
         livewire(ViewRegistration::class, ['registration' => $registration])
@@ -96,7 +96,7 @@ describe('viewing one registration', function () {
             ->assertSee('$215.00');
     });
 
-    it('refuses another school\'s registration', function () {
+    it('refuses another organization\'s registration', function () {
         // Test-inventory item 14. The resource scope means the record is not
         // found at all, which beats "found, but forbidden" — the latter
         // confirms a registration with that id exists.
@@ -108,7 +108,7 @@ describe('viewing one registration', function () {
 });
 
 describe('the registration wizard', function () {
-    it('registers the school and holds the place pending payment', function () {
+    it('registers the organization and holds the place pending payment', function () {
         livewire(CreateRegistration::class)
             ->set('event_id', $this->fair->id)->set('rep_name', 'Dana Whitfield')->set('rep_email', 'dana@kenyon.example')->set('rep_phone', '(423) 757-2845')->set('payment_method', PaymentMethod::Check->value)
             ->call('submit')
@@ -116,7 +116,7 @@ describe('the registration wizard', function () {
 
         $registration = Registration::query()->latest('id')->firstOrFail();
 
-        expect($registration->organization_id)->toBe($this->school->id)
+        expect($registration->organization_id)->toBe($this->organization->id)
             ->and($registration->user_id)->toBe($this->rep->id)
             ->and($registration->status)->toBe(RegistrationStatus::PendingPayment)
             ->and($registration->price_cents)->toBe(21500)
@@ -127,7 +127,7 @@ describe('the registration wizard', function () {
     it('snapshots the grant-aware price, which the form never accepts as input', function () {
         // There is no price field and no argument for one — "the client set
         // the price" is unrepresentable, not merely checked for (N1).
-        Grant::factory()->percentOff(50)->for($this->fair)->for($this->school)->create();
+        Grant::factory()->percentOff(50)->for($this->fair)->for($this->organization)->create();
 
         livewire(CreateRegistration::class)
             ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')->set('payment_method', PaymentMethod::Stripe->value)
@@ -138,7 +138,7 @@ describe('the registration wizard', function () {
     });
 
     it('confirms a fully-granted registration with no payment step at all', function () {
-        Grant::factory()->free()->for($this->fair)->for($this->school)->create();
+        Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
 
         livewire(CreateRegistration::class)
             ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')
@@ -160,7 +160,7 @@ describe('the registration wizard', function () {
     });
 
     it('refuses a duplicate at the first step, not after the whole wizard', function () {
-        Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
         livewire(CreateRegistration::class)
             ->set('event_id', $this->fair->id)->set('rep_name', 'Dana')->set('rep_email', 'dana@kenyon.example')->set('payment_method', PaymentMethod::Check->value)
@@ -183,7 +183,7 @@ describe('the registration wizard', function () {
 
     it('shows the grant-aware price and explains the discount', function () {
         // A discount nobody explains is a discount somebody queries.
-        Grant::factory()->percentOff(50)->for($this->fair)->for($this->school)->create();
+        Grant::factory()->percentOff(50)->for($this->fair)->for($this->organization)->create();
 
         $fairId = $this->fair->id;
         $summary = livewire(CreateRegistration::class)
@@ -195,34 +195,34 @@ describe('the registration wizard', function () {
     });
 
     it('bars a pending rep outright', function () {
-        $this->actingAs(User::factory()->pendingRep($this->school)->create());
+        $this->actingAs(User::factory()->pendingRep($this->organization)->create());
 
         livewire(CreateRegistration::class)->assertForbidden();
     });
 
     it('bars a retired rep outright', function () {
-        $this->actingAs(User::factory()->retiredRep($this->school)->create());
+        $this->actingAs(User::factory()->retiredRep($this->organization)->create());
 
         livewire(CreateRegistration::class)->assertForbidden();
     });
 });
 
 describe('the organization profile', function () {
-    it('saves the school\'s details and normalizes the phone', function () {
+    it('saves the organization\'s details and normalizes the phone', function () {
         livewire(OrganizationProfile::class)
             ->set('name', 'Kenyon College')->set('website', 'https://kenyon.example')->set('admissions_email', 'admissions@kenyon.example')->set('admissions_phone', '(423) 757-2845')
             ->call('save');
 
-        expect($this->school->refresh()->admissions_email)->toBe('admissions@kenyon.example')
-            ->and($this->school->admissions_phone)->toBe('+14237572845');
+        expect($this->organization->refresh()->admissions_email)->toBe('admissions@kenyon.example')
+            ->and($this->organization->admissions_phone)->toBe('+14237572845');
     });
 
-    it('re-derives the matching name when a school rebrands', function () {
+    it('re-derives the matching name when an organization rebrands', function () {
         livewire(OrganizationProfile::class)
             ->set('name', 'The Kenyon University')
             ->call('save');
 
-        expect($this->school->refresh()->normalized_name)->toBe('kenyon university');
+        expect($this->organization->refresh()->normalized_name)->toBe('kenyon university');
     });
 
     it('rejects a phone number nobody could dial', function () {
@@ -234,7 +234,7 @@ describe('the organization profile', function () {
     });
 
     it('bars pending and retired reps', function (string $state) {
-        $this->actingAs(User::factory()->{$state}($this->school)->create());
+        $this->actingAs(User::factory()->{$state}($this->organization)->create());
 
         livewire(OrganizationProfile::class)->assertForbidden();
     })->with(['pendingRep', 'retiredRep']);
@@ -268,18 +268,18 @@ describe('the personal profile', function () {
     });
 
     it('lets a rep step down, keeping the account and the history', function () {
-        Registration::factory()->forOrganization($this->school)->create(['user_id' => $this->rep->id]);
+        Registration::factory()->forOrganization($this->organization)->create(['user_id' => $this->rep->id]);
 
         livewire(EditProfile::class)->call('retire');
 
         expect($this->rep->refresh()->membership_status)->toBe(MembershipStatus::Retired)
             ->and($this->rep->retired_by)->toBe($this->rep->id)
             ->and($this->rep->actsForOrganization())->toBeFalse()
-            ->and($this->school->registrations()->count())->toBe(1);
+            ->and($this->organization->registrations()->count())->toBe(1);
     });
 
     it('hides stepping down from somebody who has already stepped down', function () {
-        $this->actingAs(User::factory()->retiredRep($this->school)->create());
+        $this->actingAs(User::factory()->retiredRep($this->organization)->create());
 
         expect(livewire(EditProfile::class)->instance()->actsForOrganization())->toBeFalse();
     });
@@ -294,18 +294,18 @@ describe('fee assistance', function () {
                 message: "Request submitted — we'll email you when it's been reviewed.",
             );
 
-        expect(Grant::query()->where('organization_id', $this->school->id)->first())
+        expect(Grant::query()->where('organization_id', $this->organization->id)->first())
             ->justification->toBe('Our travel budget was cut this year.')
             ->status->toBe(GrantStatus::Pending);
     });
 
-    it('shows the intro that stops a school waiting instead of registering', function () {
+    it('shows the intro that stops an organization waiting instead of registering', function () {
         expect(livewire(ListGrants::class)->html())
             ->toContain('does not register you for the fair');
     });
 
     it('renders the approved sentence with the actual benefit', function () {
-        $grant = Grant::factory()->percentOff(25)->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->percentOff(25)->for($this->fair)->for($this->organization)->create();
 
         expect(livewire(ListGrants::class)->instance()->statusCopy($grant->refresh()))
             ->toContain('Good news')
@@ -315,15 +315,15 @@ describe('fee assistance', function () {
 
     it('includes the coordinator\'s reason in a denial', function () {
         $grant = Grant::factory()->denied('Funds for this fair are already committed.')
-            ->for($this->fair)->for($this->school)->create();
+            ->for($this->fair)->for($this->organization)->create();
 
         expect(livewire(ListGrants::class)->instance()->statusCopy($grant->refresh()))
             ->toContain('Funds for this fair are already committed.')
             ->toContain('Standard registration is still open');
     });
 
-    it('withdraws a pending request and frees the school to apply again', function () {
-        $grant = Grant::factory()->for($this->fair)->for($this->school)
+    it('withdraws a pending request and frees the organization to apply again', function () {
+        $grant = Grant::factory()->for($this->fair)->for($this->organization)
             ->create(['requested_by' => $this->rep->id]);
 
         livewire(ListGrants::class)
@@ -341,19 +341,19 @@ describe('fee assistance', function () {
     });
 
     it('hides the apply action from pending and retired reps', function (string $state) {
-        $this->actingAs(User::factory()->{$state}($this->school)->create());
+        $this->actingAs(User::factory()->{$state}($this->organization)->create());
 
         expect(livewire(ListGrants::class)->instance()->canApply())->toBeFalse();
     })->with(['pendingRep', 'retiredRep']);
 
     it('hides the apply action when there is no fair left to apply for', function () {
-        Grant::factory()->for($this->fair)->for($this->school)->create();
+        Grant::factory()->for($this->fair)->for($this->organization)->create();
 
         expect(livewire(ListGrants::class)->instance()->canApply())->toBeFalse();
     });
 
-    it('never shows another school\'s requests', function () {
-        $mine = Grant::factory()->for($this->fair)->for($this->school)->create();
+    it('never shows another organization\'s requests', function () {
+        $mine = Grant::factory()->for($this->fair)->for($this->organization)->create();
         $theirs = Grant::factory()->for($this->fair)->create();
 
         livewire(ListGrants::class)

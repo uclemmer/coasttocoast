@@ -13,14 +13,14 @@ use Illuminate\Notifications\Notification;
 /**
  * The answer to a fee-assistance request (R4, card 3.5).
  *
- * One class for approved and denied rather than two, because the school is
+ * One class for approved and denied rather than two, because the organization is
  * waiting on a single question and the two answers share everything except a
  * paragraph. The copy mirrors the portal's status lines (doc 01 Appendix A) —
- * a school that reads the email and then opens the portal must not find the
+ * an organization that reads the email and then opens the portal must not find the
  * two saying different things.
  *
  * A denial always carries the reason. "Denied", with nothing else, is how a
- * school is lost for good.
+ * organization is lost for good.
  */
 class GrantDecided extends Notification implements ShouldQueue
 {

@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\DB;
  * actions all come through here, because none of these rules can be enforced
  * by a model that anyone may `create()`:
  *
- *  - no second non-cancelled registration for the same school and fair (R2.7);
- *  - the acting rep must be an ACTIVE member of that school (D9);
+ *  - no second non-cancelled registration for the same organization and fair (R2.7);
+ *  - the acting rep must be an ACTIVE member of that organization (D9);
  *  - `price_cents` is snapshotted from `Event::priceFor()`, never from input (N1);
  *  - a price of zero confirms immediately, with no payment method and no gateway;
  *  - registration is refused when the window is shut, the event is
@@ -36,7 +36,7 @@ use Illuminate\Support\Facades\DB;
 class RegistrationService
 {
     /**
-     * A representative registering their own school through the portal.
+     * A representative registering their own organization through the portal.
      *
      * Every gate applies here. The coordinator's equivalent is
      * `createManualEntry()`, which is a separate method precisely so that
@@ -114,7 +114,7 @@ class RegistrationService
      *
      * Idempotent by design. Stripe redelivers a webhook until it gets a 2xx,
      * and a second `RegistrationConfirmed` means a second receipt — which is
-     * exactly the kind of thing a school notices and the coordinator has to
+     * exactly the kind of thing an organization notices and the coordinator has to
      * apologise for. An already-confirmed registration returns unchanged and
      * fires nothing.
      */
@@ -160,7 +160,7 @@ class RegistrationService
     }
 
     /**
-     * Whether this school already holds a live place at this fair.
+     * Whether this organization already holds a live place at this fair.
      *
      * The duplicate rule is "no second NON-CANCELLED registration", which no
      * portable unique index expresses, so it lives here (doc 10, D-1.2-e). The
@@ -202,7 +202,7 @@ class RegistrationService
                 throw RegistrationNotAllowed::eventIsFull($event);
             }
 
-            // The snapshot (N1). Read from the event and the school's approved
+            // The snapshot (N1). Read from the event and the organization's approved
             // grant — never from anything the caller passed in.
             $grant = $event->approvedGrantFor($organization);
             $priceCents = $event->priceFor($organization);

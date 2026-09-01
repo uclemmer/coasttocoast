@@ -11,7 +11,7 @@
     </p>
 
     <p class="mt-3 text-sm text-ink-600">
-        {{ __('Nothing arrived? It can take a minute, and it is worth checking your spam folder — school mail systems are strict.') }}
+        {{ __('Nothing arrived? It can take a minute, and it is worth checking your spam folder — institutional mail systems are strict.') }}
     </p>
 
     <form method="POST" action="{{ route('verification.send') }}" class="mt-6">

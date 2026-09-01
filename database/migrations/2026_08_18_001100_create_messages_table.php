@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * The audience is stored as an enum case plus filters rather than as a frozen
  * recipient list, because an audience resolves at SEND time (doc 07 §2 rule 6):
- * schedule a note to lapsed schools and whoever is lapsed when it fires is who
+ * schedule a note to lapsed organizations and whoever is lapsed when it fires is who
  * receives it. The resolved list lands in `message_recipients`.
  */
 return new class extends Migration

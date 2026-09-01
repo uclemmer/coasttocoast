@@ -27,12 +27,12 @@ beforeEach(function () {
     $this->coordinator = coordinator();
     $this->actingAs($this->coordinator);
     $this->fair = Fair::factory()->registrationOpen()->priced(21500)->create();
-    $this->school = Organization::factory()->create();
+    $this->organization = Organization::factory()->create();
 });
 
 describe('the review queue', function () {
     it('defaults to the applications waiting on a decision', function () {
-        $pending = Grant::factory()->for($this->fair)->for($this->school)->create();
+        $pending = Grant::factory()->for($this->fair)->for($this->organization)->create();
         $decided = Grant::factory()->free()->for($this->fair)->create();
 
         $listed = livewire(GrantIndex::class)->instance()->grants();
@@ -54,7 +54,7 @@ describe('the review queue', function () {
     it('has no create or edit screen at all', function () {
         // A grant is applied for, then decided. An edit form would let someone
         // set approved without a benefit, which priceFor() reads as no
-        // discount — the school told it has a grant, then charged in full.
+        // discount — the organization told it has a grant, then charged in full.
         $names = collect(Route::getRoutes()->getRoutes())
             ->map(fn ($route): ?string => $route->getName())
             ->filter(fn (?string $name): bool => $name !== null && str_starts_with($name, 'staff.grants'))
@@ -66,7 +66,7 @@ describe('the review queue', function () {
 
     it('filters by fair and by status', function () {
         $other = Fair::factory()->create();
-        $mine = Grant::factory()->for($this->fair)->for($this->school)->create();
+        $mine = Grant::factory()->for($this->fair)->for($this->organization)->create();
         Grant::factory()->for($other)->create();
 
         $page = livewire(GrantIndex::class);
@@ -84,10 +84,10 @@ describe('the review queue', function () {
 
 describe('approving', function () {
     beforeEach(function () {
-        $this->grant = Grant::factory()->for($this->fair)->for($this->school)->create();
+        $this->grant = Grant::factory()->for($this->fair)->for($this->organization)->create();
     });
 
-    it('approves a free grant and the school stops owing anything', function () {
+    it('approves a free grant and the organization stops owing anything', function () {
         livewire(GrantIndex::class)
             ->call('startApprove', $this->grant->id)
             ->set('benefitType', GrantBenefit::Free->value)
@@ -95,7 +95,7 @@ describe('approving', function () {
 
         expect($this->grant->refresh()->status)->toBe(GrantStatus::Approved)
             ->and($this->grant->decided_by)->toBe($this->coordinator->id)
-            ->and($this->fair->priceFor($this->school))->toBe(0);
+            ->and($this->fair->priceFor($this->organization))->toBe(0);
     });
 
     it('converts a custom price from dollars to cents', function () {
@@ -108,7 +108,7 @@ describe('approving', function () {
             ->call('approve');
 
         expect($this->grant->refresh()->custom_price_cents)->toBe(5000)
-            ->and($this->fair->priceFor($this->school))->toBe(5000);
+            ->and($this->fair->priceFor($this->organization))->toBe(5000);
     });
 
     it('approves a percentage off', function () {
@@ -119,7 +119,7 @@ describe('approving', function () {
             ->call('approve');
 
         expect($this->grant->refresh()->percent_off)->toBe(40)
-            ->and($this->fair->priceFor($this->school))->toBe(12900);
+            ->and($this->fair->priceFor($this->organization))->toBe(12900);
     });
 
     it('requires the parameters the chosen benefit needs', function () {
@@ -153,7 +153,7 @@ describe('approving', function () {
 
 describe('denying', function () {
     it('records the reason and leaves the price at list', function () {
-        $grant = Grant::factory()->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->for($this->fair)->for($this->organization)->create();
 
         livewire(GrantIndex::class)
             ->call('startDeny', $grant->id)
@@ -162,12 +162,12 @@ describe('denying', function () {
 
         expect($grant->refresh()->status)->toBe(GrantStatus::Denied)
             ->and($grant->denial_reason)->toBe('Funds for this fair are already committed.')
-            ->and($this->fair->priceFor($this->school))->toBe(21500);
+            ->and($this->fair->priceFor($this->organization))->toBe(21500);
     });
 
     it('will not deny without a reason', function () {
-        // "Denied", with nothing else, is how a school is lost for good.
-        $grant = Grant::factory()->for($this->fair)->for($this->school)->create();
+        // "Denied", with nothing else, is how an organization is lost for good.
+        $grant = Grant::factory()->for($this->fair)->for($this->organization)->create();
 
         livewire(GrantIndex::class)
             ->call('startDeny', $grant->id)
@@ -180,7 +180,7 @@ describe('denying', function () {
 
 describe('revoking', function () {
     it('revokes an unused grant and restores list price', function () {
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
 
         livewire(GrantIndex::class)
             ->call('startRevoke', $grant->id)
@@ -188,22 +188,22 @@ describe('revoking', function () {
             ->call('revoke');
 
         expect($grant->refresh()->status)->toBe(GrantStatus::Revoked)
-            ->and($this->fair->priceFor($this->school))->toBe(21500);
+            ->and($this->fair->priceFor($this->organization))->toBe(21500);
     });
 
     it('is hidden once a live registration is priced under it', function () {
         // The service refuses it anyway; an action that always fails is worse
         // than no action.
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
-        Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->school)
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
+        Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['grant_id' => $grant->id]);
 
         expect(livewire(GrantIndex::class)->instance()->canRevoke($grant->refresh()))->toBeFalse();
     });
 
     it('comes back once the registration using it is cancelled', function () {
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
-        Registration::factory()->cancelled()->forEvent($this->fair)->forOrganization($this->school)
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
+        Registration::factory()->cancelled()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['grant_id' => $grant->id]);
 
         expect(livewire(GrantIndex::class)->instance()->canRevoke($grant->refresh()))->toBeTrue();
@@ -218,8 +218,8 @@ describe('service refusals', function () {
      * copy of the wording.
      */
     it('shows the service message rather than a generic failure', function () {
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
-        Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->school)
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
+        Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['grant_id' => $grant->id]);
 
         livewire(GrantIndex::class)
@@ -236,7 +236,7 @@ describe('service refusals', function () {
 
 describe('the detail screen', function () {
     it('shows the justification, which is why the screen exists', function () {
-        $grant = Grant::factory()->for($this->fair)->for($this->school)
+        $grant = Grant::factory()->for($this->fair)->for($this->organization)
             ->create(['justification' => 'Our entire senior class is on free lunch.']);
 
         livewire(ShowGrant::class, ['grant' => $grant])
@@ -248,7 +248,7 @@ describe('the detail screen', function () {
         // The mounted copy is stale the moment the service returns; showing
         // "Pending" beside a toast saying "Approved" is how somebody clicks
         // twice.
-        $grant = Grant::factory()->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->for($this->fair)->for($this->organization)->create();
 
         $page = livewire(ShowGrant::class, ['grant' => $grant])
             ->call('startApprove', $grant->id)
@@ -259,7 +259,7 @@ describe('the detail screen', function () {
     });
 
     it('keeps a user without the permission out', function () {
-        $grant = Grant::factory()->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->for($this->fair)->for($this->organization)->create();
         $this->actingAs(User::factory()->rep()->create());
 
         livewire(ShowGrant::class, ['grant' => $grant])->assertForbidden();
@@ -280,7 +280,7 @@ describe('the per-decision authorization check', function () {
      * what the policy currently says.
      */
     it('refuses a decision when update is denied, even though the page loaded', function () {
-        $grant = Grant::factory()->for($this->fair)->for($this->school)->create();
+        $grant = Grant::factory()->for($this->fair)->for($this->organization)->create();
 
         Gate::policy(Grant::class, GrantPolicyDenyingUpdate::class);
 

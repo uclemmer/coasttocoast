@@ -19,7 +19,7 @@ use Illuminate\Support\Carbon;
  *
  * The audience is stored as a rule, not as a list: `SendEventBroadcast`
  * resolves it when the message actually fires, so a note scheduled to "lapsed
- * schools" reaches whoever is lapsed at that moment (doc 07 section 2 rule 6).
+ * organizations" reaches whoever is lapsed at that moment (doc 07 section 2 rule 6).
  * The resolved people are then frozen into `message_recipients`.
  *
  * @property int $id

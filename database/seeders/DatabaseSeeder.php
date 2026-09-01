@@ -11,7 +11,7 @@ use Illuminate\Database\Seeder;
  *
  * Order matters. Roles before the coordinator, because the coordinator is
  * assigned one. Events before the fixtures, because the fixtures register
- * schools onto them.
+ * organizations onto them.
  *
  * `WithoutModelEvents` is deliberately NOT used: `Organization` derives
  * `normalized_name` in a saving hook and `Event` fills a blank slug the same

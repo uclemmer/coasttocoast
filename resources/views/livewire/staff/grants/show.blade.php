@@ -41,7 +41,7 @@
     <div class="mt-6 max-w-3xl">
         <x-ui::section :heading="__('The application')">
             <x-ui::description-list :columns="2">
-                <x-ui::description-list.item :term="__('School')" :description="$grant->organization?->name" />
+                <x-ui::description-list.item :term="__('Organization')" :description="$grant->organization?->name" />
                 <x-ui::description-list.item :term="__('Fair')" :description="$grant->event?->name ?? '—'" />
 
                 <x-ui::description-list.item :term="__('Status')">
@@ -69,7 +69,7 @@
             </x-ui::description-list>
         </x-ui::section>
 
-        {{-- Prose, not a cell. This is the school's case for needing help and
+        {{-- Prose, not a cell. This is the organization's case for needing help and
              the reason this screen exists at all. --}}
         <div class="mt-6">
             <x-ui::section :heading="__('Why they applied')">

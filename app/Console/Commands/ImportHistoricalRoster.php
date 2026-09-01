@@ -30,7 +30,7 @@ use Illuminate\Support\Str;
  *
  * Only `organization_name` and `event_slug` are required. Everything else is
  * optional, because a fifteen-year-old export will be missing things and a
- * partial record of a school that attended is worth far more than no record.
+ * partial record of an organization that attended is worth far more than no record.
  *
  * Idempotent by (event, organization): re-running updates rather than
  * duplicating, so the owner can fix the CSV and run it again.
@@ -45,8 +45,8 @@ class ImportHistoricalRoster extends Command
 
     /** @var array<string, int> */
     protected array $tally = [
-        'schools created' => 0,
-        'schools matched' => 0,
+        'organizations created' => 0,
+        'organizations matched' => 0,
         'registrations created' => 0,
         'registrations updated' => 0,
         'rows skipped' => 0,
@@ -161,7 +161,7 @@ class ImportHistoricalRoster extends Command
         $existing = Organization::query()->matchingName($name)->first();
 
         if ($existing instanceof Organization) {
-            $this->tally['schools matched']++;
+            $this->tally['organizations matched']++;
 
             if (! $dryRun) {
                 // Fills gaps only. An import must never overwrite a profile
@@ -172,7 +172,7 @@ class ImportHistoricalRoster extends Command
             return $existing;
         }
 
-        $this->tally['schools created']++;
+        $this->tally['organizations created']++;
 
         if ($dryRun) {
             return null;
@@ -238,7 +238,7 @@ class ImportHistoricalRoster extends Command
             'price_cents' => filled($row['price_cents'] ?? null)
                 ? (int) $row['price_cents']
                 : $event->price_cents,
-            // The school's own name is a better placeholder than nothing: the
+            // The organization's own name is a better placeholder than nothing: the
             // roster reads correctly and the coordinator can see at a glance
             // which rows still need a person attached.
             'rep_name' => ($row['rep_name'] ?? null) ?: $organization->name,

@@ -26,11 +26,11 @@ beforeEach(function () {
 });
 
 /**
- * A school with one active rep, registered for the given fairs.
+ * An organization with one active rep, registered for the given fairs.
  *
  * @param  array<int, Event>  $fairs
  */
-function school(string $name, array $fairs = [], array $registrationState = []): Organization
+function organization(string $name, array $fairs = [], array $registrationState = []): Organization
 {
     $organization = Organization::factory()->named($name)->create();
     User::factory()->rep($organization)->create(['email' => str($name)->slug().'@example.edu']);
@@ -46,27 +46,27 @@ function school(string $name, array $fairs = [], array $registrationState = []):
 }
 
 describe('this fair', function () {
-    it('finds confirmed schools', function () {
-        school('Kenyon College', [$this->thisYear]);
-        school('Pending College', [$this->thisYear], ['status' => RegistrationStatus::PendingPayment]);
+    it('finds confirmed organizations', function () {
+        organization('Kenyon College', [$this->thisYear]);
+        organization('Pending College', [$this->thisYear], ['status' => RegistrationStatus::PendingPayment]);
 
         expect($this->builder->resolve(Audience::ThisEventConfirmed, $this->thisYear)->pluck('organizationName')->all())
             ->toBe(['Kenyon College']);
     });
 
-    it('finds schools whose check has not arrived', function () {
+    it('finds organizations whose check has not arrived', function () {
         $waiting = Organization::factory()->named('Waiting College')->create();
         User::factory()->rep($waiting)->create();
         Registration::factory()->pendingCheck()->forEvent($this->thisYear)->forOrganization($waiting)->create();
 
-        school('Paid College', [$this->thisYear]);
+        organization('Paid College', [$this->thisYear]);
 
         expect($this->builder->resolve(Audience::ThisEventPendingCheck, $this->thisYear)->pluck('organizationName')->all())
             ->toBe(['Waiting College']);
     });
 
     it('finds everyone with a live registration', function () {
-        school('Confirmed College', [$this->thisYear]);
+        organization('Confirmed College', [$this->thisYear]);
         $pending = Organization::factory()->named('Pending College')->create();
         User::factory()->rep($pending)->create();
         Registration::factory()->pendingCheck()->forEvent($this->thisYear)->forOrganization($pending)->create();
@@ -76,8 +76,8 @@ describe('this fair', function () {
 
     it('never counts a cancelled or refunded registration', function () {
         // Rule 4: they did not attend.
-        school('Cancelled College', [$this->thisYear], ['status' => RegistrationStatus::Cancelled]);
-        school('Refunded College', [$this->thisYear], ['status' => RegistrationStatus::Refunded]);
+        organization('Cancelled College', [$this->thisYear], ['status' => RegistrationStatus::Cancelled]);
+        organization('Refunded College', [$this->thisYear], ['status' => RegistrationStatus::Refunded]);
 
         expect($this->builder->resolve(Audience::ThisEventAll, $this->thisYear))->toBeEmpty()
             ->and($this->builder->resolve(Audience::ThisEventConfirmed, $this->thisYear))->toBeEmpty();
@@ -88,8 +88,8 @@ describe('cross-year audiences', function () {
     it('separates last year from any previous year', function () {
         // Indistinguishable with one year of history, which is why the
         // fixtures insist on two.
-        school('Last Year College', [$this->lastYear]);
-        school('Long Ago College', [$this->twoYearsAgo]);
+        organization('Last Year College', [$this->lastYear]);
+        organization('Long Ago College', [$this->twoYearsAgo]);
 
         expect($this->builder->resolve(Audience::LastEvent, $this->thisYear)->pluck('organizationName')->all())
             ->toBe(['Last Year College'])
@@ -99,8 +99,8 @@ describe('cross-year audiences', function () {
 
     it('subtracts this year from the lapsed lists', function () {
         // The win-back list: attended before, not yet registered now.
-        school('Returning College', [$this->lastYear, $this->thisYear]);
-        school('Lapsed College', [$this->lastYear]);
+        organization('Returning College', [$this->lastYear, $this->thisYear]);
+        organization('Lapsed College', [$this->lastYear]);
 
         expect($this->builder->resolve(Audience::LapsedLastEvent, $this->thisYear)->pluck('organizationName')->all())
             ->toBe(['Lapsed College'])
@@ -108,21 +108,21 @@ describe('cross-year audiences', function () {
             ->toBe(['Lapsed College']);
     });
 
-    it('counts a school with a check in the post as registered, so it is not chased', function () {
-        $school = Organization::factory()->named('Paying College')->create();
-        User::factory()->rep($school)->create();
-        Registration::factory()->forEvent($this->lastYear)->forOrganization($school)->create();
-        Registration::factory()->pendingCheck()->forEvent($this->thisYear)->forOrganization($school)->create();
+    it('counts an organization with a check in the post as registered, so it is not chased', function () {
+        $organization = Organization::factory()->named('Paying College')->create();
+        User::factory()->rep($organization)->create();
+        Registration::factory()->forEvent($this->lastYear)->forOrganization($organization)->create();
+        Registration::factory()->pendingCheck()->forEvent($this->thisYear)->forOrganization($organization)->create();
 
         expect($this->builder->resolve(Audience::LapsedLastEvent, $this->thisYear))->toBeEmpty();
     });
 
     it('treats a cancelled registration this year as not registered', function () {
         // They cancelled; they belong on the win-back list.
-        $school = Organization::factory()->named('Changed Mind College')->create();
-        User::factory()->rep($school)->create();
-        Registration::factory()->forEvent($this->lastYear)->forOrganization($school)->create();
-        Registration::factory()->cancelled()->forEvent($this->thisYear)->forOrganization($school)->create();
+        $organization = Organization::factory()->named('Changed Mind College')->create();
+        User::factory()->rep($organization)->create();
+        Registration::factory()->forEvent($this->lastYear)->forOrganization($organization)->create();
+        Registration::factory()->cancelled()->forEvent($this->thisYear)->forOrganization($organization)->create();
 
         expect($this->builder->resolve(Audience::LapsedLastEvent, $this->thisYear))->toHaveCount(1);
     });
@@ -131,40 +131,40 @@ describe('cross-year audiences', function () {
         // Rule 5: "previous" means published, the same definition the Last
         // Year page uses.
         $draft = Fair::factory()->past(1)->create(['is_published' => false]);
-        school('Draft College', [$draft]);
+        organization('Draft College', [$draft]);
 
         expect($this->builder->resolve(Audience::AnyPreviousEvent, $this->thisYear))->toBeEmpty();
     });
 });
 
 describe('organizations qualify, people receive', function () {
-    it('delivers to every active rep of a qualifying school', function () {
-        $school = Organization::factory()->named('Kenyon College')->create();
-        User::factory()->count(2)->rep($school)->create();
-        Registration::factory()->forEvent($this->thisYear)->forOrganization($school)->create();
+    it('delivers to every active rep of a qualifying organization', function () {
+        $organization = Organization::factory()->named('Kenyon College')->create();
+        User::factory()->count(2)->rep($organization)->create();
+        Registration::factory()->forEvent($this->thisYear)->forOrganization($organization)->create();
 
         expect($this->builder->resolve(Audience::ThisEventConfirmed, $this->thisYear))->toHaveCount(2);
     });
 
     it('never mails a pending or retired rep', function () {
-        // R2.10. They can still see their history; they are not the school's
+        // R2.10. They can still see their history; they are not the organization's
         // voice any more.
-        $school = Organization::factory()->named('Kenyon College')->create();
-        $active = User::factory()->rep($school)->create(['email' => 'active@kenyon.example']);
-        User::factory()->pendingRep($school)->create(['email' => 'pending@kenyon.example']);
-        User::factory()->retiredRep($school)->create(['email' => 'retired@kenyon.example']);
-        Registration::factory()->forEvent($this->thisYear)->forOrganization($school)->create();
+        $organization = Organization::factory()->named('Kenyon College')->create();
+        $active = User::factory()->rep($organization)->create(['email' => 'active@kenyon.example']);
+        User::factory()->pendingRep($organization)->create(['email' => 'pending@kenyon.example']);
+        User::factory()->retiredRep($organization)->create(['email' => 'retired@kenyon.example']);
+        Registration::factory()->forEvent($this->thisYear)->forOrganization($organization)->create();
 
         expect($this->builder->resolve(Audience::ThisEventConfirmed, $this->thisYear)->pluck('email')->all())
             ->toBe([$active->email]);
     });
 
     it('falls back to the admissions email when nobody is active', function () {
-        $school = Organization::factory()->named('Maryville College')->create([
+        $organization = Organization::factory()->named('Maryville College')->create([
             'admissions_email' => 'admissions@maryville.example',
         ]);
-        User::factory()->retiredRep($school)->create();
-        Registration::factory()->forEvent($this->thisYear)->forOrganization($school)->create();
+        User::factory()->retiredRep($organization)->create();
+        Registration::factory()->forEvent($this->thisYear)->forOrganization($organization)->create();
 
         $recipients = $this->builder->resolve(Audience::ThisEventConfirmed, $this->thisYear);
 
@@ -177,13 +177,13 @@ describe('organizations qualify, people receive', function () {
             ->userId->toBeNull();
     });
 
-    it('drops a school with neither, and says so in the log', function () {
-        // A school vanishing without a trace is how it stops being invited.
+    it('drops an organization with neither, and says so in the log', function () {
+        // An organization vanishing without a trace is how it stops being invited.
         Log::spy();
 
-        $school = Organization::factory()->named('Bryan College')->withoutAdmissionsEmail()->create();
-        User::factory()->retiredRep($school)->create();
-        Registration::factory()->forEvent($this->thisYear)->forOrganization($school)->create();
+        $organization = Organization::factory()->named('Bryan College')->withoutAdmissionsEmail()->create();
+        User::factory()->retiredRep($organization)->create();
+        Registration::factory()->forEvent($this->thisYear)->forOrganization($organization)->create();
 
         expect($this->builder->resolve(Audience::ThisEventConfirmed, $this->thisYear))->toBeEmpty();
 
@@ -191,11 +191,11 @@ describe('organizations qualify, people receive', function () {
     });
 
     it('can be told to skip the generic fallback entirely', function () {
-        $school = Organization::factory()->named('Maryville College')->create([
+        $organization = Organization::factory()->named('Maryville College')->create([
             'admissions_email' => 'admissions@maryville.example',
         ]);
-        User::factory()->retiredRep($school)->create();
-        Registration::factory()->forEvent($this->thisYear)->forOrganization($school)->create();
+        User::factory()->retiredRep($organization)->create();
+        Registration::factory()->forEvent($this->thisYear)->forOrganization($organization)->create();
 
         expect($this->builder->resolve(Audience::ThisEventConfirmed, $this->thisYear, ['skipGenericFallback' => true]))
             ->toBeEmpty();
@@ -205,10 +205,10 @@ describe('organizations qualify, people receive', function () {
 describe('dedupe', function () {
     it('emails a rep once however many years they qualify through', function () {
         // Rule 2. A rep active across three past years qualifies three times.
-        $school = Organization::factory()->named('Kenyon College')->create();
-        User::factory()->rep($school)->create(['email' => 'dana@kenyon.example']);
-        Registration::factory()->forEvent($this->twoYearsAgo)->forOrganization($school)->create();
-        Registration::factory()->forEvent($this->lastYear)->forOrganization($school)->create();
+        $organization = Organization::factory()->named('Kenyon College')->create();
+        User::factory()->rep($organization)->create(['email' => 'dana@kenyon.example']);
+        Registration::factory()->forEvent($this->twoYearsAgo)->forOrganization($organization)->create();
+        Registration::factory()->forEvent($this->lastYear)->forOrganization($organization)->create();
 
         expect($this->builder->resolve(Audience::AnyPreviousEvent, $this->thisYear))->toHaveCount(1);
     });
@@ -222,7 +222,7 @@ describe('dedupe', function () {
 });
 
 describe('the interest list', function () {
-    it('resolves to bare addresses with no school and no account', function () {
+    it('resolves to bare addresses with no organization and no account', function () {
         EventInterest::factory()->for($this->thisYear)->create([
             'email' => 'dana@kenyon.example',
             'organization_name' => 'Kenyon College',
@@ -242,21 +242,21 @@ describe('the interest list', function () {
 
 describe('filters', function () {
     it('narrows to recipients who can actually receive a text', function () {
-        $school = Organization::factory()->create();
-        $optedIn = User::factory()->rep($school)->smsOptedIn()->create();
-        User::factory()->rep($school)->create(['phone' => '+15551234567', 'sms_opt_in' => false]);
-        User::factory()->rep($school)->create(['phone' => null, 'sms_opt_in' => true]);
-        Registration::factory()->forEvent($this->thisYear)->forOrganization($school)->create();
+        $organization = Organization::factory()->create();
+        $optedIn = User::factory()->rep($organization)->smsOptedIn()->create();
+        User::factory()->rep($organization)->create(['phone' => '+15551234567', 'sms_opt_in' => false]);
+        User::factory()->rep($organization)->create(['phone' => null, 'sms_opt_in' => true]);
+        Registration::factory()->forEvent($this->thisYear)->forOrganization($organization)->create();
 
         expect($this->builder->resolve(Audience::ThisEventConfirmed, $this->thisYear, ['smsOptedInOnly' => true])
             ->pluck('email')->all())->toBe([$optedIn->email]);
     });
 
     it('honours a manual suppression list, case-insensitively', function () {
-        $school = Organization::factory()->create();
-        User::factory()->rep($school)->create(['email' => 'noisy@kenyon.example']);
-        $keep = User::factory()->rep($school)->create(['email' => 'quiet@kenyon.example']);
-        Registration::factory()->forEvent($this->thisYear)->forOrganization($school)->create();
+        $organization = Organization::factory()->create();
+        User::factory()->rep($organization)->create(['email' => 'noisy@kenyon.example']);
+        $keep = User::factory()->rep($organization)->create(['email' => 'quiet@kenyon.example']);
+        Registration::factory()->forEvent($this->thisYear)->forOrganization($organization)->create();
 
         expect($this->builder->resolve(Audience::ThisEventConfirmed, $this->thisYear, [
             'excludeEmails' => ['NOISY@kenyon.example'],
@@ -266,9 +266,9 @@ describe('filters', function () {
 
 describe('resolution at send time', function () {
     it('reflects the world as it is when it runs, not when the message was written', function () {
-        // Rule 6. Schedule a note to lapsed schools and whoever is lapsed when
+        // Rule 6. Schedule a note to lapsed organizations and whoever is lapsed when
         // it fires is who gets it.
-        school('Lapsed College', [$this->lastYear]);
+        organization('Lapsed College', [$this->lastYear]);
 
         expect($this->builder->count(Audience::LapsedLastEvent, $this->thisYear))->toBe(1);
 

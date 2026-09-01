@@ -23,7 +23,7 @@ describe('name normalization', function () {
         'mixed case' => ['bOsToN cOlLeGe', 'boston college'],
     ]);
 
-    it('keeps schools that differ only by University or College apart', function () {
+    it('keeps organizations that differ only by University or College apart', function () {
         // Stripping those words would merge Boston University into Boston
         // College, which is worse than a missed duplicate warning.
         expect(Organization::normalizeName('Boston University'))
@@ -46,20 +46,20 @@ describe('name normalization', function () {
 });
 
 describe('duplicate detection', function () {
-    it('finds schools whose names normalize the same way', function () {
+    it('finds organizations whose names normalize the same way', function () {
         $existing = Organization::factory()->named('The Ohio State University')->create();
         $candidate = Organization::factory()->named('ohio state university.')->create();
 
         expect($candidate->possibleDuplicates()->pluck('id')->all())->toBe([$existing->id]);
     });
 
-    it('does not report a saved school as its own duplicate', function () {
+    it('does not report a saved organization as its own duplicate', function () {
         $organization = Organization::factory()->create();
 
         expect($organization->possibleDuplicates()->count())->toBe(0);
     });
 
-    it('finds duplicates for a school that has not been saved yet', function () {
+    it('finds duplicates for an organization that has not been saved yet', function () {
         // This is the signup case: the warning has to appear before the record
         // exists, or it appears too late to be useful.
         $existing = Organization::factory()->named('Kenyon College')->create();

@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * The membership lifecycle (D9, R2.10) and the duplicate merge (R3.3a).
  *
- * These are the operations where a school and the people who speak for it come
- * apart. Every one of them has to leave the school's history intact — that is
+ * These are the operations where an organization and the people who speak for it come
+ * apart. Every one of them has to leave the organization's history intact — that is
  * the entire reason the organization, rather than the rep, is the unit that
  * registers.
  *
@@ -28,11 +28,11 @@ use Illuminate\Support\Facades\DB;
 class OrganizationService
 {
     /**
-     * Signup path one: this school is not in the directory yet (D9).
+     * Signup path one: this organization is not in the directory yet (D9).
      *
      * The founder is `active` immediately. There is nobody to approve them —
-     * they are the school's first representative, and making them wait would
-     * mean waiting on a coordinator to vouch for a school only they know
+     * they are the organization's first representative, and making them wait would
+     * mean waiting on a coordinator to vouch for an organization only they know
      * about. The coordinator is alerted instead, with the duplicate warning
      * attached, because the rep saw that warning and pressed on and somebody
      * should look.
@@ -64,11 +64,11 @@ class OrganizationService
     }
 
     /**
-     * Signup path two: the school is already in the directory (D9).
+     * Signup path two: the organization is already in the directory (D9).
      *
      * The rep is `pending` until a coordinator approves. This asymmetry with
      * `createWithFounder()` is the whole point of the two paths: anyone can
-     * claim to represent Vanderbilt, and the school's registration history,
+     * claim to represent Vanderbilt, and the organization's registration history,
      * grants and roster entry are on the other side of that claim.
      */
     public function claim(Organization $organization, User $rep): User
@@ -87,7 +87,7 @@ class OrganizationService
     }
 
     /**
-     * A coordinator approving a rep's claim on an existing school.
+     * A coordinator approving a rep's claim on an existing organization.
      */
     public function approveClaim(User $rep, User $coordinator): User
     {
@@ -111,7 +111,7 @@ class OrganizationService
      * A coordinator refusing a claim.
      *
      * The account survives with no organization at all rather than being
-     * deleted or left `pending` forever. Someone who claimed the wrong school
+     * deleted or left `pending` forever. Someone who claimed the wrong organization
      * — a typo, a similar name — should be able to sign up again for the right
      * one, which a lingering pending membership would block.
      */
@@ -138,7 +138,7 @@ class OrganizationService
      * Retire a rep — by their own hand or the coordinator's.
      *
      * They keep the account, the login and the visible history; they lose
-     * every right to act for the school, and campaigns stop mailing them
+     * every right to act for the organization, and campaigns stop mailing them
      * (doc 07 §2 rule 1). The organization is untouched: its registrations,
      * grants and roster entries were never the rep's to take with them.
      */
@@ -182,7 +182,7 @@ class OrganizationService
     }
 
     /**
-     * Fold a duplicate school into the one being kept (R3.3a).
+     * Fold a duplicate organization into the one being kept (R3.3a).
      *
      * Everything that points at the duplicate is repointed — reps,
      * registrations, grants — and only then is the husk deleted. Order
@@ -196,7 +196,7 @@ class OrganizationService
      *
      * The one thing this does NOT resolve is two live registrations for the
      * same fair, which the merge can create. That is reported back rather than
-     * silently fixed — deciding which of two registrations a school keeps is a
+     * silently fixed — deciding which of two registrations an organization keeps is a
      * judgement about money, not a data-cleanup step.
      *
      * @return array<int, Registration> registrations that now collide on a fair

@@ -82,7 +82,7 @@ have **not** registered this year, last year's reps, this year's reps, etc. Beca
 and reps come and go (D8/R2.10), **audiences qualify at the organization level and deliver to people**:
 an organization qualifies through its registration history; the recipients are that organization's **active**
 reps. Retired and pending reps are never emailed by campaigns; an org with no active reps falls back to its
-`admissions_email` (one recipient, flagged `generic`) so a school with rep turnover doesn't silently vanish
+`admissions_email` (one recipient, flagged `generic`) so an organization with rep turnover doesn't silently vanish
 from the win-back list.
 
 ### `AudienceBuilder` service (`App\Services\AudienceBuilder`)
@@ -95,7 +95,7 @@ Input: an `Audience` definition (backed enum + optional filters). Output: dedupl
 | `ThisEventConfirmed` | orgs with a confirmed registration on the reference event |
 | `ThisEventPendingCheck` | orgs pending_payment + method=check on the reference event |
 | `ThisEventAll` | confirmed + pending on the reference event |
-| `LastEvent` | orgs with any non-cancelled registration on the previous published event ("last year's schools") |
+| `LastEvent` | orgs with any non-cancelled registration on the previous published event ("last year's organizations") |
 | `LapsedLastEvent` | in `LastEvent` **minus** anyone in `ThisEventAll` ("last year but not registered this year") |
 | `AnyPreviousEvent` | orgs with a non-cancelled registration on **any** past event ("registered in previous years") |
 | `LapsedAnyPrevious` | `AnyPreviousEvent` minus `ThisEventAll` (the win-back list) |
@@ -116,8 +116,8 @@ Filters composable on top: `smsOptedInOnly`, `paymentMethod`, `excludeEmails` (m
 5. "Previous"/"last" resolve against **published** events ordered by `starts_at` — same definition the
    Last Year page uses (doc 03), one source of truth: reuse the `previousPublished()` scope.
 6. An audience is resolved **at send time**, not at compose time — the coordinator schedules a message to
-   "lapsed schools" and whoever is lapsed when it fires is who gets it. The resolved list is then frozen into
-   `message_recipients` for the audit trail (with `organization_id` so results group by school).
+   "lapsed organizations" and whoever is lapsed when it fires is who gets it. The resolved list is then frozen into
+   `message_recipients` for the audit trail (with `organization_id` so results group by organization).
 
 ### Historical data caveat
 
@@ -170,7 +170,7 @@ promise — hence `prune_after_days` config rather than never-prune.
 - `messages`: replace free-form `segment` json with `audience` (string enum) + `audience_filters` (json);
   keep `channels`, `scheduled_for`, `sent_at`.
 - `message_recipients`: `registration_id` now **nullable** (lapsed/interest recipients have no current
-  registration); add `user_id` (nullable fk), `organization_id` (nullable fk — groups results by school),
+  registration); add `user_id` (nullable fk), `organization_id` (nullable fk — groups results by organization),
   `email_log_id` (nullable, ULID, references `core_email_logs`), keep name/email/phone snapshots and
   status columns.
 - Dropped from our schema (laravel-core provides them): `contact_submissions` → `core_contact_submissions`,

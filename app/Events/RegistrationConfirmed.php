@@ -10,7 +10,7 @@ use Illuminate\Foundation\Events\Dispatchable;
  *
  * This is the receipt trigger. Fired exactly once per registration —
  * `confirmPayment()` is idempotent, because Stripe redelivers webhooks and a
- * second receipt for the same registration is the kind of thing schools notice.
+ * second receipt for the same registration is the kind of thing organizations notice.
  */
 class RegistrationConfirmed
 {

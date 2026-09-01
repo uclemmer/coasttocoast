@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Applications for free or discounted registration (D10).
  *
- * The asymmetry here is the design. A school **asks**; the coordinator decides
+ * The asymmetry here is the design. An organization **asks**; the coordinator decides
  * both whether to approve and what the grant is worth — the applicant never
  * names a figure, which is why `apply()` takes only a justification and
  * `approve()` takes the benefit.
@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\DB;
 class GrantService
 {
     /**
-     * A representative applying on behalf of their school.
+     * A representative applying on behalf of their organization.
      */
     public function apply(Event $event, Organization $organization, User $rep, string $justification): Grant
     {
@@ -47,7 +47,7 @@ class GrantService
         }
 
         // Open while the fair is still ahead of us — including before
-        // registration opens, so a school can line its funding up first, which
+        // registration opens, so an organization can line its funding up first, which
         // is the whole point of applying. Closed once the fair has happened.
         if ($event->starts_at->isPast()) {
             throw GrantNotAllowed::eventIsPast($event);
@@ -78,7 +78,7 @@ class GrantService
      * The benefit parameters are validated here rather than trusted from a
      * form, because a `custom_price` grant with no price or a `percent_off`
      * grant with no percentage would silently fall through
-     * `Event::priceFor()` to list price — the school would be told it had a
+     * `Event::priceFor()` to list price — the organization would be told it had a
      * grant and then charged in full.
      */
     public function approve(
@@ -111,8 +111,8 @@ class GrantService
 
     /**
      * Decline an application. The reason is required because it goes into the
-     * email the school receives, and "denied" with no explanation is how you
-     * lose a school for good.
+     * email the organization receives, and "denied" with no explanation is how you
+     * lose an organization for good.
      */
     public function deny(Grant $grant, User $coordinator, string $reason): Grant
     {
@@ -166,9 +166,9 @@ class GrantService
     }
 
     /**
-     * A school changing its mind while the application is still pending.
+     * An organization changing its mind while the application is still pending.
      *
-     * The only status that frees the one-per-fair slot, so a school that
+     * The only status that frees the one-per-fair slot, so an organization that
      * withdraws can apply again with a better case. A denial cannot be
      * withdrawn — that decision is the coordinator's and it stands.
      */
@@ -190,7 +190,7 @@ class GrantService
     }
 
     /**
-     * Whether this school already holds an application for this fair that
+     * Whether this organization already holds an application for this fair that
      * blocks another. Everything but `Withdrawn` blocks.
      */
     public function hasLiveApplication(Event $event, Organization $organization): bool
@@ -202,7 +202,7 @@ class GrantService
     }
 
     /**
-     * The application this school currently holds for this fair, if any —
+     * The application this organization currently holds for this fair, if any —
      * what the portal's status timeline renders (card 3.5).
      */
     public function currentApplication(Event $event, Organization $organization): ?Grant

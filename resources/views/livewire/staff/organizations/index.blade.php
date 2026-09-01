@@ -1,15 +1,15 @@
-{{-- The school directory (docs/13). --}}
+{{-- The organization directory (docs/13). --}}
 <div>
-    <x-ui::action-bar :heading="__('Schools')"
-        :description="__('Every school in the directory, with or without a representative.')" level="h2">
+    <x-ui::action-bar :heading="__('Organizations')"
+        :description="__('Every organization in the directory, with or without a representative.')" level="h2">
         <x-ui::button href="{{ route('staff.organizations.create') }}" variant="brand">
-            {{ __('Add a school') }}
+            {{ __('Add an organization') }}
         </x-ui::button>
     </x-ui::action-bar>
 
     {{--
         Merge collisions. An alert, not a toast, and dismissed by hand: which of
-        two paid registrations a school keeps is a decision about money, and a
+        two paid registrations an organization keeps is a decision about money, and a
         message about it must survive the next click. Filament used
         `->persistent()` for exactly this.
     --}}
@@ -24,7 +24,7 @@
                     ) }}
                 </p>
                 <p class="mt-1">
-                    {{ __('The same school now holds two live registrations for the same fair. Cancel whichever is wrong.') }}
+                    {{ __('The same organization now holds two live registrations for the same fair. Cancel whichever is wrong.') }}
                 </p>
                 <x-ui::button size="xs" variant="ghost" class="mt-2" wire:click="dismissCollisions">
                     {{ __('Dismiss') }}
@@ -40,10 +40,10 @@
                     <x-slot:search>
                         <div class="flex flex-wrap items-end gap-3">
                             <x-ui::forms.input name="search" wire:model.live.debounce.300ms="search" type="search"
-                                :label="__('Search schools')" :placeholder="__('Search by name')" />
+                                :label="__('Search organizations')" :placeholder="__('Search by name')" />
 
                             <x-ui::forms.select name="filter" wire:model.live="filter" :label="__('Show')">
-                                <option value="">{{ __('All schools') }}</option>
+                                <option value="">{{ __('All organizations') }}</option>
                                 <option value="needs_a_rep">{{ __('No active representative') }}</option>
                                 <option value="possible_duplicates">{{ __('Possible duplicates') }}</option>
                             </x-ui::forms.select>
@@ -54,7 +54,7 @@
 
             <x-ui::table.head>
                 <x-ui::table.heading>{{ __('Logo') }}</x-ui::table.heading>
-                <x-ui::table.heading>{{ __('School') }}</x-ui::table.heading>
+                <x-ui::table.heading>{{ __('Organization') }}</x-ui::table.heading>
                 <x-ui::table.heading>{{ __('Active reps') }}</x-ui::table.heading>
                 <x-ui::table.heading>{{ __('Registrations') }}</x-ui::table.heading>
                 <x-ui::table.heading>{{ __('Admissions email') }}</x-ui::table.heading>
@@ -75,7 +75,7 @@
                     </x-ui::table.cell>
 
                     {{-- Zero is the interesting number: campaigns then fall back
-                         to admissions_email, or drop the school entirely. --}}
+                         to admissions_email, or drop the organization entirely. --}}
                     <x-ui::table.cell>
                         @if ($organization->active_reps_count === 0)
                             <x-ui::badge variant="warning">{{ __('None') }}</x-ui::badge>
@@ -103,20 +103,20 @@
             @empty
                 <x-ui::table.row>
                     <x-ui::table.empty-state :colspan="6"
-                        :heading="$search === '' && $filter === '' ? __('No schools yet') : __('Nothing matches those filters')" />
+                        :heading="$search === '' && $filter === '' ? __('No organizations yet') : __('Nothing matches those filters')" />
                 </x-ui::table.row>
             @endforelse
         </x-ui::table>
     </div>
 
-    <x-ui::modal id="merge-organization" :title="__('Merge this school into another?')" size="lg">
+    <x-ui::modal id="merge-organization" :title="__('Merge this organization into another?')" size="lg">
         <form wire:submit="merge" class="space-y-4">
             <p class="text-sm text-body">
-                {{ __('Nothing is lost: representatives, registrations and grants move to the school you keep, and the empty record is removed afterwards.') }}
+                {{ __('Nothing is lost: representatives, registrations and grants move to the organization you keep, and the empty record is removed afterwards.') }}
             </p>
 
-            <x-ui::forms.select name="keepId" wire:model="keepId" :label="__('Keep this school')" required>
-                <option value="">{{ __('Choose a school…') }}</option>
+            <x-ui::forms.select name="keepId" wire:model="keepId" :label="__('Keep this organization')" required>
+                <option value="">{{ __('Choose an organization…') }}</option>
                 @foreach ($this->mergeTargets as $target)
                     <option value="{{ $target->id }}">{{ $target->name }}</option>
                 @endforeach
@@ -132,8 +132,8 @@
         </form>
     </x-ui::modal>
 
-    <x-ui::confirm-modal id="delete-organization" :title="__('Remove this school?')" :confirm="__('Remove')"
+    <x-ui::confirm-modal id="delete-organization" :title="__('Remove this organization?')" :confirm="__('Remove')"
         variant="danger" wire:click="delete">
-        {{ __('Deleting takes its registration history with it. Merge into another school instead if this is a duplicate.') }}
+        {{ __('Deleting takes its registration history with it. Merge into another organization instead if this is a duplicate.') }}
     </x-ui::confirm-modal>
 </div>

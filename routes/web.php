@@ -54,7 +54,7 @@ use Illuminate\Support\Facades\Route;
 /*
  * Representative sign-up (D9), replacing the Filament rep panel's Register
  * page. Guest-only: a signed-in rep landing here could otherwise create a
- * second account and a second school membership.
+ * second account and a second organization membership.
  *
  * Outside the `site.` name group on purpose. This is an authentication screen,
  * not a site page, and the conventional route name is what packages and the
@@ -63,7 +63,7 @@ use Illuminate\Support\Facades\Route;
  *
  * Login, logout and password reset are laravel-core's, registered by the
  * package from config/core.php `auth.routes`. Registration is ours because
- * signing up claims or creates a school, and which of those it is decides
+ * signing up claims or creates an organization, and which of those it is decides
  * whether the account is active immediately. See docs/12.
  */
 Route::get('/register', Register::class)->middleware('guest')->name('register');
@@ -75,7 +75,7 @@ Route::get('/register', Register::class)->middleware('guest')->name('register');
  * replaced it, at the same URLs so every bookmark and emailed link still lands.
  *
  * `verified` sits alongside `auth` because the panel enforced it and dropping
- * it here would quietly widen who can register a school. Membership - pending,
+ * it here would quietly widen who can register an organization. Membership - pending,
  * active, retired - is enforced per screen instead, since browsing is allowed
  * and acting is not; see Portal\Concerns\ActsForAnOrganization.
  *

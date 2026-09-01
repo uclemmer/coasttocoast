@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
  * What a real host needs to come up: roles, the coordinator's account, the
  * editable page copy, the sponsors, the FAQ and the fair calendar.
  *
- * Deliberately excludes `FairFixtureSeeder` — no invented schools, reps,
+ * Deliberately excludes `FairFixtureSeeder` — no invented organizations, reps,
  * registrations, grants or payments ever reach production. Historical rosters
  * are a real import (card 6.6), not a fixture.
  *

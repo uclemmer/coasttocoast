@@ -23,7 +23,7 @@ use Throwable;
  * ViewRegistration and EditRegistration pages and their two header actions.
  *
  * WHAT IS EDITABLE HERE IS DELIBERATELY SMALL: the roster toggle, internal
- * notes and the fair contact. Status, price, school and fair are not, because
+ * notes and the fair contact. Status, price, organization and fair are not, because
  * each is the outcome of a decision that has to go through a service so
  * receipts are sent and the price snapshot stays honest.
  *

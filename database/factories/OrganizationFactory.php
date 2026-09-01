@@ -38,7 +38,7 @@ class OrganizationFactory extends Factory
     }
 
     /**
-     * A school with no generic contact — the case where the campaign fallback
+     * An organization with no generic contact — the case where the campaign fallback
      * has nothing to fall back to and the recipient is dropped with a log
      * (doc 07 §2 rule 1).
      */
@@ -55,7 +55,7 @@ class OrganizationFactory extends Factory
     }
 
     /**
-     * Force an exact name, for duplicate-detection tests that need two schools
+     * Force an exact name, for duplicate-detection tests that need two organizations
      * to normalize to the same string.
      */
     public function named(string $name): static

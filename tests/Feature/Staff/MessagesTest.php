@@ -26,9 +26,9 @@ beforeEach(function () {
     $this->actingAs($this->coordinator);
 
     $this->fair = Fair::factory()->published()->create();
-    $this->school = Organization::factory()->named('Kenyon College')->create();
-    $this->rep = User::factory()->rep($this->school)->create(['email' => 'dana@kenyon.example']);
-    Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+    $this->organization = Organization::factory()->named('Kenyon College')->create();
+    $this->rep = User::factory()->rep($this->organization)->create(['email' => 'dana@kenyon.example']);
+    Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
     $this->message = Message::factory()
         ->to(Audience::ThisEventConfirmed)
@@ -162,7 +162,7 @@ describe('the campaign page', function () {
 
     it('refuses a second send, because there is no unsend', function () {
         // Belt and braces against a stale tab: a second send would mail a
-        // hundred schools twice.
+        // hundred organizations twice.
         Notification::fake();
 
         $sent = Message::factory()->to(Audience::ThisEventConfirmed)->sent()
@@ -176,7 +176,7 @@ describe('the campaign page', function () {
     });
 
     it('refuses to edit or delete a sent campaign', function () {
-        // It is the record of what a hundred schools were told, and the
+        // It is the record of what a hundred organizations were told, and the
         // delivery table only means anything if it has not changed since.
         $sent = Message::factory()->sent()->create();
         $draft = Message::factory()->create();

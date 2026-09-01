@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
 class MessageFactory extends Factory
 {
     /**
-     * An unsent, email-only draft to this fair's confirmed schools.
+     * An unsent, email-only draft to this fair's confirmed organizations.
      *
      * @return array<string, mixed>
      */

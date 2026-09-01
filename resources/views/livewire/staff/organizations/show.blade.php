@@ -1,12 +1,12 @@
-{{-- One school, and its representatives (docs/13). --}}
-@php($school = $this->record)
+{{-- One organization, and its representatives (docs/13). --}}
+@php($organization = $this->record)
 
 <div>
-    <x-ui::action-bar :heading="$school->name" :description="$school->website">
+    <x-ui::action-bar :heading="$organization->name" :description="$organization->website">
         <x-ui::button href="{{ route('staff.organizations') }}" variant="secondary">
-            {{ __('Back to schools') }}
+            {{ __('Back to organizations') }}
         </x-ui::button>
-        <x-ui::button href="{{ route('staff.organizations.edit', $school) }}" variant="secondary">
+        <x-ui::button href="{{ route('staff.organizations.edit', $organization) }}" variant="secondary">
             {{ __('Edit') }}
         </x-ui::button>
     </x-ui::action-bar>
@@ -17,7 +17,7 @@
                 {{ __('Looks like a duplicate of: :names', [
                     'names' => $this->possibleDuplicates->pluck('name')->join(', '),
                 ]) }}
-                {{ __('Merge from the schools list if they really are the same school.') }}
+                {{ __('Merge from the organizations list if they really are the same organization.') }}
             </x-ui::alert>
         </div>
     @endif
@@ -26,25 +26,25 @@
         <x-ui::section :heading="__('Details')">
             <x-ui::description-list :columns="2">
                 <x-ui::description-list.item :term="__('Admissions office')"
-                    :description="$school->admissions_office ?: '—'" />
+                    :description="$organization->admissions_office ?: '—'" />
                 <x-ui::description-list.item :term="__('Admissions email')"
-                    :description="$school->admissions_email ?: '—'" />
+                    :description="$organization->admissions_email ?: '—'" />
                 <x-ui::description-list.item :term="__('Admissions phone')"
-                    :description="$school->admissions_phone ?: '—'" />
+                    :description="$organization->admissions_phone ?: '—'" />
                 <x-ui::description-list.item :term="__('Registrations')"
-                    :description="(string) $school->registrations_count" />
+                    :description="(string) $organization->registrations_count" />
                 <x-ui::description-list.item :term="__('Address')"
-                    :description="$school->formattedAddress() ?? '—'" />
+                    :description="$organization->formattedAddress() ?? '—'" />
                 {{-- The form used for duplicate detection. Worth showing: it is
-                     why two schools that look different are flagged, or two
+                     why two organizations that look different are flagged, or two
                      that look the same are not. --}}
                 <x-ui::description-list.item :term="__('Matched as')"
-                    :description="$school->normalized_name" />
+                    :description="$organization->normalized_name" />
             </x-ui::description-list>
         </x-ui::section>
 
         <x-ui::section :heading="__('Representatives')"
-            :description="__('Everyone who has claimed this school, whatever state their membership is in.')">
+            :description="__('Everyone who has claimed this organization, whatever state their membership is in.')">
             <x-ui::table>
                 <x-ui::table.head>
                     <x-ui::table.heading>{{ __('Name') }}</x-ui::table.heading>
@@ -97,7 +97,7 @@
                     </x-ui::table.row>
                 @empty
                     <x-ui::table.row>
-                        <x-ui::table.empty-state :colspan="4" :heading="__('Nobody has claimed this school')">
+                        <x-ui::table.empty-state :colspan="4" :heading="__('Nobody has claimed this organization')">
                             {{ __('Campaigns fall back to the admissions email above until somebody does.') }}
                         </x-ui::table.empty-state>
                     </x-ui::table.row>
@@ -109,7 +109,7 @@
     <x-ui::modal id="deny-claim" :title="__('Deny this claim?')" size="lg">
         <form wire:submit="denyClaim" class="space-y-4">
             <p class="text-sm text-body">
-                {{ __('They keep their account but stop being attached to this school.') }}
+                {{ __('They keep their account but stop being attached to this organization.') }}
             </p>
 
             <x-ui::forms.textarea name="reason" wire:model="reason" rows="3" :label="__('Reason')"
@@ -125,6 +125,6 @@
 
     <x-ui::confirm-modal id="retire-rep" :title="__('Retire this representative?')" :confirm="__('Retire')"
         variant="danger" wire:click="retire">
-        {{ __('They can still sign in and see this school’s history, but they can no longer register it or edit its details. Campaigns stop reaching them.') }}
+        {{ __('They can still sign in and see this organization’s history, but they can no longer register it or edit its details. Campaigns stop reaching them.') }}
     </x-ui::confirm-modal>
 </div>

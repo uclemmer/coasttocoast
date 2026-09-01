@@ -1,5 +1,5 @@
 {{--
-    One school in a list inside an email — used by the coordinator's digests
+    One organization in a list inside an email — used by the coordinator's digests
     and by any campaign that names who is coming (doc 07 §1).
 
     Text only, no logo: images in email are blocked by default in most clients,

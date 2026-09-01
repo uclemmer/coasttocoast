@@ -6,7 +6,7 @@
 --}}
 <div>
     <x-ui::action-bar :heading="__('Registrations')"
-        :description="__('Every school signed up, and what they owe.')" level="h2">
+        :description="__('Every organization signed up, and what they owe.')" level="h2">
         <x-ui::button href="{{ route('staff.registrations.create') }}" variant="brand">
             {{ __('Add a manual registration') }}
         </x-ui::button>
@@ -22,7 +22,7 @@
                     <x-slot:search>
                         <div class="flex flex-wrap items-end gap-3">
                             <x-ui::forms.input name="search" wire:model.live.debounce.300ms="search" type="search"
-                                :label="__('Search')" :placeholder="__('School, contact name or email')" />
+                                :label="__('Search')" :placeholder="__('Organization, contact name or email')" />
 
                             <x-ui::forms.select name="eventId" wire:model.live="eventId" :label="__('Fair')">
                                 <option value="">{{ __('All fairs') }}</option>
@@ -63,7 +63,7 @@
             </x-slot:before>
 
             <x-ui::table.head>
-                <x-ui::table.heading>{{ __('School') }}</x-ui::table.heading>
+                <x-ui::table.heading>{{ __('Organization') }}</x-ui::table.heading>
                 <x-ui::table.heading>{{ __('Fair') }}</x-ui::table.heading>
                 <x-ui::table.heading>{{ __('Status') }}</x-ui::table.heading>
                 <x-ui::table.heading>{{ __('Payment') }}</x-ui::table.heading>
@@ -130,7 +130,7 @@
     <x-ui::modal id="cancel-registration" :title="__('Cancel this registration?')" size="lg">
         <form wire:submit="cancel" class="space-y-4">
             <p class="text-sm text-body">
-                {{ __('The seat is released and the school stops appearing on the roster. Any payment already taken is not refunded by this — do that separately.') }}
+                {{ __('The seat is released and the organization stops appearing on the roster. Any payment already taken is not refunded by this — do that separately.') }}
             </p>
 
             <x-ui::forms.textarea name="cancelReason" wire:model="cancelReason" rows="3" :label="__('Reason')"

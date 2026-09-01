@@ -116,10 +116,10 @@ class Profile extends Component
     }
 
     /**
-     * Step down as a representative of this school.
+     * Step down as a representative of this organization.
      *
      * Keeps the account and the history; loses every right to act for the
-     * school. `OrganizationService::retire()` owns what that means — this only
+     * organization. `OrganizationService::retire()` owns what that means — this only
      * asks.
      */
     public function retire(OrganizationService $service): void

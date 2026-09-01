@@ -28,12 +28,12 @@ it('serves the sign-up page to guests only', function () {
 });
 
 /*
- * Claiming an existing school leaves the rep PENDING. Anyone can say they
- * represent a school, and behind that claim sit its registration history, its
+ * Claiming an existing organization leaves the rep PENDING. Anyone can say they
+ * represent an organization, and behind that claim sit its registration history, its
  * grants and its place on the roster.
  */
-it('leaves a rep claiming an existing school waiting on a coordinator', function () {
-    $school = Organization::factory()->create(['name' => 'Vanderbilt University']);
+it('leaves a rep claiming an existing organization waiting on a coordinator', function () {
+    $organization = Organization::factory()->create(['name' => 'Vanderbilt University']);
 
     Livewire::test(Register::class)
         ->set('name', 'Dana Reed')
@@ -41,52 +41,52 @@ it('leaves a rep claiming an existing school waiting on a coordinator', function
         ->set('password', 'correct-horse-battery')
         ->set('password_confirmation', 'correct-horse-battery')
         ->set('organization_choice', 'claim')
-        ->set('organization_id', $school->id)
+        ->set('organization_id', $organization->id)
         ->call('register')
         ->assertHasNoErrors()
         ->assertRedirect('/portal');
 
     $user = User::where('email', 'dana@vanderbilt.test')->sole();
 
-    expect($user->organization_id)->toBe($school->id)
+    expect($user->organization_id)->toBe($organization->id)
         ->and($user->membership_status->value)->toBe('pending');
 });
 
 /*
- * Adding a school makes the founder ACTIVE immediately. There is nobody to
- * vouch for a school only this person knows about, so waiting would mean
+ * Adding an organization makes the founder ACTIVE immediately. There is nobody to
+ * vouch for an organization only this person knows about, so waiting would mean
  * waiting on nothing.
  */
-it('activates the founder of a school nobody has registered yet', function () {
+it('activates the founder of an organization nobody has registered yet', function () {
     Livewire::test(Register::class)
         ->set('name', 'Alex Fry')
-        ->set('email', 'alex@newschool.test')
+        ->set('email', 'alex@neworganization.test')
         ->set('password', 'correct-horse-battery')
         ->set('password_confirmation', 'correct-horse-battery')
         ->set('organization_choice', 'create')
-        ->set('organization_name', 'New School of Design')
+        ->set('organization_name', 'New Organization of Design')
         ->call('register')
         ->assertHasNoErrors()
         ->assertRedirect('/portal');
 
-    $user = User::where('email', 'alex@newschool.test')->sole();
+    $user = User::where('email', 'alex@neworganization.test')->sole();
 
     expect($user->membership_status->value)->toBe('active')
-        ->and($user->organization->name)->toBe('New School of Design');
+        ->and($user->organization->name)->toBe('New Organization of Design');
 });
 
 it('signs the new rep in', function () {
     Livewire::test(Register::class)
         ->set('name', 'Alex Fry')
-        ->set('email', 'alex@newschool.test')
+        ->set('email', 'alex@neworganization.test')
         ->set('password', 'correct-horse-battery')
         ->set('password_confirmation', 'correct-horse-battery')
         ->set('organization_choice', 'create')
-        ->set('organization_name', 'New School of Design')
+        ->set('organization_name', 'New Organization of Design')
         ->call('register');
 
     expect(auth()->check())->toBeTrue()
-        ->and(auth()->user()->email)->toBe('alex@newschool.test');
+        ->and(auth()->user()->email)->toBe('alex@neworganization.test');
 });
 
 /*
@@ -99,11 +99,11 @@ it('fires the Registered event', function () {
 
     Livewire::test(Register::class)
         ->set('name', 'Alex Fry')
-        ->set('email', 'alex@newschool.test')
+        ->set('email', 'alex@neworganization.test')
         ->set('password', 'correct-horse-battery')
         ->set('password_confirmation', 'correct-horse-battery')
         ->set('organization_choice', 'create')
-        ->set('organization_name', 'New School of Design')
+        ->set('organization_name', 'New Organization of Design')
         ->call('register');
 
     Event::assertDispatched(Registered::class);
@@ -111,7 +111,7 @@ it('fires the Registered event', function () {
 
 /* ── validation, which differs by path ─────────────────────────────────── */
 
-it('requires a school on the claim path and a name on the create path', function () {
+it('requires an organization on the claim path and a name on the create path', function () {
     Livewire::test(Register::class)
         ->set('organization_choice', 'claim')
         ->call('register')
@@ -133,30 +133,30 @@ it('does not demand the other path\'s fields', function () {
         ->call('register')
         ->assertHasNoErrors('organization_id');
 
-    $school = Organization::factory()->create();
+    $organization = Organization::factory()->create();
 
     Livewire::test(Register::class)
         ->set('organization_choice', 'claim')
-        ->set('organization_id', $school->id)
+        ->set('organization_id', $organization->id)
         ->call('register')
         ->assertHasNoErrors('organization_name');
 });
 
 it('rejects a duplicate email', function () {
-    User::factory()->create(['email' => 'taken@school.test']);
+    User::factory()->create(['email' => 'taken@organization.test']);
 
     Livewire::test(Register::class)
         ->set('name', 'Alex Fry')
-        ->set('email', 'taken@school.test')
+        ->set('email', 'taken@organization.test')
         ->set('password', 'correct-horse-battery')
         ->set('password_confirmation', 'correct-horse-battery')
         ->set('organization_choice', 'create')
-        ->set('organization_name', 'New School')
+        ->set('organization_name', 'New Organization')
         ->call('register')
         ->assertHasErrors('email');
 });
 
-/* ── the school picker ─────────────────────────────────────────────────── */
+/* ── the organization picker ─────────────────────────────────────────────────── */
 
 it('does not search until there is something worth searching for', function () {
     Organization::factory()->create(['name' => 'Vanderbilt University']);
@@ -168,13 +168,13 @@ it('does not search until there is something worth searching for', function () {
         ->assertSee('Vanderbilt University');
 });
 
-it('holds the chosen school and lets it be changed', function () {
-    $school = Organization::factory()->create(['name' => 'Vanderbilt University']);
+it('holds the chosen organization and lets it be changed', function () {
+    $organization = Organization::factory()->create(['name' => 'Vanderbilt University']);
 
     Livewire::test(Register::class)
         ->set('organization_search', 'Vand')
-        ->call('choose', $school->id)
-        ->assertSet('organization_id', $school->id)
+        ->call('choose', $organization->id)
+        ->assertSet('organization_id', $organization->id)
         // The search box clears, so the list does not sit under the choice.
         ->assertSet('organization_search', '')
         ->call('clearChoice')
@@ -182,10 +182,10 @@ it('holds the chosen school and lets it be changed', function () {
 });
 
 /*
- * Warns, never blocks (R2.7). A false positive that stops a school registering
+ * Warns, never blocks (R2.7). A false positive that stops an organization registering
  * is worse than one a coordinator merges later.
  */
-it('warns about a duplicate school without preventing it', function () {
+it('warns about a duplicate organization without preventing it', function () {
     Organization::factory()->create(['name' => 'Boston University']);
 
     Livewire::test(Register::class)

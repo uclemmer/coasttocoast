@@ -10,7 +10,7 @@ use App\Models\User;
  *
  * Ported from the Filament rep panel's trait of the same name (docs/12). The
  * rules are unchanged, because they are product rules rather than panel
- * mechanics: pending and retired reps can log in and browse — their school's
+ * mechanics: pending and retired reps can log in and browse — their organization's
  * history is theirs to look at — but they cannot register, apply for a grant or
  * edit the profile.
  *
@@ -44,11 +44,11 @@ trait ActsForAnOrganization
     }
 
     /**
-     * Refuse a user who is attached to no school at all.
+     * Refuse a user who is attached to no organization at all.
      *
      * Distinct from the membership gate below, and a different question. A
-     * pending or retired rep HAS a school and may browse its history; somebody
-     * with no school has nothing on these pages to see, and the queries behind
+     * pending or retired rep HAS an organization and may browse its history; somebody
+     * with no organization has nothing on these pages to see, and the queries behind
      * them would return an empty set rather than a refusal. The Filament
      * resources drew the same line in `canViewAny()`.
      */
@@ -85,17 +85,17 @@ trait ActsForAnOrganization
 
         return match (true) {
             $user->organization_id === null => __(
-                'Your account is not attached to a school. Contact the fair coordinator to be added.',
+                'Your account is not attached to an organization. Contact the fair coordinator to be added.',
             ),
             $user->isPendingApproval() => __(
-                'The fair coordinator is confirming that you work at :school. You can look around in the '
+                'The fair coordinator is confirming that you work at :organization. You can look around in the '
                 .'meantime; registering and applying for a grant unlock once that is done.',
-                ['school' => $user->organization?->name],
+                ['organization' => $user->organization?->name],
             ),
             $user->isRetired() => __(
-                'You have retired as a representative of :school, so you can no longer register or edit '
+                'You have retired as a representative of :organization, so you can no longer register or edit '
                 .'its details. Your history is still here. Contact the coordinator if this was a mistake.',
-                ['school' => $user->organization?->name],
+                ['organization' => $user->organization?->name],
             ),
             default => null,
         };

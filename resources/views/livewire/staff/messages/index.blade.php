@@ -1,7 +1,7 @@
 {{-- The campaign list (docs/13). --}}
 <div>
     <x-ui::action-bar :heading="__('Campaigns')"
-        :description="__('Email and text sent to schools. A sent campaign cannot be edited or removed.')" level="h2">
+        :description="__('Email and text sent to organizations. A sent campaign cannot be edited or removed.')" level="h2">
         <x-ui::button href="{{ route('staff.messages.create') }}" variant="brand">
             {{ __('New campaign') }}
         </x-ui::button>

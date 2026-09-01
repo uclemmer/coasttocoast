@@ -40,7 +40,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // One live application per school per fair is enforced in
+            // One live application per organization per fair is enforced in
             // GrantService, not here: a withdrawn application must be allowed to
             // sit alongside its replacement, which a database unique index
             // cannot express portably across SQLite, MySQL and Postgres.

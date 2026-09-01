@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Notification;
 /**
  * The comms matrix for fee assistance (R4, card 6.1).
  *
- * Decisions are mailed to the rep who applied, and to the school's other
+ * Decisions are mailed to the rep who applied, and to the organization's other
  * active reps as well: the applicant may have left by the time a decision
  * lands, and a grant nobody knows about is a discount nobody claims.
  */
@@ -28,9 +28,9 @@ class SendGrantNotifications
             subject: __('Fee assistance request: :organization', [
                 'organization' => (string) $grant->organization?->name,
             ]),
-            headline: __('A school has asked for fee assistance'),
+            headline: __('An organization has asked for fee assistance'),
             rows: [
-                __('School') => $grant->organization?->name,
+                __('Organization') => $grant->organization?->name,
                 __('Fair') => $grant->event?->name,
                 __('Asked by') => $grant->requester?->name,
                 __('Reason given') => $grant->justification,
@@ -42,20 +42,20 @@ class SendGrantNotifications
 
     public function approved(GrantApproved $event): void
     {
-        $this->tellTheSchool($event->grant);
+        $this->tellTheOrganization($event->grant);
     }
 
     public function denied(GrantDenied $event): void
     {
-        $this->tellTheSchool($event->grant);
+        $this->tellTheOrganization($event->grant);
     }
 
     public function revoked(GrantRevoked $event): void
     {
-        $this->tellTheSchool($event->grant);
+        $this->tellTheOrganization($event->grant);
     }
 
-    protected function tellTheSchool(Grant $grant): void
+    protected function tellTheOrganization(Grant $grant): void
     {
         $grant->loadMissing(['event', 'organization', 'requester']);
 

@@ -107,7 +107,7 @@ describe('seat occupancy', function () {
 
 describe('roster scope', function () {
     it('shows only confirmed registrations the coordinator has not hidden', function () {
-        // R1.3 and R3.4. The roster is a promise the school will be there, so
+        // R1.3 and R3.4. The roster is a promise the organization will be there, so
         // an unpaid registration has no business on it.
         $visible = Registration::factory()->create();
         Registration::factory()->hiddenFromRoster()->create();

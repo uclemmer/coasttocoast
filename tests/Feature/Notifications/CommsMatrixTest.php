@@ -31,13 +31,13 @@ beforeEach(function () {
 
     $this->coordinator = coordinator();
     $this->fair = Fair::factory()->registrationOpen()->priced(21500)->create();
-    $this->school = Organization::factory()->named('Kenyon College')->create();
-    $this->rep = User::factory()->rep($this->school)->create();
+    $this->organization = Organization::factory()->named('Kenyon College')->create();
+    $this->rep = User::factory()->rep($this->organization)->create();
 });
 
 describe('registering', function () {
     it('emails check instructions on the check path only', function () {
-        app(RegistrationService::class)->create($this->fair, $this->school, $this->rep, PaymentMethod::Check);
+        app(RegistrationService::class)->create($this->fair, $this->organization, $this->rep, PaymentMethod::Check);
 
         Notification::assertSentOnDemand(
             RegistrationCheckInstructions::class,
@@ -46,7 +46,7 @@ describe('registering', function () {
     });
 
     it('sends no instructions to a card payer, who is already at Stripe', function () {
-        app(RegistrationService::class)->create($this->fair, $this->school, $this->rep, PaymentMethod::Stripe);
+        app(RegistrationService::class)->create($this->fair, $this->organization, $this->rep, PaymentMethod::Stripe);
 
         Notification::assertSentOnDemandTimes(RegistrationCheckInstructions::class, 0);
     });
@@ -54,7 +54,7 @@ describe('registering', function () {
     it('alerts the coordinator without texting them', function () {
         // A new registration is good news that can wait for morning. Money
         // arriving is what wakes somebody up.
-        app(RegistrationService::class)->create($this->fair, $this->school, $this->rep, PaymentMethod::Check);
+        app(RegistrationService::class)->create($this->fair, $this->organization, $this->rep, PaymentMethod::Check);
 
         Notification::assertSentOnDemand(
             AdminAlert::class,
@@ -67,7 +67,7 @@ describe('registering', function () {
         // The wizard asks who is staffing the table precisely so a
         // registration made by a director for a colleague reaches the
         // colleague.
-        app(RegistrationService::class)->create($this->fair, $this->school, $this->rep, PaymentMethod::Check, [
+        app(RegistrationService::class)->create($this->fair, $this->organization, $this->rep, PaymentMethod::Check, [
             'rep_name' => 'Jamie Okafor',
             'rep_email' => 'jamie@kenyon.example',
         ]);
@@ -84,7 +84,7 @@ describe('confirming', function () {
         config()->set('fair.alerts.phone', '+15551234567');
 
         $registration = Registration::factory()->pendingCheck()->forEvent($this->fair)
-            ->forOrganization($this->school)->create(['rep_email' => 'dana@kenyon.example']);
+            ->forOrganization($this->organization)->create(['rep_email' => 'dana@kenyon.example']);
 
         app(CheckPaymentService::class)->markReceived($registration, $this->coordinator);
 
@@ -101,9 +101,9 @@ describe('confirming', function () {
     });
 
     it('sends exactly one receipt however many times confirmation is attempted', function () {
-        // Stripe redelivers webhooks; a second receipt is what schools notice.
+        // Stripe redelivers webhooks; a second receipt is what organizations notice.
         $registration = Registration::factory()->pendingStripe()->forEvent($this->fair)
-            ->forOrganization($this->school)->create();
+            ->forOrganization($this->organization)->create();
 
         app(RegistrationService::class)->confirmPayment($registration);
         app(RegistrationService::class)->confirmPayment($registration);
@@ -112,9 +112,9 @@ describe('confirming', function () {
     });
 
     it('sends a receipt for a registration a grant made free', function () {
-        Grant::factory()->free()->for($this->fair)->for($this->school)->create();
+        Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
 
-        app(RegistrationService::class)->create($this->fair, $this->school, $this->rep);
+        app(RegistrationService::class)->create($this->fair, $this->organization, $this->rep);
 
         Notification::assertSentOnDemandTimes(PaymentReceipt::class, 1);
     });
@@ -122,7 +122,7 @@ describe('confirming', function () {
 
 describe('fee assistance', function () {
     it('alerts the coordinator with the justification, so the queue is actionable from the email', function () {
-        app(GrantService::class)->apply($this->fair, $this->school, $this->rep, 'Our travel budget was cut.');
+        app(GrantService::class)->apply($this->fair, $this->organization, $this->rep, 'Our travel budget was cut.');
 
         Notification::assertSentOnDemand(
             AdminAlert::class,
@@ -134,8 +134,8 @@ describe('fee assistance', function () {
     it('mails the decision to every active rep, not only the applicant', function () {
         // The applicant may have left by the time a decision lands, and a
         // grant nobody knows about is a discount nobody claims.
-        $colleague = User::factory()->rep($this->school)->create();
-        $grant = app(GrantService::class)->apply($this->fair, $this->school, $this->rep, 'Please.');
+        $colleague = User::factory()->rep($this->organization)->create();
+        $grant = app(GrantService::class)->apply($this->fair, $this->organization, $this->rep, 'Please.');
 
         app(GrantService::class)->approve($grant, $this->coordinator, GrantBenefit::Free);
 
@@ -143,7 +143,7 @@ describe('fee assistance', function () {
     });
 
     it('mails a denial too', function () {
-        $grant = app(GrantService::class)->apply($this->fair, $this->school, $this->rep, 'Please.');
+        $grant = app(GrantService::class)->apply($this->fair, $this->organization, $this->rep, 'Please.');
 
         app(GrantService::class)->deny($grant, $this->coordinator, 'Funds are committed.');
 
@@ -157,7 +157,7 @@ describe('membership', function () {
         // approval" screen.
         $newcomer = User::factory()->create();
 
-        app(OrganizationService::class)->claim($this->school, $newcomer);
+        app(OrganizationService::class)->claim($this->organization, $newcomer);
 
         Notification::assertSentOnDemand(
             AdminAlert::class,
@@ -173,13 +173,13 @@ describe('membership', function () {
 
         Notification::assertSentOnDemand(
             AdminAlert::class,
-            fn (AdminAlert $alert): bool => str_contains($alert->subject, 'New school added')
+            fn (AdminAlert $alert): bool => str_contains($alert->subject, 'New organization added')
                 && filled($alert->rows['Possible duplicates'] ?? null),
         );
     });
 
     it('tells the rep when their claim is decided', function () {
-        $pending = User::factory()->pendingRep($this->school)->create();
+        $pending = User::factory()->pendingRep($this->organization)->create();
 
         app(OrganizationService::class)->approveClaim($pending, $this->coordinator);
 
@@ -187,16 +187,16 @@ describe('membership', function () {
             fn (MembershipDecided $notification): bool => $notification->approved);
     });
 
-    it('tells the rep when it is denied, naming the school they asked about', function () {
+    it('tells the rep when it is denied, naming the organization they asked about', function () {
         // By then the rep no longer points at it, which is why the event
         // carries the organization.
-        $pending = User::factory()->pendingRep($this->school)->create();
+        $pending = User::factory()->pendingRep($this->organization)->create();
 
         app(OrganizationService::class)->denyClaim($pending, $this->coordinator, 'Not known to us.');
 
         Notification::assertSentTo($pending, MembershipDecided::class,
             fn (MembershipDecided $notification): bool => ! $notification->approved
-                && $notification->organization?->is($this->school) === true
+                && $notification->organization?->is($this->organization) === true
                 && $notification->reason === 'Not known to us.');
     });
 });
@@ -206,7 +206,7 @@ describe('the alerts toggle', function () {
         // The switch for a bulk import, or a coordinator on holiday.
         config()->set('fair.alerts.enabled', false);
 
-        app(RegistrationService::class)->create($this->fair, $this->school, $this->rep, PaymentMethod::Check);
+        app(RegistrationService::class)->create($this->fair, $this->organization, $this->rep, PaymentMethod::Check);
 
         Notification::assertNotSentTo(new AnonymousNotifiable, AdminAlert::class);
     });
@@ -215,7 +215,7 @@ describe('the alerts toggle', function () {
         config()->set('fair.alerts.email', null);
         config()->set('mail.from.address', 'fallback@example.edu');
 
-        app(RegistrationService::class)->create($this->fair, $this->school, $this->rep, PaymentMethod::Check);
+        app(RegistrationService::class)->create($this->fair, $this->organization, $this->rep, PaymentMethod::Check);
 
         Notification::assertSentOnDemand(
             AdminAlert::class,
@@ -228,8 +228,8 @@ describe('SMS consent', function () {
     it('texts only a rep who opted in', function () {
         // Consent is enforced on the model, so no notification can text
         // somebody by forgetting to check (N3).
-        $optedIn = User::factory()->rep($this->school)->smsOptedIn()->create();
-        $notOptedIn = User::factory()->rep($this->school)->create(['phone' => '+15551234567']);
+        $optedIn = User::factory()->rep($this->organization)->smsOptedIn()->create();
+        $notOptedIn = User::factory()->rep($this->organization)->create(['phone' => '+15551234567']);
 
         expect($optedIn->routeNotificationForSms())->toBe($optedIn->phone)
             ->and($notOptedIn->routeNotificationForSms())->toBeNull();
@@ -241,7 +241,7 @@ describe('SMS consent', function () {
         $sms->flush();
 
         app(SmsChannel::class)->send(
-            User::factory()->rep($this->school)->create(['phone' => null]),
+            User::factory()->rep($this->organization)->create(['phone' => null]),
             new AdminAlert(subject: 'x', headline: 'x', smsBody: 'x'),
         );
 

@@ -19,9 +19,9 @@ use UClemmer\LaravelPostmaster\Messages\Message as LoggedMessage;
 
 beforeEach(function () {
     $this->fair = Fair::factory()->published()->create();
-    $this->school = Organization::factory()->named('Kenyon College')->create();
-    $this->rep = User::factory()->rep($this->school)->create(['email' => 'dana@kenyon.example']);
-    Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+    $this->organization = Organization::factory()->named('Kenyon College')->create();
+    $this->rep = User::factory()->rep($this->organization)->create(['email' => 'dana@kenyon.example']);
+    Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
     $this->message = Message::factory()
         ->to(Audience::ThisEventConfirmed)
@@ -42,7 +42,7 @@ describe('sending', function () {
             // who was mailed.
             ->and($recipient->organization_name)->toBe('Kenyon College')
             ->and($recipient->user_id)->toBe($this->rep->id)
-            ->and($recipient->organization_id)->toBe($this->school->id);
+            ->and($recipient->organization_id)->toBe($this->organization->id);
     });
 
     it('sends one campaign notification per recipient', function () {
@@ -95,7 +95,7 @@ describe('sending', function () {
     });
 
     it('texts a rep who did opt in', function () {
-        $optedIn = User::factory()->rep($this->school)->smsOptedIn()->create();
+        $optedIn = User::factory()->rep($this->organization)->smsOptedIn()->create();
 
         /** @var NullSms $sms */
         $sms = app(SmsService::class);

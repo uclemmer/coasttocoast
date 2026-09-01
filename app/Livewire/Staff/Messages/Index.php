@@ -16,7 +16,7 @@ use Livewire\Component;
  * panel's MessageResource list (docs/13).
  *
  * A SENT MESSAGE IS IMMUTABLE. No edit screen reaches one and it cannot be
- * deleted: it is the record of what a hundred schools were told and when, and
+ * deleted: it is the record of what a hundred organizations were told and when, and
  * the delivery table hanging off it is only meaningful if the message it
  * describes still says what was sent. Filament expressed that as `canEdit()`
  * and `canDelete()` returning false once sent; here it is `isSent()` guarding

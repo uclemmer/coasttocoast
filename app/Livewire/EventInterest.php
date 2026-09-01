@@ -18,7 +18,7 @@ use Livewire\Component;
  *
  * Asks for as little as possible on purpose. This is the person who found the
  * site the week after registration closed; demanding an account, or the
- * official spelling of a school they may not work at yet, is how the lead is
+ * official spelling of an organization they may not work at yet, is how the lead is
  * lost.
  *
  * The same capture also exists as a plain POST route, which is the
@@ -75,7 +75,7 @@ class EventInterest extends Component
 
         // `updateOrCreate` on the lowercased address is both the dedupe and the
         // "we heard you the first time" — and a second submission still
-        // improves what we know, by filling in a school name the first left
+        // improves what we know, by filling in an organization name the first left
         // blank.
         $this->event->interests()->updateOrCreate(
             ['email' => Str::lower(trim($this->email))],

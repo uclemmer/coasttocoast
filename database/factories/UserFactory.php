@@ -94,10 +94,10 @@ class UserFactory extends Factory
     }
 
     /**
-     * An active representative of a school (card 1.2, D9).
+     * An active representative of an organization (card 1.2, D9).
      *
      * Pass an organization to put several reps in the same one; omit it and
-     * the factory makes a school for this rep alone.
+     * the factory makes an organization for this rep alone.
      */
     public function rep(?Organization $organization = null): static
     {
@@ -111,7 +111,7 @@ class UserFactory extends Factory
     }
 
     /**
-     * A rep whose claim on an existing school is still waiting on a
+     * A rep whose claim on an existing organization is still waiting on a
      * coordinator. Can log in and browse, can do nothing on the org's behalf.
      */
     public function pendingRep(?Organization $organization = null): static

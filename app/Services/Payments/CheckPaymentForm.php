@@ -6,14 +6,14 @@ use App\Models\Registration;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
- * The printable form a school posts with its check (card 4.2).
+ * The printable form an organization posts with its check (card 4.2).
  *
  * Carries the grant-aware amount from the registration's snapshot, not the
- * fair's list price: a school with a 50% grant that mails a full-price check
+ * fair's list price: an organization with a 50% grant that mails a full-price check
  * has to be refunded, and everyone involved would rather that never happened.
  *
  * Also carries the registration number, because a check with nothing but a
- * school name on it is how a payment ends up unmatched in a drawer.
+ * organization name on it is how a payment ends up unmatched in a drawer.
  */
 class CheckPaymentForm
 {

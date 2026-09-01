@@ -6,7 +6,7 @@ use App\Models\Registration;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * A school has taken a place at a fair.
+ * An organization has taken a place at a fair.
  *
  * Fired for every path — card, check and free — the moment the row exists.
  * A free registration fires this AND `RegistrationConfirmed`, in that order,

@@ -36,7 +36,7 @@ class MessageRecipientFactory extends Factory
     }
 
     /**
-     * The admissions_email fallback: a school with nobody behind it, so there
+     * The admissions_email fallback: an organization with nobody behind it, so there
      * is an organization but no user (doc 07 §2 rule 1).
      */
     public function generic(): static

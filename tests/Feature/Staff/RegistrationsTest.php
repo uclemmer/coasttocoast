@@ -25,12 +25,12 @@ beforeEach(function () {
     $this->coordinator = coordinator();
     $this->actingAs($this->coordinator);
     $this->fair = Fair::factory()->registrationOpen()->priced(21500)->create();
-    $this->school = Organization::factory()->named('Kenyon College')->create();
+    $this->organization = Organization::factory()->named('Kenyon College')->create();
 });
 
 describe('the list', function () {
     it('filters by fair, status and payment method', function () {
-        $mine = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        $mine = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
         $elsewhere = Registration::factory()->create();
 
         $page = livewire(RegistrationIndex::class);
@@ -40,8 +40,8 @@ describe('the list', function () {
             ->not->toContain($elsewhere->id);
     });
 
-    it('searches by school and by contact', function () {
-        $found = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)
+    it('searches by organization and by contact', function () {
+        $found = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['rep_name' => 'Dana Whitfield', 'rep_email' => 'dw@kenyon.example']);
         Registration::factory()->forEvent($this->fair)->create(['rep_name' => 'Someone Else']);
 
@@ -53,8 +53,8 @@ describe('the list', function () {
     });
 
     it('filters to registrations carrying a grant', function () {
-        $grant = Grant::factory()->free()->for($this->fair)->for($this->school)->create();
-        $withGrant = Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->school)
+        $grant = Grant::factory()->free()->for($this->fair)->for($this->organization)->create();
+        $withGrant = Registration::factory()->free()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['grant_id' => $grant->id]);
         $without = Registration::factory()->forEvent($this->fair)->create();
 
@@ -78,8 +78,8 @@ describe('the CSV export', function () {
      * read one builder, which is what stops them drifting.
      */
     it('exports the rows currently filtered, with the columns the coordinator needs', function () {
-        $grant = Grant::factory()->percentOff(50)->for($this->fair)->for($this->school)->create();
-        Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create([
+        $grant = Grant::factory()->percentOff(50)->for($this->fair)->for($this->organization)->create();
+        Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create([
             'grant_id' => $grant->id,
             'price_cents' => 10750,
             'rep_name' => 'Dana Whitfield',
@@ -103,7 +103,7 @@ describe('the CSV export', function () {
     it('exports everything when nothing is filtered', function () {
         // The other half: a filter narrowing the export is only correct if no
         // filter does not.
-        Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
         Registration::factory()->create();
 
         $csv = downloadedContent(livewire(RegistrationIndex::class)->call('export'));
@@ -116,14 +116,14 @@ describe('manual entry', function () {
     it('creates a registration with no account behind it, priced from the fair', function () {
         livewire(CreateStaffRegistration::class)
             ->set('event_id', (string) $this->fair->id)
-            ->set('organization_id', (string) $this->school->id)
+            ->set('organization_id', (string) $this->organization->id)
             ->set('payment_method', PaymentMethod::Check->value)
             ->set('rep_name', 'Dana Whitfield')
             ->set('rep_email', 'dw@kenyon.example')
             ->call('save')
             ->assertHasNoErrors();
 
-        $registration = Registration::query()->where('organization_id', $this->school->id)->sole();
+        $registration = Registration::query()->where('organization_id', $this->organization->id)->sole();
 
         expect($registration->price_cents)->toBe(21500)
             ->and($registration->user_id)->toBeNull();
@@ -132,28 +132,28 @@ describe('manual entry', function () {
     it('applies an approved grant even though the coordinator entered it', function () {
         // The price comes from the service, not from the form, so a grant
         // cannot be skipped by entering the registration by hand.
-        Grant::factory()->customPrice(5000)->for($this->fair)->for($this->school)->create();
+        Grant::factory()->customPrice(5000)->for($this->fair)->for($this->organization)->create();
 
         livewire(CreateStaffRegistration::class)
             ->set('event_id', (string) $this->fair->id)
-            ->set('organization_id', (string) $this->school->id)
+            ->set('organization_id', (string) $this->organization->id)
             ->set('payment_method', PaymentMethod::Check->value)
             ->set('rep_name', 'Dana Whitfield')
             ->set('rep_email', 'dw@kenyon.example')
             ->call('save')
             ->assertHasNoErrors();
 
-        expect(Registration::query()->where('organization_id', $this->school->id)->sole()->price_cents)
+        expect(Registration::query()->where('organization_id', $this->organization->id)->sole()->price_cents)
             ->toBe(5000);
     });
 
     it('reports a duplicate on the form instead of failing generically', function () {
-        // Keyed to the school field, because that is the field to change.
-        Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        // Keyed to the organization field, because that is the field to change.
+        Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
         livewire(CreateStaffRegistration::class)
             ->set('event_id', (string) $this->fair->id)
-            ->set('organization_id', (string) $this->school->id)
+            ->set('organization_id', (string) $this->organization->id)
             ->set('rep_name', 'Dana Whitfield')
             ->set('rep_email', 'dw@kenyon.example')
             ->call('save')
@@ -167,7 +167,7 @@ describe('manual entry', function () {
 
         livewire(CreateStaffRegistration::class)
             ->set('event_id', (string) $closed->id)
-            ->set('organization_id', (string) $this->school->id)
+            ->set('organization_id', (string) $this->organization->id)
             ->set('payment_method', PaymentMethod::Check->value)
             ->set('rep_name', 'Dana Whitfield')
             ->set('rep_email', 'dw@kenyon.example')
@@ -186,7 +186,7 @@ describe('manual entry', function () {
 
 describe('editing', function () {
     it('changes roster visibility and notes', function () {
-        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)
+        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)
             ->create(['show_on_roster' => true]);
 
         livewire(ShowStaffRegistration::class, ['registration' => $registration])
@@ -201,7 +201,7 @@ describe('editing', function () {
 
     /*
      * Editing status or price by hand would skip the events that send receipts
-     * and break the snapshot that proves what a school agreed to pay (N1).
+     * and break the snapshot that proves what an organization agreed to pay (N1).
      * There is no property to set, so the component cannot be asked to.
      */
     it('does not expose status or price as editable fields', function () {
@@ -249,7 +249,7 @@ describe('cancelling', function () {
 describe('the money actions', function () {
     it('records a check and confirms the registration', function () {
         $registration = Registration::factory()->pendingCheck()->forEvent($this->fair)
-            ->forOrganization($this->school)->create(['price_cents' => 21500]);
+            ->forOrganization($this->organization)->create(['price_cents' => 21500]);
 
         livewire(ShowStaffRegistration::class, ['registration' => $registration])
             ->set('checkNumber', '1041')
@@ -266,7 +266,7 @@ describe('the money actions', function () {
      */
     it('flags a short check without refusing it', function () {
         $registration = Registration::factory()->pendingCheck()->forEvent($this->fair)
-            ->forOrganization($this->school)->create(['price_cents' => 21500]);
+            ->forOrganization($this->organization)->create(['price_cents' => 21500]);
 
         $page = livewire(ShowStaffRegistration::class, ['registration' => $registration])
             ->set('checkAmountDollars', '200.00')
@@ -291,7 +291,7 @@ describe('the money actions', function () {
     });
 
     it('offers a refund only when a card payment actually settled', function () {
-        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->school)->create();
+        $registration = Registration::factory()->forEvent($this->fair)->forOrganization($this->organization)->create();
 
         expect(livewire(ShowStaffRegistration::class, ['registration' => $registration])->instance()->canRefund())
             ->toBeFalse();

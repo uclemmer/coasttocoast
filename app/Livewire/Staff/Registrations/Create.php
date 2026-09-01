@@ -25,7 +25,7 @@ use Throwable;
  * is still read from the fair and any approved grant. Creating the row here
  * would take a price snapshot nobody agreed.
  *
- * School and fair are chosen only at creation and never editable afterwards —
+ * Organization and fair are chosen only at creation and never editable afterwards —
  * moving a registration to another fair would carry a price that was never
  * agreed for it.
  */
@@ -67,7 +67,7 @@ class Create extends Component
      * @return Collection<int, Organization>
      */
     #[Computed]
-    public function schools(): Collection
+    public function organizations(): Collection
     {
         return Organization::query()->orderBy('name')->get();
     }
@@ -107,8 +107,8 @@ class Create extends Component
             );
         } catch (Throwable $e) {
             /*
-             * Attached to the school field rather than raised as a toast: the
-             * refusal that actually happens here is "this school is already
+             * Attached to the organization field rather than raised as a toast: the
+             * refusal that actually happens here is "this organization is already
              * registered for this fair", and the answer is to change that
              * field. Filament keyed the same exception to the same input.
              */

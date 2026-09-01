@@ -100,7 +100,7 @@ describe('creating', function () {
 
     it('rounds a fractional fee instead of truncating it', function () {
         // 215.10 * 100 is 21509.999999999996 in IEEE 754. Casting that to int
-        // charges a school a cent less than it agreed to, silently, forever.
+        // charges an organization a cent less than it agreed to, silently, forever.
         $page = livewire(EditEvent::class);
 
         foreach (validFair(['slug' => 'awkward-fee-fair', 'priceDollars' => '215.10']) as $field => $value) {

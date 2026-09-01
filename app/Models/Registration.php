@@ -153,8 +153,8 @@ class Registration extends Model
 
     /**
      * What the public roster shows: confirmed, and not hidden by the
-     * coordinator (R1.3, R3.4). Awaiting-payment schools are deliberately
-     * absent - the roster is a promise that the school will be there.
+     * coordinator (R1.3, R3.4). Awaiting-payment organizations are deliberately
+     * absent - the roster is a promise that the organization will be there.
      *
      * @param  Builder<Registration>  $query
      */

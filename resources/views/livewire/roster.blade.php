@@ -64,32 +64,32 @@
                     </thead>
                     <tbody>
                         @foreach ($roster as $registration)
-                            @php $school = $registration->organization; @endphp
+                            @php $organization = $registration->organization; @endphp
                             <tr wire:key="roster-{{ $registration->getKey() }}" class="border-t border-line-soft">
                                 <td class="px-4 py-3">
-                                    @if ($school?->logo_path)
-                                        <img src="{{ Storage::disk('public')->url($school->logo_path) }}"
-                                             alt="{{ $school->name }}"
+                                    @if ($organization?->logo_path)
+                                        <img src="{{ Storage::disk('public')->url($organization->logo_path) }}"
+                                             alt="{{ $organization->name }}"
                                              loading="lazy"
                                              class="h-10 w-10 rounded-full object-contain">
                                     @else
                                         {{-- The initial-letter placeholder (R1.3). --}}
                                         <span aria-hidden="true"
                                               class="flex h-10 w-10 items-center justify-center rounded-full bg-line font-display text-[18px] font-bold text-ink-600">
-                                            {{ $this->initialFor($school?->name) }}
+                                            {{ $this->initialFor($organization?->name) }}
                                         </span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-[15.5px] font-semibold text-ink-900">
-                                    @if ($school?->website)
-                                        <a href="{{ $school->website }}"
+                                    @if ($organization?->website)
+                                        <a href="{{ $organization->website }}"
                                            target="_blank"
                                            rel="noopener noreferrer"
                                            class="text-ink-900 underline-offset-[3px] hover:text-brand-600 hover:underline">
-                                            {{ $school->name }}
+                                            {{ $organization->name }}
                                         </a>
                                     @else
-                                        {{ $school?->name }}
+                                        {{ $organization?->name }}
                                     @endif
                                 </td>
                             </tr>

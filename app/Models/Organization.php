@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
  * A college or university that attends the fair (D8).
  *
  * The organization is the unit that registers, holds grants and appears on the
- * roster — not the person. Reps point at it, so it outlives them, and a school
+ * roster — not the person. Reps point at it, so it outlives them, and an organization
  * that changes admissions staff keeps its history, its grants and its place on
  * the win-back list.
  *
@@ -60,13 +60,13 @@ class Organization extends Model
     }
 
     /**
-     * Reduce a school name to the form used for duplicate detection.
+     * Reduce an organization name to the form used for duplicate detection.
      *
      * Lowercase, strip punctuation, collapse whitespace, and drop a leading
      * "the" — so that "The Ohio State University", "Ohio State University" and
      * "ohio state university." all collide. Deliberately does NOT strip
      * "University" or "College": "Boston University" and "Boston College" are
-     * different schools and merging them would be worse than a missed warning.
+     * different organizations and merging them would be worse than a missed warning.
      */
     public static function normalizeName(string $name): string
     {
@@ -90,7 +90,7 @@ class Organization extends Model
     }
 
     /**
-     * The reps who currently speak for this school. This is the set campaigns
+     * The reps who currently speak for this organization. This is the set campaigns
      * deliver to (doc 07 §2 rule 1) and the set allowed to register or apply
      * for a grant.
      *
@@ -128,7 +128,7 @@ class Organization extends Model
     /**
      * Other organizations whose normalized name matches this one — the soft
      * duplicate check. Returns a query, not a boolean, because the signup flow
-     * shows the coordinator *which* schools it might be rather than merely
+     * shows the coordinator *which* organizations it might be rather than merely
      * that a collision exists.
      *
      * @return Builder<Organization>
@@ -141,7 +141,7 @@ class Organization extends Model
     }
 
     /**
-     * Schools whose name normalizes to the same thing as the given one.
+     * Organizations whose name normalizes to the same thing as the given one.
      *
      * @param  Builder<Organization>  $query
      */
@@ -152,7 +152,7 @@ class Organization extends Model
     }
 
     /**
-     * The address as it belongs on a receipt or a W-9, or null when the school
+     * The address as it belongs on a receipt or a W-9, or null when the organization
      * has not filled one in.
      */
     public function formattedAddress(): ?string

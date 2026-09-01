@@ -16,17 +16,17 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 /**
- * One registration, from the school's side — the Livewire replacement for the
+ * One registration, from the organization's side — the Livewire replacement for the
  * rep panel's ViewRegistration page (docs/12).
  *
- * Readable by any rep of the owning school, including pending and retired ones:
- * their school's history is theirs to look at. The three actions are gated on
+ * Readable by any rep of the owning organization, including pending and retired ones:
+ * their organization's history is theirs to look at. The three actions are gated on
  * the registration's own state rather than on membership, because paying an
  * outstanding invoice is not something to lock a retired rep out of mid-flow.
  *
  * **Scoping happens in `mount()`, not in the route.** Route-model binding would
  * happily hand over any registration by id; the check that it belongs to the
- * viewer's school is what stops one school reading another's contact details
+ * viewer's organization is what stops one organization reading another's contact details
  * and fee.
  *
  * It re-resolves through a scoped query rather than checking the bound model's

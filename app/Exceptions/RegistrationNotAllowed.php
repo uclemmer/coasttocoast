@@ -27,7 +27,7 @@ class RegistrationNotAllowed extends RuntimeException
 
     public static function repBelongsToAnotherOrganization(): self
     {
-        return new self(__('You can only register the school your account belongs to.'));
+        return new self(__('You can only register the organization your account belongs to.'));
     }
 
     public static function registrationIsClosed(Event $event): self

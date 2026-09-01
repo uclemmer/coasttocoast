@@ -38,9 +38,9 @@ class SendRegistrationNotifications
             subject: __('New registration: :organization', [
                 'organization' => (string) $registration->organization?->name,
             ]),
-            headline: __('A school has registered'),
+            headline: __('An organization has registered'),
             rows: [
-                __('School') => $registration->organization?->name,
+                __('Organization') => $registration->organization?->name,
                 __('Fair') => $registration->event?->name,
                 __('Contact') => $registration->rep_name.' <'.$registration->rep_email.'>',
                 __('Amount') => Money::format($registration->price_cents),
@@ -66,7 +66,7 @@ class SendRegistrationNotifications
             ]),
             headline: __('A registration has been confirmed'),
             rows: [
-                __('School') => $registration->organization?->name,
+                __('Organization') => $registration->organization?->name,
                 __('Fair') => $registration->event?->name,
                 __('Amount') => Money::format($registration->price_cents),
                 __('Paid by') => $registration->payment_method?->getLabel() ?? __('Covered by a grant'),

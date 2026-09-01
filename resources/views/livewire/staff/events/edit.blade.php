@@ -48,7 +48,7 @@
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-ui::forms.input name="priceDollars" wire:model="priceDollars" type="number" step="0.01"
                     min="0" :label="__('Registration fee')"
-                    :hint="__('In dollars. The list price — approved grants reduce what an individual school pays.')"
+                    :hint="__('In dollars. The list price — approved grants reduce what an individual organization pays.')"
                     required />
 
                 <x-ui::forms.input name="capacity" wire:model="capacity" type="number" min="1"

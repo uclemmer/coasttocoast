@@ -4,8 +4,8 @@
                     : __('About your request.')">
 
     @if ($approved)
-        <p>{{ __('You are confirmed as a representative of :school.', [
-            'school' => $organization?->name,
+        <p>{{ __('You are confirmed as a representative of :organization.', [
+            'organization' => $organization?->name,
         ]) }}</p>
 
         <p>{{ __('You can now register it for a fair, apply for fee assistance, and keep its details up to date.') }}</p>
@@ -14,8 +14,8 @@
             {{ __('Open the portal') }}
         </x-emails.components.button>
     @else
-        <p>{{ __('We were not able to confirm you as a representative of :school.', [
-            'school' => $organization?->name,
+        <p>{{ __('We were not able to confirm you as a representative of :organization.', [
+            'organization' => $organization?->name,
         ]) }}</p>
 
         @if (filled($reason))

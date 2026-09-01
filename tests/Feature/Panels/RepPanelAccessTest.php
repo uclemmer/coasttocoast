@@ -42,16 +42,16 @@ it('keeps a coordinator out of nothing — admin and the portal are independent'
     // The original assertion here was `assertOk()`: a coordinator was not
     // *refused* the portal, which is the independence this test is about, and
     // that is still true. What changed on 2026-08-19 is that a coordinator with
-    // no school is now redirected to /staff rather than shown a dashboard
+    // no organization is now redirected to /staff rather than shown a dashboard
     // telling them to contact themselves (doc 10, D-9-d).
     //
-    // So the independence is asserted with a coordinator who has a school —
+    // So the independence is asserted with a coordinator who has an organization —
     // which is the case the two-surfaces claim was ever really about, and the
     // one the redirect deliberately leaves alone.
     // Assigned directly rather than through update(): User is `$guarded = ['*']`
     // and organization_id is not fillable, so mass assignment silently does
     // nothing here. That guard is deliberate — it is what stops a rep putting
-    // themselves in someone else's school — and it cost this test one debugging
+    // themselves in someone else's organization — and it cost this test one debugging
     // round to notice.
     $coordinator = coordinator();
     $coordinator->organization_id = Organization::factory()->create()->getKey();
@@ -119,14 +119,14 @@ describe('a coordinator sent to the portal', function () {
 });
 
 describe('who the bounce leaves alone', function () {
-    it('leaves a rep with no school on the portal, where the message is true', function () {
+    it('leaves a rep with no organization on the portal, where the message is true', function () {
         // For them "contact the fair coordinator to be added" is correct and
         // actionable, and /staff would 403.
         $rep = User::factory()->rep()->create(['organization_id' => null]);
 
         $this->actingAs($rep)->get('/portal')
             ->assertOk()
-            ->assertSee('not attached to a school');
+            ->assertSee('not attached to an organization');
     });
 
     it('leaves an ordinary rep alone', function () {

@@ -17,7 +17,7 @@ class MembershipNotAllowed extends RuntimeException
 
     public static function notAMember(): self
     {
-        return new self(__('This person is not currently a representative of a school.'));
+        return new self(__('This person is not currently a representative of an organization.'));
     }
 
     public static function notRetired(): self
@@ -27,6 +27,6 @@ class MembershipNotAllowed extends RuntimeException
 
     public static function cannotMergeIntoItself(): self
     {
-        return new self(__('Choose a different school to merge into.'));
+        return new self(__('Choose a different organization to merge into.'));
     }
 }

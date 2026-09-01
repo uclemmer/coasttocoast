@@ -92,7 +92,7 @@ describe('EventInterest', function () {
         expect(EventInterest::query()->unnotified()->pluck('id')->all())->toBe([$waiting->id]);
     });
 
-    it('belongs to an event and tolerates a missing school name', function () {
+    it('belongs to an event and tolerates a missing organization name', function () {
         $event = Event::factory()->create();
         $interest = EventInterest::factory()->withoutOrganizationName()->for($event)->create();
 
@@ -185,7 +185,7 @@ describe('MessageRecipient', function () {
         expect($recipient->resolvedEmailStatus())->toBe(DeliveryStatus::Sent);
     });
 
-    it('carries no school or account for an interest-list recipient', function () {
+    it('carries no organization or account for an interest-list recipient', function () {
         $recipient = MessageRecipient::factory()->interestOnly()->create();
 
         expect($recipient->user_id)->toBeNull()
@@ -193,7 +193,7 @@ describe('MessageRecipient', function () {
             ->and($recipient->email)->not->toBeEmpty();
     });
 
-    it('carries a school but no account for the generic fallback', function () {
+    it('carries an organization but no account for the generic fallback', function () {
         $recipient = MessageRecipient::factory()->generic()->create();
 
         expect($recipient->user_id)->toBeNull()

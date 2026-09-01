@@ -27,13 +27,13 @@ beforeEach(function () {
 
     $this->fair = Fair::factory()->registrationOpen()->priced(21500)->create();
     $this->pastFair = Fair::factory()->past(1)->create();
-    $this->school = Organization::factory()->named('Kenyon College')->create();
-    $this->rep = User::factory()->rep($this->school)->create();
+    $this->organization = Organization::factory()->named('Kenyon College')->create();
+    $this->rep = User::factory()->rep($this->organization)->create();
 
     $this->registration = Registration::factory()->forEvent($this->fair)
-        ->forOrganization($this->school)->create(['user_id' => $this->rep->id]);
-    Registration::factory()->forEvent($this->pastFair)->forOrganization($this->school)->create();
-    $this->grant = Grant::factory()->for($this->fair)->for($this->school)
+        ->forOrganization($this->organization)->create(['user_id' => $this->rep->id]);
+    Registration::factory()->forEvent($this->pastFair)->forOrganization($this->organization)->create();
+    $this->grant = Grant::factory()->for($this->fair)->for($this->organization)
         ->create(['requested_by' => $this->rep->id]);
     $this->message = Message::factory()->create(['event_id' => $this->fair->id]);
     Sponsor::factory()->create();
@@ -195,7 +195,7 @@ it('serves the pages a coordinator actually works from, by name', function () {
         // site.
         '/staff/events/'.$this->fair->getRouteKey(),
         '/staff/organizations',
-        '/staff/organizations/'.$this->school->id,
+        '/staff/organizations/'.$this->organization->id,
         '/staff/registrations',
         '/staff/registrations/'.$this->registration->id,
         '/staff/grants',

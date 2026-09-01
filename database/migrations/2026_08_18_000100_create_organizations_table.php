@@ -30,7 +30,7 @@ return new class extends Migration
 
             $table->string('admissions_office')->nullable();
             // The campaign fallback: mailed when the org has no active reps
-            // (doc 07 §2 rule 1), which is how a school with rep turnover stays
+            // (doc 07 §2 rule 1), which is how an organization with rep turnover stays
             // on the win-back list.
             $table->string('admissions_email')->nullable();
             $table->string('admissions_phone', 20)->nullable();

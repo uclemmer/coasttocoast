@@ -23,17 +23,17 @@ use Illuminate\Support\Facades\Notification;
  * Three steps, in this order and for a reason:
  *
  *  1. **Resolve the audience now.** Not when the message was composed — a note
- *     scheduled to "lapsed schools" reaches whoever is lapsed at this moment
+ *     scheduled to "lapsed organizations" reaches whoever is lapsed at this moment
  *     (doc 07 §2 rule 6).
  *  2. **Freeze the result into `message_recipients`.** With snapshots of name,
  *     email and phone, so a later profile edit cannot rewrite the record of
- *     who was mailed, and with the organization id so results group by school.
+ *     who was mailed, and with the organization id so results group by organization.
  *  3. **Fan out one queued notification per recipient**, each carrying its own
  *     row's id in a header for delivery tracking.
  *
  * Guarded against double-sending: a message with `sent_at` already set does
  * nothing. A queue that retries this job after a timeout must not mail a
- * hundred schools twice.
+ * hundred organizations twice.
  */
 class SendEventBroadcast implements ShouldQueue
 {

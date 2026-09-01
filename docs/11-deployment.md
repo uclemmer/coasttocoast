@@ -235,7 +235,8 @@ None of these block a deploy; all of them are visible to a visitor.
 | Signed W-9 PDF | `/staff/faq` → "Can we get a W-9?" → **Attachment**. PDF, up to 5 MB | `TODO-OWNER` in the answer. A download link appears under the answer once the file is there, so the sentence pointing at this can then be replaced |
 | Google Map embed for the venue | `/staff/faq` | The design's embed is pinned at Chattanooga generally, not the venue — see the asset queue below |
 | Brand colour and logo | `FAIR_BRAND_COLOR`, `FAIR_BRAND_LOGO_URL` | Email falls back to the app name in text |
-| Historical rosters, 2022–2026 | `php artisan fair:import-roster <file.csv>` | Five past fairs are seeded and waiting; see below |
+| Historical rosters, 2023–2026 | `db:seed --class=…\OrganizationSeeder` then `…\RegistrationSeeder` | **Supplied 2026-09-01** and read straight from the owner's export — see [18-participant-export.md](18-participant-export.md). Not part of `ProductionSeeder`; run the two by name, once |
+| Historical roster, 2022 | `php artisan fair:import-roster <file.csv>` | Not in the export. The fair is seeded and empty; see below |
 
 ### Design assets still outstanding (2026-08-19)
 
@@ -264,7 +265,16 @@ Cross-year campaign audiences — the win-back lists — are only as good as the
 Without the import, the first year on this system has no previous year and `LastEvent` /
 `LapsedAnyPrevious` resolve to nothing.
 
-Whatever ISPEUS can export needs massaging into these columns:
+**Most of that history is now seeded, not imported.** The owner's export arrived on 2026-09-01 as
+form submissions rather than a CSV, and `OrganizationSeeder` + `RegistrationSeeder` read it directly
+— 158 organizations and 354 registrations across the 2023–2026 fairs. Run those two by name; they
+are deliberately not part of `ProductionSeeder`, and they are idempotent. Read
+[18-participant-export.md](18-participant-export.md) first, because six of the fields they write are
+a stated convention rather than something the export knew.
+
+The command below remains the way in for anything the export does not cover — the 2022 roster, or a
+later correction that arrives as a spreadsheet. Whatever the old system can produce needs massaging
+into these columns:
 
 ```
 organization_name,website,admissions_email,admissions_phone,

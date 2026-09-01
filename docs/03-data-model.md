@@ -268,6 +268,20 @@ re-running never overwrites edited copy:
 | `EventSeeder` | the fair calendar: 2022–2026 published and past, 2027 unpublished | both |
 | `FairFixtureSeeder` | organizations, reps, three years of registrations, grants in every status, the awkward cases | **dev only** |
 
+Two more joined them on 2026-09-01, when the owner's roster export finally arrived (doc 18). They
+are real history rather than fixtures, and they run **last** — `FairFixtureSeeder` does nothing at
+all if any organization exists, so seeding the history first would silently cost the fixtures.
+
+| Seeder | What it writes | Runs in |
+|---|---|---|
+| `OrganizationSeeder` | 158 organizations from `database/seeders/data/participants.json` | **dev only**, plus by hand on a real host |
+| `RegistrationSeeder` | their 354 places at the 2023–2026 fairs | **dev only**, plus by hand on a real host |
+
+`ProductionSeeder` deliberately does not call either: its contract is that it invents nothing and is
+safe on every deploy, and loading a roster is a deliberate one-off. Both share
+`ParticipantExportSeeder`, which decides which submitted spellings are one organization and which of
+several submissions for a fair wins.
+
 ### The fair calendar
 
 `EventSeeder` writes six fairs: **five past ones (2022–2026) and the next (2027)**. The five past
@@ -312,7 +326,7 @@ One cosmetic loose end if that day comes: the public page is routed at `/last-ye
 stays correct — only the wording would read oddly. Renaming the route would break a public URL, so
 it is a deliberate decision rather than a tidy-up.
 
-`DatabaseSeeder` (dev) calls all seven; `ProductionSeeder` calls the first six. Note that
+`DatabaseSeeder` (dev) calls all nine; `ProductionSeeder` calls the first six. Note that
 `DatabaseSeeder` does **not** use `WithoutModelEvents` — `Organization` derives `normalized_name`
 and `Event` fills a blank slug in `saving` hooks, so muting model events would seed rows the
 application itself could never produce, and the duplicate-detection fixtures would seed as
@@ -328,7 +342,8 @@ The 2027 event seeds **unpublished** with `TODO-OWNER` in its name because its d
 placeholders; `FairFixtureSeeder` publishes and opens it in development only. See
 [10-implementation-decisions.md](10-implementation-decisions.md) D-1.3-a…e.
 
-Historical roster import is card 6.6.
+Historical roster import is card 6.6. The export it was waiting for arrived on 2026-09-01 and is
+seeded rather than imported — [18-participant-export.md](18-participant-export.md).
 
 ## Data lifecycle rules
 

@@ -14,7 +14,7 @@
 |---|---|---|
 | A1 | May the session install `stripe/stripe-php`, `twilio/sdk`, `barryvdh/laravel-dompdf` (card 1.4)? | **Yes, all three.** |
 | A2 | How far to build? | **Sequentially from card 1.2, as far as the session gets**, committing per card. |
-| A3 | Is there a real ISPEUS export for card 6.6? | **No.** Build an idempotent importer against a documented CSV schema; the owner runs it when the file exists. |
+| A3 | Is there a real ISPEUS export for card 6.6? | **No.** Build an idempotent importer against a documented CSV schema; the owner runs it when the file exists. **Superseded 2026-09-01** — the file arrived, as form submissions rather than the CSV this answer imagined, and is read by two seeders instead. See [18-participant-export.md](18-participant-export.md). |
 | A4 | How to handle doc 01's unanswered open questions? | **Use the documented defaults and flag `TODO-OWNER`.** 2027 date/price as placeholders, confirmed-only roster, refund copy as an editable content block. |
 
 ## Decisions

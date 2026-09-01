@@ -173,7 +173,11 @@ describe('manual entry', function () {
         $errors = livewire(CreateStaffRegistration::class)->call('save')->errors();
 
         expect($errors->first('organization_id'))->toBe('The organization field is required.')
-            ->and($errors->first('event_id'))->toBe('The fair field is required.');
+            ->and($errors->first('event_id'))->toBe('The fair field is required.')
+            // The rep_ prefix is a column convention, not something on screen:
+            // these three are labelled Name, Email and Phone under "Fair contact".
+            ->and($errors->first('rep_name'))->toBe('The name field is required.')
+            ->and($errors->first('rep_email'))->toBe('The email field is required.');
     });
 
     it('works on a fair whose registration has closed', function () {

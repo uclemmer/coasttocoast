@@ -253,9 +253,12 @@ class CreateRegistration extends Component
     }
 
     /**
-     * The select is labelled "Fair". Without this its failures say "the event
-     * id field is required" and name a column the rep never sees — including
-     * the already-registered refusal, which is the one they actually hit.
+     * Name every field as the form labels it.
+     *
+     * Without this the rep is told "the event id field is required" and "the
+     * rep phone field", naming a column and a prefix that appear nowhere on
+     * screen. `event_id` carries the already-registered refusal too, which is
+     * the message they are most likely to actually see.
      *
      * @return array<string, string>
      */
@@ -263,6 +266,9 @@ class CreateRegistration extends Component
     {
         return [
             'event_id' => __('fair'),
+            'rep_name' => __('name'),
+            'rep_email' => __('email'),
+            'rep_phone' => __('phone'),
         ];
     }
 

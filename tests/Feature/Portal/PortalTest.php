@@ -108,11 +108,21 @@ describe('viewing one registration', function () {
 });
 
 describe('the registration wizard', function () {
-    it('names the fair select as the form labels it, not as a column', function () {
-        // The select is labelled "Fair"; without validationAttributes() the rep
-        // is told "the event id field is required" and given a column name.
-        expect(livewire(CreateRegistration::class)->call('submit')->errors()->first('event_id'))
-            ->toBe('The fair field is required.');
+    it('names its fields as the form labels them, not as columns', function () {
+        // Without validationAttributes() the rep is told "the event id field is
+        // required" and "the rep name field" — a column and a prefix that
+        // appear nowhere on the page.
+        // mount() pre-fills these from the signed-in rep, so they have to be
+        // cleared for the required rule to fire at all.
+        $errors = livewire(CreateRegistration::class)
+            ->set('rep_name', '')
+            ->set('rep_email', '')
+            ->call('submit')
+            ->errors();
+
+        expect($errors->first('event_id'))->toBe('The fair field is required.')
+            ->and($errors->first('rep_name'))->toBe('The name field is required.')
+            ->and($errors->first('rep_email'))->toBe('The email field is required.');
     });
 
     it('registers the organization and holds the place pending payment', function () {

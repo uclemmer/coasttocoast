@@ -123,12 +123,14 @@ class Create extends Component
     }
 
     /**
-     * Name the two selects as the form labels them.
+     * Name every field as the form labels it.
      *
      * Laravel derives an attribute name from the key, so `organization_id`
      * fails as "the organization id field is required" — naming a foreign key
-     * this form never shows. The selects are labelled "Fair" and
-     * "Organization"; the failures should say the same words.
+     * this form never shows — and `rep_name` as "the rep name field", naming a
+     * column prefix that appears nowhere on screen. Each message renders
+     * directly beneath its own input, so the label is the only word the
+     * coordinator can match it against.
      *
      * @return array<string, string>
      */
@@ -137,6 +139,9 @@ class Create extends Component
         return [
             'event_id' => __('fair'),
             'organization_id' => __('organization'),
+            'rep_name' => __('name'),
+            'rep_email' => __('email'),
+            'rep_phone' => __('phone'),
         ];
     }
 

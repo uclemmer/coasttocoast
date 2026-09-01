@@ -334,6 +334,14 @@ them were labelled "Organization" and "Fair". Three components had it:
 `Staff\Messages\Edit`. `Auth\Register` was the only component that had ever
 defined `validationAttributes()`.
 
+The first pass fixed only the `_id` fields, on the reasoning that "the rep name
+field" is at least readable where "the organization id field" is not. That line
+did not survive being looked at: `rep_` is a column prefix, the inputs are
+labelled plainly "Name", "Email" and "Phone", and each message renders directly
+beneath its own input — so the label is the only word there is to match it
+against. Both registration forms now name **every** field as the form labels it,
+not just the ones that were unreadable.
+
 **This belongs in the table above.** A Filament `Select` was constructed with its
 label and used it for both the field and its messages; a Livewire property is
 just a property, and the label lives in the Blade where the validator cannot see

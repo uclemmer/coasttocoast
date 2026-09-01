@@ -96,6 +96,7 @@ Each of these is now ours, and each has a test because none of them had one:
 | Relation-manager scoping | `$this->sponsor->staff()->find()` |
 | Implicit policy checks | `$this->authorize()` in mount and every action |
 | A hidden label on a selection checkbox | `aria-label` with no `label` prop — the component always renders a visible label when given one |
+| Friendly field names in validation messages | `validationAttributes()` — a Filament `Select` knew its own label, a Livewire property does not. Missed on three components until 2026-09-01; see the last section |
 
 ## Traps recorded for the six that remain
 
@@ -319,3 +320,35 @@ lesson is narrower than "add tests": **a method no test ever calls can be
 deleted out from under**, and coverage *around* it is not coverage *of* it.
 Worth remembering for the six resources still to come, each of which will strand
 call sites as it lands.
+
+## A second bug, found by a browser pass two weeks later
+
+**2026-09-01.** Submitting the manual-registration form empty said:
+
+> The organization **id** field is required.
+
+Laravel derives a validation attribute name from the key, so `organization_id`
+and `event_id` named foreign keys the form never shows — while the selects above
+them were labelled "Organization" and "Fair". Three components had it:
+`Staff\Registrations\Create` (both fields), `Portal\CreateRegistration` and
+`Staff\Messages\Edit`. `Auth\Register` was the only component that had ever
+defined `validationAttributes()`.
+
+**This belongs in the table above.** A Filament `Select` was constructed with its
+label and used it for both the field and its messages; a Livewire property is
+just a property, and the label lives in the Blade where the validator cannot see
+it. It joins the other four things the port had to take over by hand — and it is
+the one that got missed, because unlike file cleanup or policy checks it is
+invisible until someone submits a form wrongly.
+
+Two things worth keeping from how it was found and fixed:
+
+- **The rename browser pass found it, and nothing else could have.** 799 tests,
+  Pint and a full-source vocabulary scan were all green: nothing was *broken*,
+  the wording was just wrong, and no assertion had ever read it. `assertHasErrors()`
+  passes on the old message and the new one alike — so the tests added here assert
+  the **message text**, which is the only thing that can catch it coming back.
+- **It predates the schools→organizations rename** (doc 17) and is committed
+  separately. The field has been `organization_id` since card 1.2, so the screen
+  said "organization id" before the rename too. Fixing it in the rename commit
+  would have implied the rename caused it.

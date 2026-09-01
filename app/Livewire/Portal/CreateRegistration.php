@@ -252,6 +252,20 @@ class CreateRegistration extends Component
         }
     }
 
+    /**
+     * The select is labelled "Fair". Without this its failures say "the event
+     * id field is required" and name a column the rep never sees — including
+     * the already-registered refusal, which is the one they actually hit.
+     *
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        return [
+            'event_id' => __('fair'),
+        ];
+    }
+
     public function render(): View
     {
         return view('livewire.portal.create-registration');

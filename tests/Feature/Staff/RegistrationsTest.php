@@ -160,6 +160,22 @@ describe('manual entry', function () {
             ->assertHasErrors(['organization_id']);
     });
 
+    it('names the two selects as the form labels them, not as columns', function () {
+        /*
+         * Laravel derives an attribute name from the key, so these used to read
+         * "the organization id field is required" and "the event id field is
+         * required" — naming foreign keys the form never shows.
+         *
+         * Asserted on the message rather than on assertHasErrors(), because the
+         * error is present either way. Only the wording is the bug, so only the
+         * wording can catch it coming back.
+         */
+        $errors = livewire(CreateStaffRegistration::class)->call('save')->errors();
+
+        expect($errors->first('organization_id'))->toBe('The organization field is required.')
+            ->and($errors->first('event_id'))->toBe('The fair field is required.');
+    });
+
     it('works on a fair whose registration has closed', function () {
         // Manual entry skips the window check on purpose: the coordinator is
         // recording something that already happened.

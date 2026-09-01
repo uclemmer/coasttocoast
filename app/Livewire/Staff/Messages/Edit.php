@@ -197,6 +197,19 @@ class Edit extends Component
         $this->redirect(route('staff.messages.show', $message), navigate: false);
     }
 
+    /**
+     * The select is labelled "Reference fair". It is nullable, so `required`
+     * never fires — but `integer` and `exists` do, and they named `event_id`.
+     *
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        return [
+            'event_id' => __('reference fair'),
+        ];
+    }
+
     public function render(): View
     {
         return view('livewire.staff.messages.edit', [

@@ -122,6 +122,24 @@ class Create extends Component
         $this->redirect(route('staff.registrations.show', $registration), navigate: false);
     }
 
+    /**
+     * Name the two selects as the form labels them.
+     *
+     * Laravel derives an attribute name from the key, so `organization_id`
+     * fails as "the organization id field is required" — naming a foreign key
+     * this form never shows. The selects are labelled "Fair" and
+     * "Organization"; the failures should say the same words.
+     *
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        return [
+            'event_id' => __('fair'),
+            'organization_id' => __('organization'),
+        ];
+    }
+
     public function render(): View
     {
         return view('livewire.staff.registrations.create');

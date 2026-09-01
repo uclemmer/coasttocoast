@@ -114,6 +114,22 @@ describe('composing', function () {
         livewire(EditMessage::class)->call('save')->assertHasErrors(['audience', 'subject']);
     });
 
+    it('names the fair select as the form labels it, not as a column', function () {
+        /*
+         * `event_id` is nullable here, so `required` never fires and the label
+         * only shows through `exists` — which is why this test points the field
+         * at a fair that does not exist rather than leaving it blank.
+         */
+        $errors = livewire(EditMessage::class)
+            ->set('audience', Audience::ThisEventConfirmed->value)
+            ->set('subject', 'Parking and check-in')
+            ->set('event_id', '999999')
+            ->call('save')
+            ->errors();
+
+        expect($errors->first('event_id'))->toBe('The selected reference fair is invalid.');
+    });
+
     it('refuses to open a sent campaign for editing', function () {
         // A form that cannot be saved should not be rendered.
         $sent = Message::factory()->sent()->create();

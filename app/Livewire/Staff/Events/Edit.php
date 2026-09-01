@@ -204,6 +204,29 @@ class Edit extends Component
         return $value === '' ? null : $value;
     }
 
+    /**
+     * Name every field as the form labels it, or as close as a sentence allows.
+     *
+     * The datetimes are where the label cannot be reused verbatim: they are
+     * labelled "Fair opens" and "Fair closes", which are clauses rather than
+     * nouns, and "the fair opens field is required" is not English. They take
+     * the noun the label implies instead. `priceDollars` and the rest do reuse
+     * their labels, because those already read as nouns.
+     *
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        return [
+            'starts_at' => __('opening time'),
+            'ends_at' => __('closing time'),
+            'reception_starts_at' => __('reception start time'),
+            'registration_opens_at' => __('registration opening time'),
+            'registration_closes_at' => __('registration closing time'),
+            'priceDollars' => __('registration fee'),
+        ];
+    }
+
     public function render(): View
     {
         return view('livewire.staff.events.edit', [

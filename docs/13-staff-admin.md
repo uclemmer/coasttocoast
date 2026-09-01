@@ -349,6 +349,28 @@ is what a rule applied by hand does; **the sweep that would have found all of
 them at once is to submit each form empty and read what comes back**, and it
 takes a minute per screen.
 
+**The sweep was then written down, and immediately found nine more.** Running it
+over all 20 forms in the app turned up mismatches on six that three hand-passes
+had walked straight past — including a whole form nobody had looked at: the fair
+editor was saying "the starts at field", "the ends at field" and "the price
+dollars field" under inputs labelled *Fair opens*, *Fair closes* and
+*Registration fee*. Also `event_id` on the portal's grant application, and
+`keepId` in the merge dialog.
+
+`tests/Feature/Foundation/FormLabelSweepTest.php` is that sweep, and it is
+generic: `uclemmer/laravel-ui` derives a field `id` from `name`, points
+`label[for]` at it and renders the message as `#{id}-error`, so every labelled
+error on a page pairs with its own label **without the test knowing anything
+about the form**. Adding a form to the dataset is one line; no assertion needs
+writing.
+
+It comes in two halves, and the second is the one that matters. The sweep passes
+trivially on a form that renders no errors at all, so a component that quietly
+stopped validating would read as green — a coverage test asserts every form
+either produces labelled errors or is on a named list of three modal actions
+that guard before validating (`denyClaim`, `deny`, `cancel`). Proved by claiming
+`cancel` validates: one failure, naming it.
+
 `channels` is the exception worth recording, because it is where the rule stops.
 Its label is "Send by", and "the send by field is required" is not English — the
 heading sits above a checkbox list and is not a noun for the thing being
@@ -356,6 +378,17 @@ validated. It takes a written name, **delivery method**, and there is a test
 pinning that specifically, because the obvious tidy-up is to make it match the
 label like everything else. Matching labels is a means to a message somebody can
 act on, not the point in itself.
+
+**Nine fields are on that exception list now, and the reason is the same every
+time: the label is not a noun.** A heading (*Send by*), an instruction (*Keep
+this organization*), a question (*Why are you requesting fee assistance?*), a
+possessive (*Your name*), or a clause (*Fair opens*, *Registration closes*).
+Each takes the noun its label implies — "delivery method", "organization to
+keep", "opening time" — and the list carries the reason beside it, so they stay
+decisions rather than looking like the oversights the sweep exists to catch.
+`EventInterest` is on it for the opposite reason: it writes its own message,
+"We need an email address to tell you.", which is better than any attribute
+name would give.
 
 **This belongs in the table above.** A Filament `Select` was constructed with its
 label and used it for both the field and its messages; a Livewire property is

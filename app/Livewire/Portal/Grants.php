@@ -42,8 +42,13 @@ class Grants extends Component
 {
     use ActsForAnOrganization;
 
-    /** The fair being applied for, while the apply dialog is open. */
-    #[Validate('required|integer|exists:events,id')]
+    /**
+     * The fair being applied for, while the apply dialog is open.
+     *
+     * `as:` because the select is labelled "Fair" and the failure would
+     * otherwise name the column: "the event id field is required".
+     */
+    #[Validate('required|integer|exists:events,id', as: 'fair')]
     public ?int $event_id = null;
 
     #[Validate('required|string|max:1000')]

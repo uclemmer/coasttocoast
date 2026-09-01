@@ -199,6 +199,20 @@ class Index extends Component
         $this->toast(__('Organization removed.'));
     }
 
+    /**
+     * The merge dialog's select is labelled "Keep this organization" — an
+     * instruction, not a noun, so "the keep this organization field" would be
+     * as wrong as the "keep id" it replaces. It takes the noun instead.
+     *
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        return [
+            'keepId' => __('organization to keep'),
+        ];
+    }
+
     public function render(): View
     {
         return view('livewire.staff.organizations.index');

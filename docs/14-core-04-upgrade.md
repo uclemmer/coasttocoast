@@ -146,7 +146,10 @@ stylesheet already imports.
 - [x] Retired config keys removed with a note saying what they were
 - [x] **740 tests passing** (739 before; `ContentResourcesTest` gained one),
       Pint clean
-- [ ] `/admin` driven in a browser by a human. The suite proves the routes, the
-      gate and the screens mount; it cannot prove the shell looks right, and
-      this is the first time this app has rendered that admin from its own
-      stylesheet rather than Filament's.
+- [x] `/admin` driven in a browser by a human — **done 2026-09-02**. Fourteen
+      screens, no console errors, and one real defect: the sidebar was painting
+      over the topbar and hiding the brand, on `/admin` and `/staff` and
+      `/portal` alike. This app's two layouts are fixed; the same bug is in
+      `uclemmer/laravel-ui`'s `layouts.admin`, which is the shell `/admin`
+      renders in, so **that surface stays affected until the package ships it**.
+      Doc 10, D-10-d.

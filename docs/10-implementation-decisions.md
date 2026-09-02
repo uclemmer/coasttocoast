@@ -1458,3 +1458,60 @@ screen can afford it because it has no selection; this one cannot — `updated()
 `$selected` too, so every tick cleared itself the instant it was made and the bulk bar could never
 appear. Named `updatedSearch()` / `updatedEventId()` / `updatedStatus()` hooks instead. **Copying a
 hook is copying its preconditions**, and this one's precondition was written nowhere.
+
+
+## The `/admin` browser pass (2026-09-02)
+
+### D-10-d — The sidebar was covering the topbar, and had been all along
+
+Doc 14's definition of done left one box unticked: `/admin` driven in a browser by a human, because
+the suite proves the routes, the gate and that the screens mount, and cannot prove the shell looks
+right. Driving it found one defect, and it was not on `/admin` alone.
+
+**The topbar's brand was underneath the sidebar.** The sidebar is `fixed left-0 top-0 h-screen w-64`
+with an opaque background at `z-40`; the topbar was `fixed top-0 w-full` at `z-30`. So the sidebar
+painted over the leftmost 256px of the bar, and the brand sits at x=16.
+
+The intended stacking is not a matter of taste, and the markup says so: **the sidebar carries
+`pt-16`**, sixteen rem of padding whose only purpose is to clear a bar it is drawn on top of. The
+padding and the z-index contradicted each other, and the z-index won.
+
+**Why nobody saw it for weeks.** On `/admin` the brand is "Coast to Coast College Fair" — 218px
+wide, entirely inside the sidebar's 256px, so it vanished completely and read as a blank corner. On
+`/staff` the brand is the app name *plus* a "Staff" span, 264px wide, so the last 8px poked out past
+the sidebar and the corner read **"Staff"** — which looks exactly like intentional chrome. It is in
+every screenshot taken of that surface this session, including the ones in this session's own
+commits, and it was read as a label every time.
+
+Confirmed by hit-testing rather than by eye: `document.elementFromPoint()` at the brand's own
+coordinates returned the `<aside>`, not the `<a>`.
+
+**Fixed here in `staff.blade.php` and `portal.blade.php`** — `z-30` to `z-50`, above the sidebar's
+`z-40` and above the mobile backdrop's `z-30`. Raising the topbar rather than lowering the sidebar,
+because the sidebar has to stay above that backdrop.
+
+**The same bug is in `uclemmer/laravel-ui`'s `layouts.admin`, and the fix belongs there, not here.**
+That component is the shell `/admin` renders in — core's `admin/layout.blade.php` is a thin wrapper
+over it — so **`/admin` still has an invisible brand until the package ships the change**. This
+app's two layouts are its own files and were fixed; the package's is not ours to edit, and
+publishing a copy to patch it would stop that shell tracking the package. Raise it against `ui`.
+
+**Guarded by a test on the class strings**, in `FrontendWiringTest`. That shape is deliberate: this
+is pure CSS stacking with no server-side behaviour to exercise, and nothing in a Pest suite
+composites a page. The classes are the thing that regresses.
+
+### What else the pass covered
+
+Fourteen screens driven: the dashboard, users and one user edit, roles and the new-role form,
+contact, settings, failed jobs, content, and postmaster's do-not-send list, mailing lists and
+message log. Everything else rendered correctly — populated forms, working empty states, sortable
+headers, and the content list's title-as-edit-link, which is the route doc 11's owner queue tells
+Matt to use for the refund policy. No console errors on any of them.
+
+**Two things checked because a screenshot is not proof.** The content list shows only a red
+"Archive" button per row, so it looks read-only until you notice the title is the edit link — worth
+knowing before somebody reports it as a bug. And the mobile drawer was re-measured after the
+z-index change: the sidebar's first nav link starts at 84px and the topbar ends at 87px on a
+375px-wide viewport, where the bar wraps to two lines, so three pixels of that link's top padding
+sit under the bar. The overlap is the package's `pt-16` assuming a one-line header and predates this
+change; all that moved is which element owns those three pixels. The link's text is nowhere near it.

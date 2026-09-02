@@ -1,10 +1,20 @@
 # Coast to Coast College Fair — Project Documentation
 
-> **Build status (2026-08-19): all eight phases of [05-build-roadmap.md](05-build-roadmap.md) are
-> implemented.** Pest is green and Pint is clean. What is left before launch is content and
-> credentials rather than code — the owner content queue is at the bottom of
-> [11-deployment.md](11-deployment.md), and one decision wanting the owner's eye is still flagged in
-> [10-implementation-decisions.md](10-implementation-decisions.md) (D-5.4-a).
+> **Build status (last checked 2026-09-02): all eight phases of
+> [05-build-roadmap.md](05-build-roadmap.md) are implemented.** Pest is green and Pint is clean.
+> What is left before launch is content, credentials and a deploy rather than code — the owner
+> content queue is at the bottom of [11-deployment.md](11-deployment.md), and the go-live checklist
+> is just above it.
+>
+> **No decision is waiting on the owner in [10-implementation-decisions.md](10-implementation-decisions.md).**
+> This block used to flag D-5.4-a; it was resolved the same day it was written, by D-8-d, and the
+> note outlived it by a fortnight. The one thing there still wanting Matt's word is not a decision
+> but a fact — whether the venue is 1 Carter Plaza or 1150 Carter Street (D-8.5-d, and doc 11's
+> asset queue).
+>
+> **One verification is outstanding and is not owner-blocked**: `/admin` has never been driven in a
+> browser by a human since this app stopped rendering it with Filament's own stylesheet
+> ([14-core-04-upgrade.md](14-core-04-upgrade.md), definition of done).
 >
 > **The design handoff's second delivery landed 2026-09-01** — the same bundle, extended with error
 > pages, an admin-dashboard reference and an email template. The four error views, the restyled email

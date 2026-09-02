@@ -24,7 +24,7 @@
 - [x] Phase 5 — Public site (cards 5.1–5.4) — **complete 2026-08-19**
 - [x] Phase 6 — Communications (cards 6.0–6.6) — **complete 2026-08-19**
 - [x] Phase 7 — Launch hardening (cards 7.1–7.3) — **complete 2026-08-19**
-- [ ] Phase 8 — Public site in Blade/Livewire/Flowbite (cards 8.0–8.5) — **8.0 done 2026-08-19; the rest waits on the design handoff**
+- [x] Phase 8 — Public site in Blade/Livewire/Flowbite (cards 8.0–8.5) — **complete 2026-08-19**
 
 ---
 

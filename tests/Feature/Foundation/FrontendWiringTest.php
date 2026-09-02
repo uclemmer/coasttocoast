@@ -269,3 +269,28 @@ describe('the maintenance page', function () {
         $this->get('/')->assertOk();
     });
 });
+
+describe('the sidebar shells stack correctly', function () {
+    /*
+     * A browser pass on 2026-09-02 found the topbar brand invisible: the
+     * sidebar is `fixed top-0 h-screen` with an opaque background at `z-40`,
+     * the topbar was `z-30`, so the sidebar covered the leftmost 256px of the
+     * bar and swallowed the brand whole. On /staff only the trailing "Staff"
+     * poked out past the sidebar, which read like deliberate chrome for weeks.
+     *
+     * The sidebar's own `pt-16` is the proof of the intended order — it exists
+     * to clear a bar it is drawn on top of.
+     *
+     * Asserted against the class strings, which is not the usual shape and is
+     * the honest one: this is pure CSS stacking with no server-side behaviour
+     * to exercise, and nothing in a Pest suite composites a page. The classes
+     * are what regresses. Doc 10, D-10-d.
+     */
+    it('puts the topbar above the sidebar in every shell that has both', function (string $layout) {
+        $markup = file_get_contents(resource_path("views/components/layouts/{$layout}.blade.php"));
+
+        expect($markup)->toContain('<header class="fixed top-0 z-50 w-full')
+            ->and($markup)->toContain('z-40 h-screen w-64')
+            ->and($markup)->not->toContain('<header class="fixed top-0 z-30 w-full');
+    })->with(['staff', 'portal']);
+});

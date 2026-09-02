@@ -47,7 +47,12 @@
 <body x-data="{ sidebar: false }" x-on:keydown.escape.window="sidebar = false"
     class="min-h-full bg-neutral-secondary-soft font-sans text-ink-800 antialiased">
 
-    <header class="fixed top-0 z-30 w-full border-b border-default bg-neutral-primary">
+    {{-- `z-50`, above the sidebar's `z-40`. The sidebar is `top-0 h-screen`
+         with an opaque background and `pt-16` to clear this bar — that padding
+         is the proof the header was meant to sit on top. At `z-30` it did not,
+         so the sidebar covered the leftmost 256px of this bar and swallowed the
+         brand. See doc 10, D-10-d. --}}
+    <header class="fixed top-0 z-50 w-full border-b border-default bg-neutral-primary">
         <div class="flex items-center justify-between gap-3 px-4 py-3">
             <div class="flex items-center gap-3">
                 <button type="button" x-on:click="sidebar = ! sidebar" x-bind:aria-expanded="sidebar"

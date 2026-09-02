@@ -12,8 +12,8 @@ use RuntimeException;
  * The participant export gave us a person — a representative's name, work
  * address and mobile — and nothing about the institution (doc 18). This fills
  * the rest in: which office handles admissions, its page, its own address,
- * its own phone number and its own inbox, for the 156 organizations that have
- * one.
+ * its own phone number and its own inbox, for every one of the 156
+ * organizations on the roster.
  *
  * **It is the office, not the university.** `website` is the admissions page
  * rather than the institution's front door, and the address is the admissions

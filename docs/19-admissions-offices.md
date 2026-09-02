@@ -3,12 +3,12 @@
 **2026-09-01.** Doc 18 imported the roster and said, in as many words, what it
 could not fill in: the participant export described a *person* — a
 representative's name, work address and mobile — and knew nothing about the
-institution. Every one of the 157 organizations landed with a null `website`,
+institution. Every one of the 156 organizations landed with a null `website`,
 `admissions_office` and address, and with a representative's own email sitting
 in `admissions_email` because that was the only address available and an
 organization with none is dropped from every campaign.
 
-This closes that gap. **156 of the 157 organizations now carry their admissions
+This closes that gap. **Every one of the 156 organizations now carries its admissions
 office**: which office it is, its page, its own address, its own phone number
 and its own inbox.
 
@@ -43,10 +43,12 @@ That is what is in there.
 | `admissions_email` | **143 / 156** |
 | `logo_source` | 156 / 156 |
 
-**The 157th is `JROTC`**, which submitted from an `aol.com` address. It is not
-an institution and has no admissions office to look up, so it has no record and
-keeps the representative's address. It is a candidate for deletion or for
-merging into whichever school's unit it was, and that is the coordinator's call.
+**Every organization on the roster now has a record**, and it did not used to.
+`JROTC` was the one without: not an institution, no admissions office to look
+up, so nothing to research. It was flagged here as a deletion-or-merge decision
+for the coordinator, and on 2026-09-02 the owner took it — it is excluded at the
+source now (doc 18), which is why the roster is 156 rather than 157 and this
+table's denominator matches it exactly.
 
 ### The thirteen without an office inbox
 
@@ -160,7 +162,7 @@ rather than an invented one, so it agrees with the researched data instead of
 blocking it — and `SeederTest` fails if the two ever drift apart.
 
 **Nothing about production changed.** Verified rather than assumed: seeded
-without fixtures, all 157 organizations and 156 contact upgrades land and
+without fixtures, all 156 organizations and 156 contact upgrades land and
 nothing disagrees with the source file. The bug only ever existed where fixtures
 and real institutions shared a database.
 

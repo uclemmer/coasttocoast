@@ -282,9 +282,9 @@ all if any organization exists, so seeding the history first would silently cost
 
 | Seeder | What it writes | Runs in |
 |---|---|---|
-| `OrganizationSeeder` | 157 organizations from `storage/app/private/participants.json` | **dev only**, plus by hand on a real host |
-| `RegistrationSeeder` | their 354 places at the 2023–2026 fairs | **dev only**, plus by hand on a real host |
-| `AdmissionsOfficeSeeder` | the admissions office behind 156 of them — office, page, address, phone, inbox (doc 19) | **dev only**, plus by hand on a real host |
+| `OrganizationSeeder` | 156 organizations from `storage/app/private/participants.json` | **dev only**, plus by hand on a real host |
+| `RegistrationSeeder` | their 353 places at the 2023–2026 fairs | **dev only**, plus by hand on a real host |
+| `AdmissionsOfficeSeeder` | the admissions office behind every one of them — office, page, address, phone, inbox (doc 19) | **dev only**, plus by hand on a real host |
 
 That export is real contact data and is **not in the repository** — `storage/app/private` is
 gitignored, so the first two are the only seeders that can find nothing to do. `DatabaseSeeder`

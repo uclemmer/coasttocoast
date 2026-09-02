@@ -6,7 +6,7 @@ use App\Models\Organization;
 use Illuminate\Support\Carbon;
 
 /**
- * The 157 organizations that attended the 2023-2026 fairs, from the previous
+ * The 156 organizations that attended the 2023-2026 fairs, from the previous
  * system's participant export (card 6.6).
  *
  * Real history, not a fixture. Without it every cross-year audience is empty:
@@ -28,7 +28,7 @@ use Illuminate\Support\Carbon;
  * inbox. It is filled because `AudienceBuilder` drops an organization with no
  * active rep and no `admissions_email` from every campaign (doc 07 §2 rule 1),
  * and none of these organizations has an account behind it — so leaving the
- * column null would seed 157 organizations that no campaign can ever reach,
+ * column null would seed 156 organizations that no campaign can ever reach,
  * which is the exact failure importing history is meant to prevent. The
  * coordinator can correct any of them in the admin panel.
  *

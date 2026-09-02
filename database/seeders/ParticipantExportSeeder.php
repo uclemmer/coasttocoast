@@ -128,6 +128,28 @@ abstract class ParticipantExportSeeder extends Seeder
     ];
 
     /**
+     * Submissions that are not an organization, by normalized name.
+     *
+     * Deleting one of these in `/staff/organizations` does not stick — the next
+     * seed reads the export again and puts it straight back — so the decision
+     * belongs here, where it is durable and carries its reason, rather than in
+     * a database row somebody has to remember to delete again.
+     *
+     * Excluding one DOES drop a real registration, which is why the bar is that
+     * the row names no institution that could hold one, not merely that it is
+     * untidy. Anything identifiable belongs in `CANONICAL_NAMES` and merged
+     * instead.
+     */
+    protected const NOT_ORGANIZATIONS = [
+        // One submission, 2025, from an aol.com address and a Las Vegas mobile.
+        // "JROTC" is a cadet training programme, not a college with an
+        // admissions office — there is no institution here to invite, no office
+        // to research, and nothing to merge it into, because the submission
+        // identifies no institution at all (owner, 2026-09-02).
+        'jrotc',
+    ];
+
+    /**
      * The decoded export, held so the two seeders and the two passes within
      * each of them read the file once.
      *
@@ -145,6 +167,11 @@ abstract class ParticipantExportSeeder extends Seeder
         $names = $this->canonicalNames();
 
         return $this->export()
+            ->reject(fn (array $row): bool => in_array(
+                $this->groupingKey($row['organization']),
+                self::NOT_ORGANIZATIONS,
+                true,
+            ))
             ->map(function (array $row) use ($names): array {
                 $key = $this->groupingKey($row['organization']);
 

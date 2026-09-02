@@ -237,7 +237,7 @@ None of these block a deploy; all of them are visible to a visitor.
 | Brand colour and logo | `FAIR_BRAND_COLOR`, `FAIR_BRAND_LOGO_URL` | Email falls back to the app name in text |
 | Historical rosters, 2023–2026 | Copy the export to `storage/app/private/participants.json` on the host, then `db:seed --class=…\OrganizationSeeder` and `…\RegistrationSeeder` | **Supplied 2026-09-01** and read straight from the owner's export — see [18-participant-export.md](18-participant-export.md). The export is gitignored, so it does **not** arrive with a deploy; without it both seeders throw. Not part of `ProductionSeeder`; run the two by name, once |
 | Historical roster, 2022 | `php artisan fair:import-roster <file.csv>` | Not in the export. The fair is seeded and empty; see below |
-| Admissions office details | `db:seed --class=…\AdmissionsOfficeSeeder`, then `php artisan fair:fetch-organization-logos --dry-run` | Committed data, so no file to copy. Fills office, page, address, phone and inbox for 156 organizations ([19-admissions-offices.md](19-admissions-offices.md)); thirteen have no published office inbox and stay on the rep's address |
+| Admissions office details | `db:seed --class=…\AdmissionsOfficeSeeder`, then `php artisan fair:fetch-organization-logos --dry-run` | Committed data, so no file to copy. Fills office, page, address, phone and inbox for every one of them ([19-admissions-offices.md](19-admissions-offices.md)); thirteen have no published office inbox and stay on the rep's address |
 
 ### Design assets still outstanding (2026-08-19)
 
@@ -268,7 +268,7 @@ Without the import, the first year on this system has no previous year and `Last
 
 **Most of that history is now seeded, not imported.** The owner's export arrived on 2026-09-01 as
 form submissions rather than a CSV, and `OrganizationSeeder` + `RegistrationSeeder` read it directly
-— 157 organizations and 354 registrations across the 2023–2026 fairs. Run those two by name; they
+— 156 organizations and 353 registrations across the 2023–2026 fairs. Run those two by name; they
 are deliberately not part of `ProductionSeeder`, and they are idempotent. Read
 [18-participant-export.md](18-participant-export.md) first, because six of the fields they write are
 a stated convention rather than something the export knew.

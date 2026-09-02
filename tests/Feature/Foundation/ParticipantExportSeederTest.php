@@ -38,10 +38,10 @@ beforeEach(function () {
 });
 
 it('seeds every organization and every place at a fair from the export', function () {
-    // 381 submissions collapse to 354 registrations across 157 organizations:
+    // 381 submissions collapse to 353 registrations across 156 organizations:
     // the export is a form log, and people submitted twice.
-    expect(Organization::query()->count())->toBe(157)
-        ->and(Registration::query()->count())->toBe(354);
+    expect(Organization::query()->count())->toBe(156)
+        ->and(Registration::query()->count())->toBe(353);
 });
 
 it('fills the four fairs the export covers and leaves the others empty', function () {
@@ -53,7 +53,7 @@ it('fills the four fairs the export covers and leaves the others empty', functio
         'college-fair-2022' => 0,
         'college-fair-2023' => 72,
         'college-fair-2024' => 87,
-        'college-fair-2025' => 99,
+        'college-fair-2025' => 98,
         'college-fair-2026' => 96,
         'college-fair-2027' => 0,
     ]);
@@ -151,6 +151,18 @@ describe('which spellings are one organization', function () {
             ->toBe(['college-fair-2025', 'college-fair-2026']);
     });
 
+    it('seeds nothing for a submission that is not an organization', function () {
+        // "JROTC" is a cadet training programme, not a college with an
+        // admissions office — one 2025 submission from an aol.com address and a
+        // Las Vegas mobile, identifying no institution (owner, 2026-09-02).
+        //
+        // This is a test rather than a deleted row because deleting the row does
+        // not stick: the seeders read the export again and put it straight back,
+        // so the only durable place for the decision is the code.
+        expect(Organization::query()->matchingName('JROTC')->exists())->toBeFalse()
+            ->and(Registration::query()->where('rep_email', 'greshann2@aol.com')->exists())->toBeFalse();
+    });
+
     it('keeps two organizations apart when only their names look alike', function () {
         // miamioh.edu and miami.edu, both at the 2026 fair.
         expect(Organization::query()->matchingName('Miami University')->value('name'))->toBe('Miami University')
@@ -192,7 +204,7 @@ describe('what the export cannot say', function () {
     it('leaves every organization reachable by a campaign', function () {
         // AudienceBuilder drops an organization with no active rep and no
         // admissions_email (doc 07 §2 rule 1). None of these has an account, so
-        // a null here would seed 157 organizations no win-back list can reach.
+        // a null here would seed 156 organizations no win-back list can reach.
         expect(Organization::query()->whereNull('admissions_email')->count())->toBe(0);
     });
 
@@ -235,8 +247,8 @@ describe('re-running', function () {
         $this->seed(OrganizationSeeder::class);
         $this->seed(RegistrationSeeder::class);
 
-        expect(Organization::query()->count())->toBe(157)
-            ->and(Registration::query()->count())->toBe(354);
+        expect(Organization::query()->count())->toBe(156)
+            ->and(Registration::query()->count())->toBe(353);
     });
 
     it('does not talk over a correction the coordinator has made', function () {
@@ -272,7 +284,7 @@ describe('re-running', function () {
 
         $this->seed(RegistrationSeeder::class);
 
-        expect(Registration::query()->count())->toBe(354);
+        expect(Registration::query()->count())->toBe(353);
     });
 });
 

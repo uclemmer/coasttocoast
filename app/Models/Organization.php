@@ -23,6 +23,7 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $name
  * @property string $normalized_name
+ * @property string $sort_name
  * @property string|null $website
  * @property string|null $logo_path
  * @property string|null $admissions_office
@@ -43,18 +44,20 @@ class Organization extends Model
     protected $guarded = ['id'];
 
     /**
-     * Keep `normalized_name` in step with `name` automatically.
+     * Keep `normalized_name` and `sort_name` in step with `name` automatically.
      *
-     * It is derived data with two jobs — the duplicate soft-check at signup
-     * (R2.7) and matching during the historical import (card 6.6) — and both
-     * break quietly if a caller sets `name` without it. Deriving it on save
-     * means no caller can forget.
+     * Both are derived data that break quietly if a caller sets `name` without
+     * them — `normalized_name` has two jobs, the duplicate soft-check at signup
+     * (R2.7) and matching during the historical import (card 6.6); `sort_name`
+     * orders every organization list on the site. Deriving them on save means no
+     * caller can forget.
      */
     protected static function booted(): void
     {
         static::saving(function (Organization $organization): void {
             if ($organization->isDirty('name')) {
                 $organization->normalized_name = static::normalizeName($organization->name);
+                $organization->sort_name = static::sortName($organization->name);
             }
         });
     }
@@ -79,6 +82,52 @@ class Organization extends Model
         return str_starts_with($normalized, 'the ')
             ? substr($normalized, 4)
             : $normalized;
+    }
+
+    /**
+     * The key every organization list is alphabetized on.
+     *
+     * **An organization files under its name as displayed.** "University of
+     * Alabama" belongs under U, not inverted to "Alabama, University of" and
+     * filed under A. The card-catalogue inversion only works when the inverted
+     * form is also the form on screen; a row reading "University of Alabama"
+     * that sorts under A is one a rep scanning the U's never finds. It is also
+     * only half a convention — "Auburn University" and "Belmont University"
+     * stay under A and B whatever we do, so inverting would rearrange only the
+     * names containing "of".
+     *
+     * What genuinely misfiles names here is the leading article. Sorting on
+     * `name` put "The University of Alabama at Birmingham" under T while
+     * "University of Alabama" and "University of Alabama in Huntsville" sat
+     * under U, and all four University of Tennessee campuses under T. Dropping
+     * the article reunites them without inverting anything.
+     *
+     * Deliberately NOT `normalized_name`, which does almost the same work.
+     * That column exists for duplicate matching, and its rules are tuned for
+     * that — the day somebody tightens the dedupe heuristic, every public list
+     * on the site would silently reorder.
+     *
+     * Lowercasing and folding accents also makes the order identical on SQLite
+     * and MySQL. Ordering by `name` does not: SQLite compares with BINARY
+     * collation (case-sensitive, accents last) while `config/database.php` puts
+     * MySQL on `utf8mb4_unicode_ci`, so dev and production disagree.
+     */
+    public static function sortName(string $name): string
+    {
+        $sortable = Str::of($name)
+            ->ascii()
+            ->lower()
+            ->replaceMatches('/[^a-z0-9\s]/', ' ')
+            ->squish()
+            ->value();
+
+        foreach (['the ', 'an ', 'a '] as $article) {
+            if (str_starts_with($sortable, $article)) {
+                return substr($sortable, strlen($article));
+            }
+        }
+
+        return $sortable;
     }
 
     /**

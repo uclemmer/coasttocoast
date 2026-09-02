@@ -69,7 +69,7 @@ class Create extends Component
     #[Computed]
     public function organizations(): Collection
     {
-        return Organization::query()->orderBy('name')->get();
+        return Organization::query()->orderBy('sort_name')->get();
     }
 
     /** @return array<int, PaymentMethod> */

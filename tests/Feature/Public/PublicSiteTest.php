@@ -166,6 +166,25 @@ describe('the roster', function () {
             ->assertDontSee('Cancelled University');
     });
 
+    it('alphabetizes on the sort key, so a leading "The" does not misfile an organization', function () {
+        // The roster is the list a visitor scans by eye, so the order is the
+        // feature. Ordering by `name` put every "The University of …" under T.
+        $birmingham = Organization::factory()->named('The University of Alabama at Birmingham')->create();
+        $vanderbilt = Organization::factory()->named('Vanderbilt University')->create();
+
+        foreach ([$vanderbilt, $birmingham, $this->organization] as $organization) {
+            Registration::factory()->forEvent($this->fair)->forOrganization($organization)->create();
+        }
+
+        $this->get('/representatives')
+            ->assertOk()
+            ->assertSeeInOrder([
+                'Kenyon College',
+                'The University of Alabama at Birmingham',
+                'Vanderbilt University',
+            ]);
+    });
+
     it('respects the coordinator hiding an organization, and drops a refunded one', function () {
         Registration::factory()->hiddenFromRoster()->forEvent($this->fair)
             ->forOrganization($this->organization)->create();

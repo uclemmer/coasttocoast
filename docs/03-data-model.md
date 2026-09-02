@@ -64,6 +64,7 @@ campaign audiences (doc 07). Helper scopes: `activeReps()`, `pendingReps()`.
 | id | bigint pk | |
 | name | string | display name |
 | normalized_name | string index | lowercased/stripped for duplicate soft-check (R2.7) and audience matching |
+| sort_name | string index | the key every organization list alphabetizes on: accents folded, lowercased, punctuation stripped, leading `the`/`a`/`an` dropped. Files an organization under its **displayed** name — University of Alabama under U, never inverted — so "The University of Alabama at Birmingham" sorts beside its sibling campuses instead of under T. Deliberately separate from `normalized_name`, whose rules answer to duplicate detection (doc 10, D-10-a) |
 | website | string null | |
 | logo_path | string null | uploaded via Filament; public disk |
 | admissions_office | string null | office/department name |
@@ -344,7 +345,7 @@ it is a deliberate decision rather than a tidy-up.
 
 `DatabaseSeeder` (dev) calls all ten; `ProductionSeeder` calls the first six. Note that
 `DatabaseSeeder` does **not** use `WithoutModelEvents` — `Organization` derives `normalized_name`
-and `Event` fills a blank slug in `saving` hooks, so muting model events would seed rows the
+and `sort_name`, and `Event` fills a blank slug, all in `saving` hooks, so muting model events would seed rows the
 application itself could never produce, and the duplicate-detection fixtures would seed as
 non-duplicates.
 

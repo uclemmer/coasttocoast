@@ -45,6 +45,68 @@ describe('name normalization', function () {
     });
 });
 
+describe('sort key', function () {
+    // Every organization list on the site alphabetizes on this column. The
+    // reasoning behind the rule lives on Organization::sortName(); these pin
+    // its edges, because reordering a public list is the kind of regression
+    // nobody reports.
+    it('lowercases, folds accents and punctuation, and drops a leading article', function (string $input, string $expected) {
+        expect(Organization::sortName($input))->toBe($expected);
+    })->with([
+        'plain' => ['Kenyon College', 'kenyon college'],
+        'leading the' => ['The Ohio State University', 'ohio state university'],
+        'leading a' => ['A Better College', 'better college'],
+        'leading an' => ['An Example College', 'example college'],
+        'an article inside the name stays' => ['College of the Ozarks', 'college of the ozarks'],
+        'a name merely starting with those letters is untouched' => ['Anderson University', 'anderson university'],
+        'hyphen' => ['Carson-Newman University', 'carson newman university'],
+        'parentheses' => ['University of Mississippi (Ole Miss)', 'university of mississippi ole miss'],
+        'accents fold to ascii' => ['Université Sainte-Anne', 'universite sainte anne'],
+        'collapsed whitespace' => ['  Berry   College  ', 'berry college'],
+    ]);
+
+    it('files "University of X" under U rather than inverting it to X', function () {
+        // The card-catalogue inversion would file this under A. It is not
+        // inverted, because the row on screen reads "University of Alabama"
+        // and a rep scanning the U's has to find it there.
+        expect(Organization::sortName('University of Alabama'))->toStartWith('university of');
+    });
+
+    it('keeps an institution\'s campuses together across a leading article', function () {
+        // The misfiling this column was added to fix: ordering by `name` put
+        // Birmingham under T and the other two campuses under U.
+        foreach ([
+            'Vanderbilt University',
+            'University of Alabama in Huntsville',
+            'The University of Alabama at Birmingham',
+            'University of Alabama',
+        ] as $name) {
+            Organization::factory()->named($name)->create();
+        }
+
+        expect(Organization::query()->orderBy('sort_name')->pluck('name')->all())->toBe([
+            'University of Alabama',
+            'The University of Alabama at Birmingham',
+            'University of Alabama in Huntsville',
+            'Vanderbilt University',
+        ]);
+    });
+
+    it('derives sort_name on save without being asked', function () {
+        $organization = Organization::factory()->named('The University of Example')->create();
+
+        expect($organization->sort_name)->toBe('university of example');
+    });
+
+    it('re-derives sort_name when the name changes', function () {
+        $organization = Organization::factory()->named('Example College')->create();
+
+        $organization->update(['name' => 'The Example State University']);
+
+        expect($organization->fresh()->sort_name)->toBe('example state university');
+    });
+});
+
 describe('duplicate detection', function () {
     it('finds organizations whose names normalize the same way', function () {
         $existing = Organization::factory()->named('The Ohio State University')->create();

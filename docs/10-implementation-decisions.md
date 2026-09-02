@@ -1325,3 +1325,51 @@ link floated above the word "Attachment" and read as orphaned. The position is r
 field's own label now switches to "Replace it with" when there is already a file. Both states are
 tested, including that ticking removal drops the block — otherwise the page offers a download link
 for a file the save is about to delete.
+
+## Alphabetizing the organization lists (2026-09-02)
+
+### D-10-a — An organization files under its name as displayed, not inverted
+
+The question was whether "University of Alabama" belongs under the U's or the A's. It files under
+**U**, on `organizations.sort_name` — a derived column, not a display change.
+
+**Why not the card-catalogue inversion.** "Alabama, University of" only works if the inverted form is
+also the form on screen; a row that reads "University of Alabama" and sorts under A is one a rep
+scanning the U's never finds. It is also only half a convention — "Auburn University", "Belmont
+University" and "Vanderbilt University" stay under A, B and V whatever we do, so inverting would
+rearrange only the names that happen to contain "of", producing a list ordered on two rules at once.
+
+**What was actually misfiling names was the leading article.** Of the 156 seeded organizations, eight
+begin with "The". Ordering by `name` put "The University of Alabama at Birmingham" under T while
+"University of Alabama" and "University of Alabama in Huntsville" sat under U, and filed all four
+University of Tennessee campuses under T. Dropping the article reunites both families under U
+without inverting anything — which is the clustering inversion is usually reached for to get.
+
+**`sort_name` is deliberately not `normalized_name`,** which already does four of the same five
+steps. That column exists for the duplicate soft-check (R2.7) and the import's matching (card 6.6),
+and its docblock records rules tuned for that job — it must not strip "University" or "College",
+because Boston University and Boston College are different institutions. Sorting on it would couple
+the order of every public list to a dedupe heuristic, so the next tightening of that heuristic would
+silently reorder the roster. Both are derived in the same `saving` hook, so neither can be forgotten.
+
+**It also removes a dev/production disagreement.** SQLite compares with BINARY collation
+(case-sensitive, accents last) while `config/database.php` puts MySQL on `utf8mb4_unicode_ci`, so
+ordering by `name` sorted differently in the two. `sort_name` is stored pre-lowercased and
+ASCII-folded, so the two agree by construction rather than by luck.
+
+**Rules, in `Organization::sortName()`:** fold accents to ASCII, lowercase, replace punctuation with
+spaces, collapse whitespace, then drop a leading `the` / `a` / `an`. An article *inside* the name is
+untouched — "College of the Ozarks" stays under C. `St.`/`Saint` are deliberately **not** treated as
+equivalent: no organization in the data spells it either way today, and a rule with no case to serve
+is a rule that rots.
+
+**How to reverse it.** The inversion, if it is ever wanted, is a change to `sortName()` plus a
+backfill migration — and it should come with a matching change to what the roster *displays*, or it
+reintroduces the problem above. Ordering call sites take `sort_name` in seven places
+(`RosterService`, `ShowsARoster`, `Staff\Organizations\Index` twice, `Staff\Registrations\Create`,
+`Auth\Register`, `FetchOrganizationLogos`).
+
+**One list deliberately left alone.** `Staff\Messages\Show` orders the delivery table on
+`message_recipients.organization_name`, a snapshot column on a different table that records who a
+campaign was sent to at the time it went out. It is a delivery record rather than an organization
+list, and giving it a sort key of its own is a change to the audit trail, not to alphabetization.

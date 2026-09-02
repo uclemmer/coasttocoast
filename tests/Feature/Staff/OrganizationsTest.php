@@ -33,6 +33,22 @@ describe('the directory', function () {
         expect($found->pluck('name')->all())->toBe(['Baylor School']);
     });
 
+    it('alphabetizes on the sort key, so a leading "The" does not misfile an organization', function () {
+        // Ordering by `name` filed Birmingham under T, three letters away from
+        // the two campuses it belongs beside.
+        Organization::factory()->named('Vanderbilt University')->create();
+        Organization::factory()->named('The University of Alabama at Birmingham')->create();
+        Organization::factory()->named('University of Alabama')->create();
+
+        $listed = livewire(OrganizationIndex::class)->instance()->organizations();
+
+        expect($listed->pluck('name')->all())->toBe([
+            'University of Alabama',
+            'The University of Alabama at Birmingham',
+            'Vanderbilt University',
+        ]);
+    });
+
     it('filters to organizations with nobody speaking for them', function () {
         // Zero active reps means campaigns fall back to admissions_email, or
         // drop the organization entirely.

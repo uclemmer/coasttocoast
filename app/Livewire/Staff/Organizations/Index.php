@@ -77,7 +77,7 @@ class Index extends Component
                     ->groupBy('normalized_name')
                     ->havingRaw('count(*) > 1'),
             ))
-            ->orderBy('name')
+            ->orderBy('sort_name')
             ->get();
     }
 
@@ -93,7 +93,7 @@ class Index extends Component
             return collect();
         }
 
-        return Organization::query()->whereKeyNot($this->merging)->orderBy('name')->get();
+        return Organization::query()->whereKeyNot($this->merging)->orderBy('sort_name')->get();
     }
 
     public function updatedSearch(): void

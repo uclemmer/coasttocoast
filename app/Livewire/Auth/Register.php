@@ -101,7 +101,7 @@ class Register extends Component
 
         return Organization::query()
             ->where('name', 'like', '%'.trim($this->organization_search).'%')
-            ->orderBy('name')
+            ->orderBy('sort_name')
             ->limit(25)
             ->get(['id', 'name']);
     }

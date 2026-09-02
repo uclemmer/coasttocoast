@@ -61,7 +61,7 @@ trait ShowsARoster
                 filled($this->search),
                 fn ($query) => $query->where('organizations.name', 'like', '%'.trim($this->search).'%'),
             )
-            ->orderBy('organizations.name')
+            ->orderBy('organizations.sort_name')
             ->select('registrations.*')
             ->paginate(30)
             ->withQueryString();

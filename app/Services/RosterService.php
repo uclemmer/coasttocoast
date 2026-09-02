@@ -33,7 +33,7 @@ class RosterService
             ->where('event_id', $event->getKey())
             ->with('organization')
             ->join('organizations', 'organizations.id', '=', 'registrations.organization_id')
-            ->orderBy('organizations.name')
+            ->orderBy('organizations.sort_name')
             ->select('registrations.*')
             ->get();
     }

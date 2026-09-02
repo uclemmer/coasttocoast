@@ -128,7 +128,7 @@ class FetchOrganizationLogos extends Command
 
         $organizations = Organization::query()
             ->when(is_string($only) && $only !== '', fn ($query) => $query->where('name', 'like', "%{$only}%"))
-            ->orderBy('name')
+            ->orderBy('sort_name')
             ->get();
 
         foreach ($organizations as $organization) {

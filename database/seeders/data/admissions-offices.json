@@ -1781,19 +1781,6 @@
         "postal_code": "28815-9000",
         "logo_source": "https://www.warren-wilson.edu"
     },
-    "Washington & Lee University": {
-        "admissions_office": "Office of Admissions",
-        "website": "https://www.wlu.edu/admissions",
-        "admissions_email": "admissions@wlu.edu",
-        "admissions_phone": "(540) 458-8710",
-        "address_line1": "204 West Washington Street",
-        "address_line2": null,
-        "city": "Lexington",
-        "state": "VA",
-        "postal_code": "24450-2116",
-        "logo_source": "https://www.wlu.edu",
-        "note": "Same institution as the 'Washington and Lee University' row; the two names do not normalize together. Merge candidate."
-    },
     "Washington College": {
         "admissions_office": "Office of Admissions",
         "website": "https://www.washcoll.edu/admissions/index.php",
@@ -1828,8 +1815,7 @@
         "city": "Lexington",
         "state": "VA",
         "postal_code": "24450-2116",
-        "logo_source": "https://www.wlu.edu",
-        "note": "Same institution as the 'Washington & Lee University' row; the two names do not normalize together. Merge candidate."
+        "logo_source": "https://www.wlu.edu"
     },
     "Wesleyan College": {
         "admissions_office": "Office of Admission",

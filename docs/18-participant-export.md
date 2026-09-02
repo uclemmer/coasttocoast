@@ -52,7 +52,7 @@ Three files:
 | File | Job |
 |---|---|
 | `database/seeders/ParticipantExportSeeder.php` | Abstract. Reads the export, decides which submissions are one organization, orders them |
-| `database/seeders/OrganizationSeeder.php` | 158 organizations |
+| `database/seeders/OrganizationSeeder.php` | 157 organizations |
 | `database/seeders/RegistrationSeeder.php` | 354 places at four fairs |
 
 ```bash
@@ -79,9 +79,9 @@ invents nothing and is safe on every deploy; `SeederTest` asserts it creates zer
 zero registrations. Loading a roster is a deliberate one-off — these two by name, or
 `fair:import-roster` — not something that should happen again every time someone deploys.
 
-The two seeders overlap the fixtures in dev: 18 of the 158 organizations already exist by name from
+The two seeders overlap the fixtures in dev: 18 of the 157 organizations already exist by name from
 `FairFixtureSeeder`, and 19 of the 354 registrations are already held by fixture rows. Those are
-matched and left alone, which is why a development seed reports 140 created rather than 158.
+matched and left alone, which is why a development seed reports 139 created rather than 157.
 
 ## The judgements
 
@@ -110,7 +110,7 @@ here for the same reason they are one in the application. That collapses 182 sub
 Where several spellings survive normalizing, the **most frequently submitted one wins** and a tie
 goes to the most recent — the organization's own latest word on how it writes its name.
 
-Fourteen entries in `CANONICAL_NAMES` handle what normalizing cannot see, taking 170 down to 158:
+Fifteen entries in `CANONICAL_NAMES` handle what normalizing cannot see, taking 170 down to 157:
 an abbreviation (`UAH`), truncated form fills (`Rh`, `Valdosta State Univer`), a typo that outlived
 three fairs (`Middle Tennessee State Unviersity`), parentheticals and campus suffixes. **Every entry
 is evidenced by the submissions sharing an email domain**, and every one was checked not to merge
@@ -131,8 +131,8 @@ This is the judgement most worth knowing about, because it writes a person's wor
 column named for an office inbox.
 
 `AudienceBuilder` drops an organization with no active rep and no `admissions_email` from every
-campaign, and logs the drop (doc 07 §2 rule 1). None of these 158 organizations has an account
-behind it. Leaving the column null would therefore seed 158 organizations that no win-back list can
+campaign, and logs the drop (doc 07 §2 rule 1). None of these 157 organizations has an account
+behind it. Leaving the column null would therefore seed 157 organizations that no win-back list can
 ever reach — the exact failure importing history exists to prevent, arriving quietly as a log line
 nobody reads.
 
@@ -222,7 +222,7 @@ data it carried is in the database by then.
 | `college-fair-2024` | 87 |
 | `college-fair-2025` | 99 |
 | `college-fair-2026` | 96 |
-| **Total** | **354**, across 158 organizations |
+| **Total** | **354**, across 157 organizations |
 
 `tests/Feature/Foundation/ParticipantExportSeederTest.php` — 30 tests — pins all of it: the counts
 per fair, the collapsing of duplicate submissions, each entry in the canonical-name map, the pair
@@ -236,7 +236,7 @@ run on a machine without it has proved nothing about the roster — read the ski
 
 - **The 2022 roster.** Not in this export. The fair is seeded and empty; if a 2022 list exists,
   `fair:import-roster` is still the way in.
-- **Institutional detail.** Websites and addresses for all 158 organizations. Nothing needs them to
+- **Institutional detail.** Websites and addresses for all 157 organizations. Nothing needs them to
   work, but a roster entry with a website is worth more than one without.
 - **Near-duplicates for the merge queue.** A handful of organizations are plausibly the same
   institution under names that neither normalizing nor the canonical map can join. They are

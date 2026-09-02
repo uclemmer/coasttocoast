@@ -47,6 +47,34 @@ class OrganizationFactory extends Factory
         return $this->state(fn (array $attributes) => ['admissions_email' => null]);
     }
 
+    /**
+     * An organization with a name and nothing else about the institution.
+     *
+     * For fixtures that name a REAL college. The invented website, inbox,
+     * phone and address are fine on an invented name and actively wrong on a
+     * real one — and because `OrganizationSeeder` and `AdmissionsOfficeSeeder`
+     * both only fill columns that are EMPTY, an invented value does not merely
+     * sit there looking odd: it blocks the researched one from ever landing.
+     * That is how `https://sawayn.com` ended up on Rhodes College.
+     *
+     * Note this does not clear `name`, which is the point, or `logo_path`,
+     * which the factory leaves null anyway.
+     */
+    public function withoutInstitutionalProfile(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'website' => null,
+            'admissions_office' => null,
+            'admissions_email' => null,
+            'admissions_phone' => null,
+            'address_line1' => null,
+            'address_line2' => null,
+            'city' => null,
+            'state' => null,
+            'postal_code' => null,
+        ]);
+    }
+
     public function withLogo(): static
     {
         return $this->state(fn (array $attributes) => [

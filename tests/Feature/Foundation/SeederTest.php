@@ -217,6 +217,52 @@ describe('the development seed', function () {
             ->and(EventInterest::query()->whereNotNull('notified_at')->count())->toBeGreaterThan(0);
     });
 
+    it('invents nothing about an organization that is a real institution', function () {
+        // The fixtures name real colleges so the development roster is worth
+        // looking at, and the factory invents a website, an inbox, a phone and
+        // an address to go with the name. On an invented name that is
+        // placeholder data; on a real one it is wrong data — and because both
+        // real-data seeders only fill columns that are EMPTY, it also blocks
+        // the researched value from ever landing. Twenty-six organizations
+        // carried faker output, `https://sawayn.com` on Rhodes College among
+        // them, while the real admissions page sat in the seed data unused.
+        //
+        // Asserted over the whole seed rather than per seeder on purpose: every
+        // seeder involved was correct on its own, and only running them
+        // together shows it.
+        $researched = json_decode(
+            (string) file_get_contents(base_path('database/seeders/data/admissions-offices.json')),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        $disagreements = collect($researched)
+            ->mapWithKeys(fn (array $office, string $name): array => [
+                Organization::normalizeName($name) => $office,
+            ])
+            ->map(function (array $office, string $key): array {
+                $organization = Organization::query()->where('normalized_name', $key)->first();
+
+                if (! $organization instanceof Organization) {
+                    return [];
+                }
+
+                return collect(['website', 'admissions_email', 'admissions_phone', 'city'])
+                    ->filter(fn (string $column): bool => filled($office[$column] ?? null)
+                        && filled($organization->{$column})
+                        && $organization->{$column} !== $office[$column])
+                    ->mapWithKeys(fn (string $column): array => [
+                        $column => $organization->{$column}.' should be '.$office[$column],
+                    ])
+                    ->all();
+            })
+            ->filter()
+            ->all();
+
+        expect($disagreements)->toBe([]);
+    });
+
     it('does not duplicate its fixtures when run again', function () {
         $before = Organization::query()->count();
 

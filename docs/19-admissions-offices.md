@@ -3,12 +3,12 @@
 **2026-09-01.** Doc 18 imported the roster and said, in as many words, what it
 could not fill in: the participant export described a *person* — a
 representative's name, work address and mobile — and knew nothing about the
-institution. Every one of the 158 organizations landed with a null `website`,
+institution. Every one of the 157 organizations landed with a null `website`,
 `admissions_office` and address, and with a representative's own email sitting
 in `admissions_email` because that was the only address available and an
 organization with none is dropped from every campaign.
 
-This closes that gap. **157 of the 158 organizations now carry their admissions
+This closes that gap. **156 of the 157 organizations now carry their admissions
 office**: which office it is, its page, its own address, its own phone number
 and its own inbox.
 
@@ -19,7 +19,7 @@ The distinction is the point, and it decided every field:
 | Column | What went in | What deliberately did not |
 |---|---|---|
 | `website` | The admissions office's page — `admissions.vanderbilt.edu/contact/` | The institution's front door, `vanderbilt.edu` |
-| `admissions_office` | The office's own name, as it styles itself: "Office of Undergraduate Admission", "SCAD Admission Department", "Admissions and Records" | A generic label applied to all 157 |
+| `admissions_office` | The office's own name, as it styles itself: "Office of Undergraduate Admission", "SCAD Admission Department", "Admissions and Records" | A generic label applied to all 156 |
 | `admissions_email` | The office's published inbox — `apply@admission.clemson.edu` | The campus switchboard's `info@`, or a named person's address |
 | `admissions_phone` | The admissions line | The university's main number |
 | address | The admissions mailroom — a PO box or a named hall, which is frequently *not* the campus street address | The institution's postal address |
@@ -29,21 +29,21 @@ That is what is in there.
 
 ## Coverage
 
-`database/seeders/data/admissions-offices.json`, 157 records:
+`database/seeders/data/admissions-offices.json`, 156 records:
 
 | Field | Filled |
 |---|---|
-| `admissions_office` | 157 / 157 |
-| `website` | 157 / 157 |
-| `admissions_phone` | 156 / 157 |
-| `city` | 156 / 157 |
-| `address_line1` | 155 / 157 |
-| `state` | 155 / 157 |
-| `postal_code` | 150 / 157 |
-| `admissions_email` | **144 / 157** |
-| `logo_source` | 157 / 157 |
+| `admissions_office` | 156 / 156 |
+| `website` | 156 / 156 |
+| `admissions_phone` | 155 / 156 |
+| `city` | 155 / 156 |
+| `address_line1` | 154 / 156 |
+| `state` | 154 / 156 |
+| `postal_code` | 149 / 156 |
+| `admissions_email` | **143 / 156** |
+| `logo_source` | 156 / 156 |
 
-**The 158th is `JROTC`**, which submitted from an `aol.com` address. It is not
+**The 157th is `JROTC`**, which submitted from an `aol.com` address. It is not
 an institution and has no admissions office to look up, so it has no record and
 keeps the representative's address. It is a candidate for deletion or for
 merging into whichever school's unit it was, and that is the coordinator's call.
@@ -98,22 +98,71 @@ in development — Sewanee is a fixture organization with an invented address �
 but it would happen to any organization whose rep filled in half a profile. So
 the address is written only onto an organization that has none of it.
 
-It **replaces** `admissions_email` and `admissions_phone` under one narrow rule:
-only when the value sitting there is one of that organization's own
-`registrations.rep_email` / `rep_phone` values. That is exactly the fingerprint
-of `OrganizationSeeder` having copied a representative's address up into the
-office column — it needs no provenance flag, it survives the export being
-absent, and it cannot match something a coordinator typed. Anything else is a
-deliberate entry and is left alone.
+It **replaces** `admissions_email` and `admissions_phone` only where the value
+sitting there is one a representative gave rather than one a person chose. That
+is asked two ways, and the second exists because the first was not enough:
 
-Idempotent, and safe to run in any order relative to the other two.
+1. The value matches one of that organization's own `registrations.rep_email` /
+   `rep_phone` values. Enough on a real host, and it needs nothing but the
+   database.
+2. The value appears in the participant export for that organization at all.
+   Consulted only when the export is on the machine, which is why
+   `AdmissionsOfficeSeeder` extends `ParticipantExportSeeder`.
 
-**In development the fixtures win, and that is correct.** `FairFixtureSeeder`
-invents eighteen organizations whose names are real institutions — Vanderbilt,
-Rhodes, Belmont — with faker websites and addresses. The seeder will not
-overwrite them, so a local database shows Vanderbilt with a `hoeger.com`
-website. Production has no fixtures, so it does not arise there; the alternative
-would be a seeder that talks over existing data, which is worse.
+Anything matching neither is a deliberate entry and is left alone.
+
+Idempotent, and it must run **after** `OrganizationSeeder` — it only updates
+organizations that already exist, and the value it replaces is the one that
+seeder wrote.
+
+### Why check (2) had to exist
+
+Check (1) is right about a real host and wrong in development, and the reason
+generalises past this seeder. `OrganizationSeeder` takes an organization's
+address from its **latest** submission; `RegistrationSeeder` **skips a fair the
+organization is already registered for**. When a fixture holds that year, the
+address is real and the registration that would prove where it came from was
+never written — so the fingerprint looks for something that does not exist.
+
+Seven organizations sat on a named representative's personal address with the
+published inbox available and unused: Appalachian State, Belmont, Berry, Emory,
+Rhodes, Vanderbilt, Wofford. Each individually explicable, none visible without
+comparing the seeded rows against the source file — which is now
+`SeederTest`'s job.
+
+## The fixtures do not invent institutions any more
+
+**Owner, 2026-09-01**, overruling this doc's earlier position that "in
+development the fixtures win, and that is correct". They do not, and it was not.
+
+`FairFixtureSeeder` names its organizations after real colleges so a local
+roster is worth looking at, and `OrganizationFactory` invented a website, an
+inbox, a phone and an address to go with each name. On an invented name that is
+placeholder data. On a real one it is **wrong** data — and because both
+real-data seeders only fill columns that are EMPTY, it did not merely sit there
+looking odd, it blocked the researched value from ever landing. Twenty-six
+organizations carried faker output, `https://sawayn.com` on Rhodes College among
+them, while the real admissions page sat in the seed data unused.
+
+The fix is at the source: `OrganizationFactory::withoutInstitutionalProfile()`,
+applied by `FairFixtureSeeder::organization()` to every organization it creates.
+A fixture organization now has a real name and nothing else claimed about the
+institution behind it, and the real-data seeders fill in the rest. Whatever
+neither covers — Bryan College, Hendrix, Millsaps and the handful of fixture
+organizations that never attended a real fair — stays visibly empty in
+`/staff/organizations`, which is a gap a coordinator can close rather than a
+plausible-looking lie nobody thinks to check.
+
+One organization sets its own contact detail: `Maryville College` needs a
+generic address for the campaign-fallback fixture to mean anything, so it is set
+here rather than left to this seeder. It is Maryville's real published inbox
+rather than an invented one, so it agrees with the researched data instead of
+blocking it — and `SeederTest` fails if the two ever drift apart.
+
+**Nothing about production changed.** Verified rather than assumed: seeded
+without fixtures, all 157 organizations and 156 contact upgrades land and
+nothing disagrees with the source file. The bug only ever existed where fixtures
+and real institutions shared a database.
 
 ## Logos
 
@@ -127,7 +176,7 @@ php artisan fair:fetch-organization-logos             # fetch and store
 ```
 
 **The logo URL is discovered, not recorded**, and that was a deliberate choice
-over hand-collecting 157 image URLs. A hand-collected list is 157 guesses at a
+over hand-collecting 156 image URLs. A hand-collected list is 156 guesses at a
 path that changes whenever a university touches its stylesheet, and the failure
 is silent: the URL 404s and the roster tile quietly falls back to a letter. The
 command reads each institution's own metadata instead, from the `logo_source` in
@@ -189,10 +238,21 @@ Two known specifics worth carrying forward:
   `-cmg@`, `-ocn@`). Dahlonega is recorded as the primary campus; if the rep who
   attends is from another, that is a one-field edit.
 
-`Washington & Lee University` and `Washington and Lee University` are still two
-rows with identical office details — the same institution under two spellings
-that do not normalize together. Doc 18 left it for `/staff/organizations` →
-Merge, and this did not change that.
+`Washington & Lee University` and `Washington and Lee University` were two rows
+with identical office details — the same institution under two spellings that do
+not normalize together. **Resolved 2026-09-01** (owner): the ampersand spelling
+is now a `CANONICAL_NAMES` entry in `ParticipantExportSeeder`, the two rows here
+are collapsed into one, and the organization seeds once as `Washington and Lee
+University` carrying both its fairs. Nothing is left for the Merge action.
+
+It is worth knowing how it was found, because none of the guards could see it.
+`normalizeName()` strips `&` to a space, so `X & Y` and `X and Y` normalize to
+different strings and **can never collide** — the duplicate warning is blind to
+the pair, and so is this file's own "no organization twice under a different
+spelling" test, which only looks for two keys normalizing alike. What surfaced
+it was two rows sharing a byte-identical logo. The other pair of this shape,
+Missouri University of Science and Technology, was caught earlier the same way
+and is already in that map.
 
 ## Tests
 

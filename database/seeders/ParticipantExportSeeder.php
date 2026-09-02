@@ -108,9 +108,19 @@ abstract class ParticipantExportSeeder extends Seeder
         'sewanee the university of the south' => 'Sewanee: The University of the South',
         'university of the south' => 'Sewanee: The University of the South',
 
-        // Both spellings appear twice, so frequency cannot decide it. The
-        // spelled-out form is the institution's own.
+        // An ampersand against the word "and". `normalizeName()` strips "&" to
+        // a space, so "X & Y" and "X and Y" normalize to different strings and
+        // can NEVER collide however many times they are submitted — the
+        // duplicate warning cannot see this pair, and neither can a test that
+        // only looks for two names normalizing alike. Both resolve to the
+        // institution's own spelled-out form.
+        //
+        // Missouri appears twice each way, so frequency could not decide it.
+        // Washington and Lee is one submission each way, at DIFFERENT fairs —
+        // 2025 under the word, 2026 under the ampersand — so merging them keeps
+        // both registrations. It was found by two rows sharing a logo.
         'missouri university of science technology' => 'Missouri University of Science and Technology',
+        'washington lee university' => 'Washington and Lee University',
 
         // "The" is part of this campus's official name and the majority
         // spelling in the export either way.

@@ -101,7 +101,7 @@ class FairFixtureSeeder extends Seeder
         $organizations = [];
 
         foreach ($names as $name) {
-            $organization = Organization::factory()->named($name)->create();
+            $organization = $this->organization($name);
             $rep = User::factory()->rep($organization)->create();
 
             foreach ([$fair2025, $fair2026, $fair2027] as $fair) {
@@ -123,14 +123,14 @@ class FairFixtureSeeder extends Seeder
     protected function lapsedOrganizations(Event $fair2025, Event $fair2026): void
     {
         foreach (['Berry College', 'Emory University', 'Mercer University', 'Wofford College'] as $name) {
-            $organization = Organization::factory()->named($name)->create();
+            $organization = $this->organization($name);
             $rep = User::factory()->rep($organization)->create();
             $this->register($fair2025, $organization, $rep);
             $this->register($fair2026, $organization, $rep);
         }
 
         foreach (['Hendrix College', 'Millsaps College'] as $name) {
-            $organization = Organization::factory()->named($name)->create();
+            $organization = $this->organization($name);
             $rep = User::factory()->rep($organization)->create();
             $this->register($fair2025, $organization, $rep);
         }
@@ -143,7 +143,7 @@ class FairFixtureSeeder extends Seeder
      */
     protected function organizationWithMessyMembership(Event $fair2027): void
     {
-        $organization = Organization::factory()->named('University of Tennessee at Chattanooga')->create();
+        $organization = $this->organization('University of Tennessee at Chattanooga');
 
         $active = User::factory()->rep($organization)->create(['name' => 'Dana Whitfield']);
         User::factory()->pendingRep($organization)->create(['name' => 'Priya Raman']);
@@ -159,13 +159,23 @@ class FairFixtureSeeder extends Seeder
      */
     protected function organizationsWithNoActiveReps(Event $fair2026): void
     {
-        $reachable = Organization::factory()->named('Maryville College')->create([
-            'admissions_email' => 'admissions@maryvillecollege.example',
+        // The one fixture organization that must carry a generic address for its
+        // case to exist at all, so it is set here rather than left to
+        // `AdmissionsOfficeSeeder` — this seeder has to hold up run on its own.
+        // It is Maryville's real published inbox, not an invented one, so it
+        // agrees with the researched data instead of blocking it; `SeederTest`
+        // fails if the two ever drift apart.
+        $reachable = $this->organization('Maryville College', [
+            'admissions_email' => 'admissions@maryvillecollege.edu',
         ]);
         $retired = User::factory()->retiredRep($reachable)->create();
         $this->register($fair2026, $reachable, $retired);
 
-        $unreachable = Organization::factory()->named('Bryan College')->withoutAdmissionsEmail()->create();
+        // `withoutAdmissionsEmail()` is redundant beside `organization()` and
+        // kept anyway: this organization's null address is the fixture case,
+        // not an accident of how it was built.
+        $unreachable = Organization::factory()->named('Bryan College')
+            ->withoutInstitutionalProfile()->withoutAdmissionsEmail()->create();
         $goneEntirely = User::factory()->retiredRep($unreachable)->create();
         $this->register($fair2026, $unreachable, $goneEntirely);
     }
@@ -176,8 +186,8 @@ class FairFixtureSeeder extends Seeder
      */
     protected function duplicateNamedOrganizations(): void
     {
-        Organization::factory()->named('The University of Example')->create();
-        Organization::factory()->named('University of Example')->create();
+        $this->organization('The University of Example');
+        $this->organization('University of Example');
     }
 
     /**
@@ -191,7 +201,7 @@ class FairFixtureSeeder extends Seeder
         $coordinator = $this->coordinator();
 
         // Approved and free — the registration confirms with no payment at all.
-        $freeOrganization = Organization::factory()->named('Southern Adventist University')->create();
+        $freeOrganization = $this->organization('Southern Adventist University');
         $freeRep = User::factory()->rep($freeOrganization)->create();
         $freeGrant = Grant::factory()->free()->for($freeOrganization)->for($fair2027)
             ->create(['requested_by' => $freeRep->id, 'decided_by' => $coordinator?->id]);
@@ -214,19 +224,19 @@ class FairFixtureSeeder extends Seeder
         ]);
 
         // Pending — the coordinator's review queue has something in it.
-        $pendingOrganization = Organization::factory()->named('Tennessee Wesleyan University')->create();
+        $pendingOrganization = $this->organization('Tennessee Wesleyan University');
         $pendingRep = User::factory()->rep($pendingOrganization)->create();
         Grant::factory()->for($pendingOrganization)->for($fair2027)->create(['requested_by' => $pendingRep->id]);
 
         // Denied, with a reason — the decision email needs one.
-        $deniedOrganization = Organization::factory()->named('Lee University')->create();
+        $deniedOrganization = $this->organization('Lee University');
         $deniedRep = User::factory()->rep($deniedOrganization)->create();
         Grant::factory()->denied()->for($deniedOrganization)->for($fair2027)
             ->create(['requested_by' => $deniedRep->id, 'decided_by' => $coordinator?->id]);
 
         // Revoked while unused — revoking a used one is blocked, so this
         // organization has no registration against it.
-        $revokedOrganization = Organization::factory()->named('Carson-Newman University')->create();
+        $revokedOrganization = $this->organization('Carson-Newman University');
         $revokedRep = User::factory()->rep($revokedOrganization)->create();
         Grant::factory()->revoked()->for($revokedOrganization)->for($fair2027)
             ->create(['requested_by' => $revokedRep->id, 'decided_by' => $coordinator?->id]);
@@ -243,7 +253,7 @@ class FairFixtureSeeder extends Seeder
     protected function awkwardRegistrations(Event $fair2027): void
     {
         foreach (['Union University', 'Bethel University'] as $name) {
-            $organization = Organization::factory()->named($name)->create();
+            $organization = $this->organization($name);
             $rep = User::factory()->rep($organization)->create();
 
             Registration::factory()->pendingCheck()->forEvent($fair2027)->forOrganization($organization)->create([
@@ -254,7 +264,7 @@ class FairFixtureSeeder extends Seeder
             ]);
         }
 
-        $cancelled = Organization::factory()->named('Trevecca Nazarene University')->create();
+        $cancelled = $this->organization('Trevecca Nazarene University');
         $cancelledRep = User::factory()->rep($cancelled)->create();
         Registration::factory()->cancelled()->forEvent($fair2027)->forOrganization($cancelled)->create([
             'user_id' => $cancelledRep->id,
@@ -264,7 +274,7 @@ class FairFixtureSeeder extends Seeder
             'notes' => 'Cancelled by the organization; travel budget cut.',
         ]);
 
-        $hidden = Organization::factory()->named('Covenant College')->create();
+        $hidden = $this->organization('Covenant College');
         $hiddenRep = User::factory()->rep($hidden)->create();
         $this->register($fair2027, $hidden, $hiddenRep)->update([
             'show_on_roster' => false,
@@ -272,7 +282,7 @@ class FairFixtureSeeder extends Seeder
         ]);
 
         // A coordinator's manual entry: no account behind it, only the snapshot.
-        $manual = Organization::factory()->named('Dalton State College')->create();
+        $manual = $this->organization('Dalton State College');
         Registration::factory()->manualEntry()->forEvent($fair2027)->forOrganization($manual)->create([
             'price_cents' => $fair2027->price_cents,
             'rep_name' => 'Kim Alvarado',
@@ -290,6 +300,32 @@ class FairFixtureSeeder extends Seeder
     {
         EventInterest::factory()->count(4)->for($fair2027)->create();
         EventInterest::factory()->notified()->for($fair2027)->create();
+    }
+
+    /**
+     * A fixture organization: a real institution's name, and nothing invented
+     * about the institution behind it.
+     *
+     * Every organization here is named after a real college, because a
+     * development roster reading "Ferry-Bergnaum State University" is no use for
+     * looking at. The factory's invented website, inbox, phone and address are
+     * the problem — on a real name they are not placeholder data, they are
+     * WRONG data, and because both real-data seeders only fill columns that are
+     * empty, they also stop the researched values from ever landing. Eighteen of
+     * these names are also in the participant export, so eighteen organizations
+     * were showing `https://sawayn.com` where `AdmissionsOfficeSeeder` had the
+     * real admissions page ready to write.
+     *
+     * Blank instead. `OrganizationSeeder` and `AdmissionsOfficeSeeder` fill them
+     * in afterwards, and whatever neither covers stays visibly empty in
+     * `/staff/organizations` — which is a gap a coordinator can close, rather
+     * than a plausible-looking lie nobody thinks to check.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function organization(string $name, array $attributes = []): Organization
+    {
+        return Organization::factory()->named($name)->withoutInstitutionalProfile()->create($attributes);
     }
 
     /**

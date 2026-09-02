@@ -268,15 +268,23 @@ re-running never overwrites edited copy:
 | `EventSeeder` | the fair calendar: 2022–2026 published and past, 2027 unpublished | both |
 | `FairFixtureSeeder` | organizations, reps, three years of registrations, grants in every status, the awkward cases | **dev only** |
 
+`FairFixtureSeeder` names its organizations after real colleges but **claims
+nothing else about them** — no website, inbox, phone or address (doc 19). The
+factory invents all four, and on a real institution's name that is not
+placeholder data but wrong data, which then blocks the researched value because
+the real-data seeders only fill columns that are empty. Use
+`FairFixtureSeeder::organization()` rather than `Organization::factory()->named()`
+for anything new there.
+
 Two more joined them on 2026-09-01, when the owner's roster export finally arrived (doc 18). They
 are real history rather than fixtures, and they run **last** — `FairFixtureSeeder` does nothing at
 all if any organization exists, so seeding the history first would silently cost the fixtures.
 
 | Seeder | What it writes | Runs in |
 |---|---|---|
-| `OrganizationSeeder` | 158 organizations from `storage/app/private/participants.json` | **dev only**, plus by hand on a real host |
+| `OrganizationSeeder` | 157 organizations from `storage/app/private/participants.json` | **dev only**, plus by hand on a real host |
 | `RegistrationSeeder` | their 354 places at the 2023–2026 fairs | **dev only**, plus by hand on a real host |
-| `AdmissionsOfficeSeeder` | the admissions office behind 157 of them — office, page, address, phone, inbox (doc 19) | **dev only**, plus by hand on a real host |
+| `AdmissionsOfficeSeeder` | the admissions office behind 156 of them — office, page, address, phone, inbox (doc 19) | **dev only**, plus by hand on a real host |
 
 That export is real contact data and is **not in the repository** — `storage/app/private` is
 gitignored, so the first two are the only seeders that can find nothing to do. `DatabaseSeeder`

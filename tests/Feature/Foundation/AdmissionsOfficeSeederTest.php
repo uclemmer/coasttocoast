@@ -3,6 +3,7 @@
 use App\Models\Organization;
 use App\Models\Registration;
 use Database\Seeders\AdmissionsOfficeSeeder;
+use Database\Seeders\ParticipantExportSeeder;
 use Illuminate\Support\Str;
 
 /**
@@ -145,6 +146,44 @@ describe('replacing what the export put there', function () {
             ->city->toBe('Somewhere Else');
     });
 
+    it('replaces an address the export supplied even when no registration proves it', function () {
+        // The gap the registration check alone leaves. `OrganizationSeeder`
+        // takes an organization's address from its LATEST submission, and
+        // `RegistrationSeeder` skips a fair the organization is already
+        // registered for — so a fixture holding that year means the address is
+        // real and nothing in the database says where it came from. Seven
+        // organizations sat on a representative's personal address because of
+        // it, with the published inbox available and unused.
+        $organization = Organization::factory()->named('Rhodes College')->create([
+            'admissions_email' => 'glovers@rhodes.edu',
+            'website' => null,
+        ]);
+
+        // Deliberately a DIFFERENT address: the fixture that claimed the year.
+        Registration::factory()->forOrganization($organization)->create([
+            'rep_email' => 'someone.else@example.org',
+        ]);
+
+        $this->seed(AdmissionsOfficeSeeder::class);
+
+        expect($organization->fresh()->admissions_email)->toBe('adminfo@rhodes.edu');
+    })->skip(
+        fn (): bool => ! ParticipantExportSeeder::available(),
+        'Needs the participant export, which is the source this rule consults.',
+    );
+
+    it('still refuses to touch an address nobody submitted', function () {
+        // The other half: the rule got broader, not indiscriminate. A
+        // coordinator's own entry is not in the export and is not replaced.
+        $organization = Organization::factory()->named('Rhodes College')->create([
+            'admissions_email' => 'ask-me-first@rhodes.edu',
+        ]);
+
+        $this->seed(AdmissionsOfficeSeeder::class);
+
+        expect($organization->fresh()->admissions_email)->toBe('ask-me-first@rhodes.edu');
+    });
+
     it('fills a blank contact column even with no registration to compare against', function () {
         $organization = Organization::factory()->named('Skidmore College')->create([
             'admissions_email' => null,
@@ -195,7 +234,7 @@ describe('the researched data itself', function () {
     it('covers every organization with an office and a page', function () {
         $offices = admissionsOfficeData();
 
-        expect($offices)->toHaveCount(157)
+        expect($offices)->toHaveCount(156)
             ->and(collect($offices)->whereNull('admissions_office'))->toBeEmpty()
             ->and(collect($offices)->whereNull('website'))->toBeEmpty();
     });

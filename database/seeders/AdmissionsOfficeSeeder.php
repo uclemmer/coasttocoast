@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Organization;
-use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use RuntimeException;
 
@@ -13,7 +12,7 @@ use RuntimeException;
  * The participant export gave us a person — a representative's name, work
  * address and mobile — and nothing about the institution (doc 18). This fills
  * the rest in: which office handles admissions, its page, its own address,
- * its own phone number and its own inbox, for the 157 organizations that have
+ * its own phone number and its own inbox, for the 156 organizations that have
  * one.
  *
  * **It is the office, not the university.** `website` is the admissions page
@@ -54,20 +53,35 @@ use RuntimeException;
  * (doc 07 §2 rule 1). A real office inbox is strictly better, so those get
  * replaced.
  *
- * The replacement is narrow on purpose. It happens only when the value sitting
- * there is one of that organization's own `registrations.rep_email` values —
- * that is exactly the fingerprint of `OrganizationSeeder` having copied it up,
- * it needs no provenance column, and it cannot match an address a coordinator
- * typed. Everything else is gap-filling: a column that already has something in
- * it is left alone.
+ * The replacement is narrow on purpose: it happens only where the value is one
+ * a representative gave rather than one a person chose. That is asked of the
+ * registrations first, and of the export itself second — see
+ * `cameFromASubmission()` for why the database alone is not enough, and why
+ * getting it wrong left seven organizations on a named individual's personal
+ * address with the published inbox sitting unused. Everything else is
+ * gap-filling: a column that already says something is left alone.
  *
  * `logo_path` is deliberately untouched — see `fair:fetch-organization-logos`,
  * which is a separate command because it downloads files.
  *
- * Idempotent, and safe to run before or after `OrganizationSeeder`.
+ * Idempotent, and must run AFTER `OrganizationSeeder`: it only ever updates
+ * organizations that already exist, and its replacement rule reads what that
+ * seeder wrote.
+ *
+ * It extends `ParticipantExportSeeder` for one narrow reason — it needs to
+ * recognise a contact detail that came out of the export in order to replace
+ * it, and `cameFromASubmission()` explains why the database alone cannot always
+ * tell. It seeds nothing from the export itself and works without it.
  */
-class AdmissionsOfficeSeeder extends Seeder
+class AdmissionsOfficeSeeder extends ParticipantExportSeeder
 {
+    /**
+     * Memoised contacts from the export, or an empty map where it is absent.
+     *
+     * @var array<string, array<string, list<string>>>|null
+     */
+    protected ?array $submittedContacts = null;
+
     /**
      * The columns this seeder fills one at a time, and never overwrites.
      *
@@ -188,9 +202,8 @@ class AdmissionsOfficeSeeder extends Seeder
     /**
      * A representative's own contact details, replaced by the office's.
      *
-     * Blank is filled. A value that matches one of this organization's own
-     * registration contacts is replaced, because that is `OrganizationSeeder`'s
-     * fingerprint. Anything else is somebody's deliberate entry and is left.
+     * Blank is filled. A value `OrganizationSeeder` copied up off a submission
+     * is replaced. Anything else is somebody's deliberate entry and is left.
      *
      * @param  array<string, string|null>  $office
      * @return array<string, string>
@@ -201,21 +214,77 @@ class AdmissionsOfficeSeeder extends Seeder
 
         foreach (['admissions_email' => 'rep_email', 'admissions_phone' => 'rep_phone'] as $column => $repColumn) {
             $offered = $office[$column] ?? null;
+            $current = $organization->{$column};
 
-            if (blank($offered) || $organization->{$column} === $offered) {
+            if (blank($offered) || $current === $offered) {
                 continue;
             }
 
-            $fromTheExport = $organization->registrations()
-                ->where($repColumn, $organization->{$column})
-                ->exists();
-
-            if (blank($organization->{$column}) || $fromTheExport) {
+            if (blank($current) || $this->cameFromASubmission($organization, $repColumn, (string) $current)) {
                 $upgrades[$column] = $offered;
             }
         }
 
         return $upgrades;
+    }
+
+    /**
+     * Whether a value is one a representative gave, rather than one a person
+     * chose — the fingerprint that makes replacing it safe.
+     *
+     * Asked of the registrations first, which is enough on a real host and
+     * needs nothing but the database. It is NOT enough in development, and the
+     * reason is worth keeping: `OrganizationSeeder` takes an organization's
+     * address from its LATEST submission, while `RegistrationSeeder` skips any
+     * fair the organization is already registered for. So when a fixture has
+     * claimed the year that submission belongs to, the address is real and the
+     * registration proving where it came from was never written — and seven
+     * organizations sat on a representative's personal address with the
+     * published inbox available and unused.
+     *
+     * So the export is asked too, when it is there. It is the actual source of
+     * these values, and consulting it is what makes the rule correct rather
+     * than correct-unless-something-else-got-there-first.
+     */
+    protected function cameFromASubmission(Organization $organization, string $repColumn, string $value): bool
+    {
+        if ($organization->registrations()->where($repColumn, $value)->exists()) {
+            return true;
+        }
+
+        return in_array($value, $this->submittedContacts()[$organization->normalized_name][$repColumn] ?? [], true);
+    }
+
+    /**
+     * Every contact detail the export carries, per organization.
+     *
+     * Empty when the export is not on this machine, which is the ordinary state
+     * of a fresh clone (doc 18) — the registration check above still covers a
+     * host that has actually seeded a roster.
+     *
+     * @return array<string, array<string, list<string>>>
+     */
+    protected function submittedContacts(): array
+    {
+        if ($this->submittedContacts !== null) {
+            return $this->submittedContacts;
+        }
+
+        if (! static::available()) {
+            return $this->submittedContacts = [];
+        }
+
+        $contacts = [];
+
+        foreach ($this->submissions() as $submission) {
+            $contacts[$submission['organization_key']]['rep_email'][] = $submission['rep_email'];
+
+            if (filled($submission['rep_phone'])) {
+                $contacts[$submission['organization_key']]['rep_phone'][] = $submission['rep_phone'];
+            }
+        }
+
+        return $this->submittedContacts = $contacts;
     }
 
     /**

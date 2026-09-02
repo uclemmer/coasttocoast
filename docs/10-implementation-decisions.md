@@ -1392,9 +1392,24 @@ is explicit that a later profile edit must not rewrite them. Ordering through a 
 sort nothing at all for a recipient whose organization has since been merged away. A test pins it:
 rename the organization after the send, and the recipient row keeps the key it was frozen with.
 
-**Nullable, unlike `organizations.sort_name`.** An interest-list recipient is a bare address with no
-organization, so the snapshot is null and the key is null — which keeps those rows sorting first,
-exactly where they sort today. Defaulting to an empty string would have claimed an organization
-named nothing, and would have been indistinguishable from one.
+**Nullable, unlike `organizations.sort_name`.** `organization_name` is itself nullable, so the key
+follows it: no name, no key, and those rows sort first exactly where they sort today. Defaulting to
+an empty string would have claimed an organization named nothing, and would have been
+indistinguishable from one.
 
-`event_interests.organization_name` is untouched. Nothing orders on it.
+**Correcting this entry as first written**, because the mistake is worth keeping: it said the null
+case *is* the interest list. It is not. `AudienceBuilder::fromInterestList()` passes
+`$interest->organization_name` straight through, and the public interest form collects one — it is
+optional, not absent. So an interest-list signup that typed "The University of Alabama at
+Birmingham" gets a key and files with the other campuses; only one that left the field blank sorts
+first. The delivery table renders `organization_name ?? 'Interest list'`, and that label means *no
+name given*, not *came from the interest list* — the phrase in the view is what misled the entry.
+An extra test now covers the named-interest path, which nothing had exercised.
+
+**`event_interests.organization_name` was considered for the same treatment and declined**
+(2026-09-02). Nothing lists that table: it is counted on `Staff\Events\Show`, iterated unordered to
+notify, and read by `AudienceBuilder`. The only place its names appear in an ordered list is the
+delivery table, which sorts them through the recipient key above — so a third column would be
+indexed, hooked, migrated and read by nothing. The package roadmap's rule applies here too: a rule
+with no case to serve rots. **What would change the answer** is a `/staff` screen for the interest
+list, which does not exist today; build the column with it, not before it.

@@ -22,9 +22,10 @@ use Illuminate\Support\Facades\Schema;
  * year's names, and would order nothing at all for a recipient whose
  * organization has since been merged away.
  *
- * **Nullable, unlike `organizations.sort_name`.** An interest-list recipient
- * genuinely has no organization, so `organization_name` is null and this is too
- * — which keeps those rows sorting first, exactly where they sort today. An
+ * **Nullable, unlike `organizations.sort_name`.** `organization_name` is itself
+ * nullable — the interest form's organization field is optional, and the
+ * generic fallback rows always have one — so the key follows it: no name, no
+ * key, and those rows sort first exactly where they sort today. An
  * empty-string default would have said "an organization named nothing".
  */
 return new class extends Migration

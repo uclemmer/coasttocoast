@@ -103,8 +103,9 @@ class Show extends Component
      *
      * Ordered on the frozen `organization_sort_name` rather than the raw
      * snapshot, so an institution files where the roster files it (doc 10,
-     * D-10-a). Interest-list recipients have no organization and no key, and
-     * keep sorting first.
+     * D-10-a). A recipient who named no organization has no key and sorts
+     * first — which is not the same set as the interest list, whose signup
+     * form offers an optional organization name and usually gets one.
      */
     public function recipientsProperty()
     {

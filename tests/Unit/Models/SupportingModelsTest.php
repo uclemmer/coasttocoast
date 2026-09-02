@@ -196,12 +196,29 @@ describe('MessageRecipient', function () {
         expect($recipient->organization_sort_name)->toBe('university of alabama at birmingham');
     });
 
-    it('leaves the sort key null when there is no organization to file under', function () {
-        // An interest-list recipient is a bare address. An empty string here
-        // would claim an organization named nothing.
+    it('leaves the sort key null when no organization was named', function () {
+        // An empty string here would claim an organization named nothing, and
+        // would be indistinguishable from one.
         $recipient = MessageRecipient::factory()->interestOnly()->create();
 
         expect($recipient->organization_sort_name)->toBeNull();
+    });
+
+    it('files a named interest-list signup with the other organizations', function () {
+        // The interest form's organization field is optional, not absent, and
+        // AudienceBuilder passes whatever was typed straight through. The
+        // delivery table's "Interest list" label means "no name given" — it is
+        // not a statement about where the recipient came from.
+        $interest = EventInterest::factory()
+            ->create(['organization_name' => 'The University of Alabama at Birmingham']);
+
+        $recipient = MessageRecipient::factory()->create([
+            'organization_id' => null,
+            'user_id' => null,
+            'organization_name' => $interest->organization_name,
+        ]);
+
+        expect($recipient->organization_sort_name)->toBe('university of alabama at birmingham');
     });
 
     it('derives the sort key from the frozen snapshot, not from the live organization', function () {

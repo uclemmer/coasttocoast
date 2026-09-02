@@ -221,8 +221,9 @@ timestamps.
 table on. It is derived in a `saving` hook from the **snapshot** `organization_name`, through the
 same `Organization::sortName()` the roster uses, so an institution files in the same place on both —
 never joined to the live organization, which would let a rename reorder a campaign that has already
-gone out. Null for an interest-list recipient, who has no organization at all, so those rows sort
-first as they always have (doc 10, D-10-a).
+gone out. Null when the recipient named no organization, so those rows sort first as they always
+have — note that this is *not* the interest list, whose signup form collects an optional organization
+name and usually has one (doc 10, D-10-b).
 
 ## Enums (`app/Enums`)
 

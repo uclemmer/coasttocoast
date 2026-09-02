@@ -298,6 +298,37 @@ describe('announcing that registration is open', function () {
         Notification::assertNothingSent();
     });
 
+    it('refuses to announce a fair whose registration has not opened yet', function () {
+        /*
+         * Found while building the dashboard nudge, and it was a real one: the
+         * guard asked `is_published` alone, so a fair published in advance of
+         * its registration window would happily mail "Registration for X is
+         * now open. It is open now." over a button to a page that refuses the
+         * registration. Published is not open.
+         */
+        $early = Event::factory()->published()->registrationNotYetOpen()->create();
+        EventInterest::factory()->for($early)->create(['notified_at' => null]);
+
+        $page = livewire(ShowEvent::class, ['event' => $early]);
+
+        expect($page->instance()->canAnnounce())->toBeFalse();
+
+        $page->call('announce')
+            ->assertDispatched('ui-toast', fn (string $e, array $p): bool => $p['variant'] === 'danger');
+
+        Notification::assertNothingSent();
+        expect($early->interests()->unnotified()->count())->toBe(1);
+    });
+
+    it('refuses to announce a fair whose registration has closed', function () {
+        $late = Event::factory()->published()->registrationClosed()->create();
+        EventInterest::factory()->for($late)->create(['notified_at' => null]);
+
+        livewire(ShowEvent::class, ['event' => $late])->call('announce');
+
+        Notification::assertNothingSent();
+    });
+
     it('is not offered when nobody is waiting', function () {
         expect(livewire(ShowEvent::class, ['event' => $this->fair])->instance()->canAnnounce())->toBeFalse();
     });

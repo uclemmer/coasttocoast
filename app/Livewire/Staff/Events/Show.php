@@ -45,9 +45,21 @@ class Show extends Component
         return $this->record->interests()->unnotified()->count();
     }
 
+    /**
+     * Whether the announcement is appropriate right now.
+     *
+     * Asks `isRegistrationOpen()` rather than `is_published`, and the
+     * distinction is not pedantry: the notification's subject is "Registration
+     * for X is now open", its body says "It is open now", and its button goes
+     * to a page that would turn the reader away. A published fair whose
+     * registration window has not started is exactly that email being untrue.
+     *
+     * The dashboard's nudge asks the same question, so the two cannot disagree
+     * about when this button should exist.
+     */
     public function canAnnounce(): bool
     {
-        return $this->record->is_published
+        return $this->record->isRegistrationOpen()
             && $this->waitingCount > 0
             && $this->currentUser()->can('update', $this->record);
     }
@@ -74,6 +86,14 @@ class Show extends Component
         if (! $event->is_published) {
             // An unpublished fair has nothing for these people to register for.
             $this->toast(__('Publish the fair before announcing it.'), 'danger');
+
+            return;
+        }
+
+        if (! $event->isRegistrationOpen()) {
+            // Covers both ends of the window. The announcement claims
+            // registration is open and links somewhere that would refuse one.
+            $this->toast(__('Registration for this fair is not open, and the announcement says it is.'), 'danger');
 
             return;
         }

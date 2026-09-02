@@ -66,6 +66,26 @@
                 sentiment="neutral" />
         </x-ui::stat-group>
 
+        {{-- The card above reports the number; this says it is now a job. The
+             condition is registration being open, not the fair merely being
+             published, because the announcement's own words are "It is open
+             now" — see the component. --}}
+        @if ($this->shouldAnnounceRegistration)
+            <div class="mt-6">
+                <x-ui::alert variant="info">
+                    {{ trans_choice(
+                        'Registration is open and :count person on the notify-me list has not been told.|Registration is open and :count people on the notify-me list have not been told.',
+                        $interest['waiting'],
+                        ['count' => $interest['waiting']],
+                    ) }}
+                    <a href="{{ route('staff.events.show', $this->fair) }}"
+                        class="font-medium underline">{{ __('Tell them') }}</a>
+                    <a href="{{ route('staff.interests', ['eventId' => $this->fair->id, 'status' => 'waiting']) }}"
+                        class="font-medium underline">{{ __('or see who they are') }}</a>
+                </x-ui::alert>
+            </div>
+        @endif
+
         @if ($this->pendingGrants > 0)
             <div class="mt-6">
                 <x-ui::alert variant="warning">

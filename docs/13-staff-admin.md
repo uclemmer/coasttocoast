@@ -498,6 +498,26 @@ about 2022 is not somebody waiting today. The card is not a link, because
 either; the sidebar and the fair page already reach the list, and a third path
 would be clutter rather than convenience.
 
+It also carries a **nudge**: an alert, in the same shape as the fee-assistance
+one, saying registration is open and N people have not been told, linking both
+to the fair page's button and to this fair's waiting set. The card reports a
+number; the nudge says it has become a job.
+
+**Building it turned up a real bug in the announcement guard.**
+`Staff\Events\Show::canAnnounce()` asked `is_published` alone, and `announce()`
+guarded on the same thing — so a fair published ahead of its registration window
+would happily mail "Registration for X is now open", body text "It is open now",
+over a button to a page that refuses the registration. Published is not open.
+Both now ask `Event::isRegistrationOpen()`, which also closes the other end of
+the window, and the nudge asks the same question so the two screens cannot
+disagree about when announcing is appropriate.
+
+Nobody had noticed because the announce tests all build a fair with a null/null
+registration window, which `isRegistrationOpen()` treats as permanently open —
+so every existing test kept passing after the fix, and none of them had ever
+described a fair with a window. **The bug lived in the gap between what the
+fixtures modelled and what production has.**
+
 The return link is deliberately conditional. It appears only when a single fair
 is selected, because the announcement is an action on one fair and "all fairs"
 has no fair page to send anybody to. Filtered to all fairs the screen keeps the

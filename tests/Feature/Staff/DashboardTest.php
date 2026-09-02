@@ -80,6 +80,50 @@ it('has no notify-me numbers when no fair is active', function () {
     expect(livewire(Dashboard::class)->instance()->interestList())->toBeNull();
 });
 
+describe('the announcement nudge', function () {
+    it('pushes at the notify-me list once registration is open', function () {
+        $fair = Fair::factory()->published()->registrationOpen()->create();
+        EventInterest::factory()->count(2)->for($fair, 'event')->create();
+
+        livewire(Dashboard::class)
+            ->assertSee('Registration is open and 2 people on the notify-me list have not been told')
+            ->assertSee(route('staff.events.show', $fair), escape: false)
+            ->assertSee(route('staff.interests', ['eventId' => $fair->id, 'status' => 'waiting']));
+    });
+
+    it('stays quiet while registration has not opened yet', function () {
+        /*
+         * The condition is registration being OPEN, not the fair being
+         * published. The announcement's subject is "Registration for X is now
+         * open" and its button goes to a page that would refuse the
+         * registration, so nudging here would be pushing somebody to send an
+         * untrue email.
+         */
+        $fair = Fair::factory()->published()->registrationNotYetOpen()->create();
+        EventInterest::factory()->count(2)->for($fair, 'event')->create();
+
+        $page = livewire(Dashboard::class);
+
+        expect($page->instance()->shouldAnnounceRegistration())->toBeFalse();
+
+        $page->assertDontSee('has not been told');
+    });
+
+    it('stays quiet once registration has closed', function () {
+        $fair = Fair::factory()->published()->registrationClosed()->create();
+        EventInterest::factory()->for($fair, 'event')->create();
+
+        expect(livewire(Dashboard::class)->instance()->shouldAnnounceRegistration())->toBeFalse();
+    });
+
+    it('stays quiet when everybody has been told', function () {
+        $fair = Fair::factory()->published()->registrationOpen()->create();
+        EventInterest::factory()->count(2)->for($fair, 'event')->notified()->create();
+
+        expect(livewire(Dashboard::class)->instance()->shouldAnnounceRegistration())->toBeFalse();
+    });
+});
+
 it('shows the ten most recent registrations for the active fair only', function () {
     $fair = Fair::factory()->published()->create();
     $other = Fair::factory()->create();

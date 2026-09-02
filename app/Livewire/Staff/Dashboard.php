@@ -216,6 +216,31 @@ class Dashboard extends Component
         ];
     }
 
+    /**
+     * Whether the overview should push the coordinator at the notify-me list.
+     *
+     * The count on the card is informational; this is the moment it becomes a
+     * job. Registration being **open** is the condition, not merely the fair
+     * being published, because the announcement's subject line is "Registration
+     * for X is now open" and its body says "It is open now" over a button to a
+     * page that would refuse the registration.
+     *
+     * `Staff\Events\Show::canAnnounce()` asks the same question, so the nudge
+     * and the button it points at cannot disagree about when announcing is
+     * appropriate.
+     */
+    #[Computed]
+    public function shouldAnnounceRegistration(): bool
+    {
+        $fair = $this->fair;
+        $interest = $this->interestList;
+
+        return $fair instanceof Event
+            && $fair->isRegistrationOpen()
+            && $interest !== null
+            && $interest['waiting'] > 0;
+    }
+
     public function formatMoney(?int $cents): string
     {
         return Money::format($cents);

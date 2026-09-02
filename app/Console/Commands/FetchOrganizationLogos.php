@@ -74,6 +74,31 @@ class FetchOrganizationLogos extends Command
 
     protected const MAX_BYTES = 2 * 1024 * 1024;
 
+    /**
+     * Below this, a roster tile is upscaling and it shows. Not a rejection —
+     * a small mark still beats a letter — but it is counted so there is a
+     * worklist rather than a vague sense that some tiles look soft.
+     */
+    protected const MIN_DIMENSION = 96;
+
+    /**
+     * Stop looking once something is at least this big. 180 is the modern
+     * `apple-touch-icon`, so most sites cost one request.
+     */
+    protected const GOOD_ENOUGH = 180;
+
+    /**
+     * Wider than this is a banner or a photograph rather than a mark.
+     * Mississippi State's og:image is 2400x800.
+     */
+    protected const MAX_ASPECT = 2.0;
+
+    /**
+     * A site declaring more icons than this is not hiding a better one further
+     * down the list, and every entry is a request to somebody else's server.
+     */
+    protected const MAX_CANDIDATES = 6;
+
     protected const DISK = 'public';
 
     protected const DIRECTORY = 'organization-logos';
@@ -84,6 +109,7 @@ class FetchOrganizationLogos extends Command
         'resolved (dry run)' => 0,
         'already had one' => 0,
         'recovered from disk' => 0,
+        'stored but small' => 0,
         'no logo found' => 0,
         'unreachable' => 0,
     ];
@@ -132,7 +158,8 @@ class FetchOrganizationLogos extends Command
     protected function fetchFor(Organization $organization, string $source, bool $dryRun): void
     {
         try {
-            $url = $this->resolveLogoUrl($source);
+            $candidates = $this->candidates($source);
+            $url = $candidates[0]['url'] ?? null;
         } catch (ConnectionException|RuntimeException $e) {
             if ($this->recover($organization, "{$source} unreachable ({$e->getMessage()})", $dryRun)) {
                 return;
@@ -158,13 +185,44 @@ class FetchOrganizationLogos extends Command
             return;
         }
 
-        $this->download($organization, $url);
+        $this->download($organization, $candidates);
     }
 
     /**
      * Read the institution's own metadata for the image it nominates.
+     *
+     * Returns the best candidate by DECLARED size. `candidates()` explains why
+     * there is more than one and why taking the first was the bug.
      */
     protected function resolveLogoUrl(string $source): ?string
+    {
+        return $this->candidates($source)[0]['url'] ?? null;
+    }
+
+    /**
+     * Every image the page nominates, best first.
+     *
+     * **Taking the first declared icon was wrong, and it cost 40 logos.** A site
+     * that supports iOS properly declares an `apple-touch-icon` per device
+     * generation — Auburn ships 57, 72, 76, 114, 120 and 144 — and the smallest
+     * is conventionally written first, because the list is historical. The old
+     * code matched one pattern, took match [0] and committed to it, so Auburn's
+     * roster tile was a 57px image upscaled into a space four times its size,
+     * with a 144 sitting in the same `<head>`.
+     *
+     * So: collect them all, read the `sizes` attribute, and order by it. An
+     * `apple-touch-icon` with no `sizes` is treated as 180, which is the modern
+     * single-icon convention and the reason it is usually the unsized one.
+     *
+     * `og:image` stays in the list and stays late. It is what the institution
+     * nominates for a link preview, which is a photograph far more often than a
+     * mark — Auburn's is a picture of Samford Hall, Mississippi State's is a
+     * 2400x800 banner. `storeBest()` rejects those on shape rather than here on
+     * rank, because a few institutions do nominate their mark.
+     *
+     * @return list<array{url: string, declared: int}>
+     */
+    protected function candidates(string $source): array
     {
         $response = Http::timeout(15)
             ->withHeaders(['User-Agent' => 'CoastToCoastCollegeFair/1.0 (roster logo fetch)'])
@@ -175,19 +233,102 @@ class FetchOrganizationLogos extends Command
         }
 
         $html = $response->body();
+        $base = (string) $response->effectiveUri();
+
+        $touch = $this->linksWithSizes($html, 'apple-touch-icon', 180);
+        $icons = $this->linksWithSizes($html, 'icon', 0);
+        $masks = $this->linksWithSizes($html, 'mask-icon', 0);
+
+        $sharing = [];
 
         foreach ([
-            '/<link[^>]+rel=["\']apple-touch-icon[^"\']*["\'][^>]+href=["\']([^"\']+)["\']/i',
             '/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/i',
             '/<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']/i',
-            '/<link[^>]+rel=["\'][^"\']*\bicon\b[^"\']*["\'][^>]+href=["\']([^"\']+)["\']/i',
         ] as $pattern) {
             if (preg_match($pattern, $html, $matches) === 1) {
-                return $this->absolute($matches[1], (string) $response->effectiveUri());
+                $sharing[] = ['href' => $matches[1], 'declared' => 0];
+
+                break;
             }
         }
 
-        return $this->absolute('/favicon.ico', (string) $response->effectiveUri());
+        // A vector never needs upscaling, so it outranks every raster size.
+        foreach ($masks as $index => $mask) {
+            $masks[$index]['declared'] = 100000;
+        }
+
+        $ordered = [
+            ...$this->bySize($masks),
+            ...$this->bySize($touch),
+            ...$this->bySize($icons),
+            ...$sharing,
+            ['href' => '/favicon.ico', 'declared' => 0],
+        ];
+
+        $candidates = [];
+
+        foreach ($ordered as $candidate) {
+            $url = $this->absolute($candidate['href'], $base);
+
+            // Sites repeat the same href across several rel values.
+            if (! isset($candidates[$url])) {
+                $candidates[$url] = ['url' => $url, 'declared' => $candidate['declared']];
+            }
+        }
+
+        return array_values($candidates);
+    }
+
+    /**
+     * Every `<link rel="...">` of one kind, with its declared square size.
+     *
+     * @return list<array{href: string, declared: int}>
+     */
+    protected function linksWithSizes(string $html, string $rel, int $whenUnsized): array
+    {
+        preg_match_all('/<link[^>]+>/i', $html, $tags);
+
+        $found = [];
+
+        foreach ($tags[0] as $tag) {
+            if (preg_match('/rel=["\']([^"\']*)["\']/i', $tag, $relMatch) !== 1) {
+                continue;
+            }
+
+            $values = preg_split('/\s+/', strtolower(trim($relMatch[1]))) ?: [];
+
+            // `rel="shortcut icon"` is two tokens and means `icon`.
+            if (! in_array(strtolower($rel), $values, true)) {
+                continue;
+            }
+
+            if (preg_match('/href=["\']([^"\']+)["\']/i', $tag, $hrefMatch) !== 1) {
+                continue;
+            }
+
+            $declared = $whenUnsized;
+
+            if (preg_match('/sizes=["\'](\d+)x(\d+)["\']/i', $tag, $sizeMatch) === 1) {
+                $declared = min((int) $sizeMatch[1], (int) $sizeMatch[2]);
+            }
+
+            $found[] = ['href' => $hrefMatch[1], 'declared' => $declared];
+        }
+
+        return $found;
+    }
+
+    /**
+     * Largest declared first, stable for equal sizes.
+     *
+     * @param  list<array{href: string, declared: int}>  $links
+     * @return list<array{href: string, declared: int}>
+     */
+    protected function bySize(array $links): array
+    {
+        usort($links, fn (array $a, array $b): int => $b['declared'] <=> $a['declared']);
+
+        return $links;
     }
 
     /**
@@ -211,57 +352,215 @@ class FetchOrganizationLogos extends Command
         return $origin.'/'.ltrim($href, '/');
     }
 
-    protected function download(Organization $organization, string $url): void
+    /**
+     * Try the candidates in order and keep the best one.
+     *
+     * It stops as soon as something reaches `GOOD_ENOUGH`, so a site declaring
+     * its 180px icon first costs exactly one request. Only a site whose best
+     * declared icon is small pays for the whole walk, and it is capped.
+     *
+     * @param  list<array{url: string, declared: int}>  $candidates
+     */
+    protected function download(Organization $organization, array $candidates): void
+    {
+        $best = null;
+        $lastFailure = null;
+
+        foreach (array_slice($candidates, 0, self::MAX_CANDIDATES) as $candidate) {
+            $found = $this->evaluate($organization, $candidate['url']);
+
+            if (is_string($found)) {
+                $lastFailure = $found;
+
+                continue;
+            }
+
+            if ($best === null || $found['score'] > $best['score']) {
+                $best = $found;
+            }
+
+            if ($best['score'] >= self::GOOD_ENOUGH) {
+                break;
+            }
+        }
+
+        if ($best === null) {
+            if ($this->recover($organization, $lastFailure ?? 'nothing usable was declared')) {
+                return;
+            }
+
+            $this->warn("{$organization->name}: {$lastFailure}.");
+            $this->tally['no logo found']++;
+
+            return;
+        }
+
+        $path = self::DIRECTORY.'/'.Str::slug($organization->name).'.'.$this->extensionFor($best['type'], $best['url']);
+
+        Storage::disk(self::DISK)->put($path, $best['body']);
+        $this->forgetSupersededFiles($organization, $path);
+
+        $organization->forceFill(['logo_path' => $path])->save();
+
+        $this->line(sprintf('%-46s %-52s %s', Str::limit($organization->name, 44), $path, $best['size']));
+        $this->tally['downloaded']++;
+
+        if ($best['score'] < self::MIN_DIMENSION) {
+            // Kept, because a small mark beats a letter, but counted: these are
+            // the rows worth a coordinator's time in /staff/organizations.
+            $this->tally['stored but small']++;
+        }
+    }
+
+    /**
+     * Fetch one candidate and score it, or describe why it is unusable.
+     *
+     * @return array{url: string, body: string, type: string, score: int, size: string}|string
+     */
+    protected function evaluate(Organization $organization, string $url): array|string
     {
         try {
             $response = Http::timeout(20)
                 ->withHeaders(['User-Agent' => 'CoastToCoastCollegeFair/1.0 (roster logo fetch)'])
                 ->get($url);
         } catch (ConnectionException $e) {
-            if ($this->recover($organization, "{$url} unreachable ({$e->getMessage()})")) {
-                return;
-            }
-
-            $this->warn("{$organization->name}: {$url} unreachable ({$e->getMessage()}).");
-            $this->tally['unreachable']++;
-
-            return;
+            return "{$url} unreachable ({$e->getMessage()})";
         }
 
         $type = Str::before((string) $response->header('Content-Type'), ';');
 
         if (! $response->successful() || ! str_starts_with($type, 'image/')) {
-            if ($this->recover($organization, "{$url} is not an image ({$type})")) {
-                return;
-            }
-
-            $this->warn("{$organization->name}: {$url} is not an image ({$type}).");
-            $this->tally['no logo found']++;
-
-            return;
+            return "{$url} is not an image ({$type})";
         }
 
         $body = $response->body();
 
         if (strlen($body) > self::MAX_BYTES) {
-            if ($this->recover($organization, "{$url} is larger than 2 MB")) {
-                return;
-            }
-
-            $this->warn("{$organization->name}: {$url} is larger than 2 MB — skipped.");
-            $this->tally['no logo found']++;
-
-            return;
+            return "{$url} is larger than 2 MB";
         }
 
-        $path = self::DIRECTORY.'/'.Str::slug($organization->name).'.'.$this->extensionFor($type, $url);
+        $measured = $this->measure($body);
 
-        Storage::disk(self::DISK)->put($path, $body);
+        if ($measured === null) {
+            // Unjudgeable, not unusable — an SVG has no pixel size and is the
+            // best logo there is. Scores below any decent raster so a measured
+            // one wins, and above nothing at all so it is still stored.
+            return ['url' => $url, 'body' => $body, 'type' => $type, 'score' => self::MIN_DIMENSION, 'size' => 'unmeasured'];
+        }
 
-        $organization->forceFill(['logo_path' => $path])->save();
+        [$width, $height] = $measured;
+        $ratio = min($width, $height) > 0 ? max($width, $height) / min($width, $height) : 99;
 
-        $this->line(sprintf('%-46s %s', Str::limit($organization->name, 44), $path));
-        $this->tally['downloaded']++;
+        if ($ratio > self::MAX_ASPECT) {
+            // A banner or a photograph, not a mark. This is what the
+            // institution nominates for a link preview, and it is why og:image
+            // ranks late rather than being trusted.
+            return "{$url} is {$width}x{$height}, too wide to be a logo";
+        }
+
+        return [
+            'url' => $url,
+            'body' => $body,
+            'type' => $type,
+            'score' => min($width, $height),
+            'size' => "{$width}x{$height}",
+        ];
+    }
+
+    /**
+     * The largest square-ish edge of an image, or null when it cannot be read.
+     *
+     * **Unmeasurable is not the same as unusable.** An SVG has no pixel size at
+     * all and is the best possible logo; some servers send a format GD cannot
+     * parse. Those score neutrally and are still stored — this measurement
+     * ranks candidates and rejects obvious banners, and anything it cannot
+     * judge it does not reject.
+     *
+     * @return array{0: int, 1: int}|null
+     */
+    protected function measure(string $body): ?array
+    {
+        $ico = $this->measureIco($body);
+
+        if ($ico !== null) {
+            return $ico;
+        }
+
+        $size = @getimagesizefromstring($body);
+
+        return $size === false ? null : [$size[0], $size[1]];
+    }
+
+    /**
+     * The largest frame in an ICO, or null if it is not one.
+     *
+     * An ICO is a container: `favicon.ico` routinely holds 16, 32, 48, 128 and
+     * 256 in one file, and a browser picks the frame it wants. `getimagesize()`
+     * reports the FIRST directory entry, which is conventionally the smallest —
+     * so measuring an ICO the ordinary way says 16x16 about a file whose real
+     * content is 256x256. Bard, Trinity and the Air Force Academy all read as
+     * unusable that way and are all fine.
+     *
+     * @return array{0: int, 1: int}|null
+     */
+    protected function measureIco(string $body): ?array
+    {
+        if (strlen($body) < 6) {
+            return null;
+        }
+
+        $header = @unpack('vreserved/vtype/vcount', substr($body, 0, 6));
+
+        if (! is_array($header) || $header['reserved'] !== 0 || $header['type'] !== 1 || $header['count'] < 1) {
+            return null;
+        }
+
+        if (strlen($body) < 6 + $header['count'] * 16) {
+            return null;
+        }
+
+        $best = null;
+
+        for ($index = 0; $index < $header['count']; $index++) {
+            $entry = substr($body, 6 + $index * 16, 16);
+
+            // A zero byte means 256 — the field is one byte and 256 does not fit.
+            $width = ord($entry[0]) ?: 256;
+            $height = ord($entry[1]) ?: 256;
+
+            if ($best === null || min($width, $height) > min($best[0], $best[1])) {
+                $best = [$width, $height];
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * Delete this organization's other logo files.
+     *
+     * The stored name is `<slug>.<extension>`, so a run that picks a different
+     * format leaves the old file behind — and that is not merely untidy.
+     * `existingFile()` prefers richer formats, so a superseded
+     * `rice-university.webp` would outrank the `.ico` that replaced it, and the
+     * next refusal would relink the 1500x600 banner this command had just
+     * rejected on shape. The fallback would resurrect exactly what the quality
+     * check threw out.
+     *
+     * Found by combining the two features, which is where this class of bug
+     * lives: each was right on its own.
+     */
+    protected function forgetSupersededFiles(Organization $organization, string $keep): void
+    {
+        $slug = Str::slug($organization->name);
+
+        foreach (['svg', 'png', 'webp', 'jpg', 'gif', 'ico'] as $extension) {
+            $path = self::DIRECTORY.'/'.$slug.'.'.$extension;
+
+            if ($path !== $keep && Storage::disk(self::DISK)->exists($path)) {
+                Storage::disk(self::DISK)->delete($path);
+            }
+        }
     }
 
     /**

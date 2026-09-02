@@ -182,16 +182,68 @@ is silent: the URL 404s and the roster tile quietly falls back to a letter. The
 command reads each institution's own metadata instead, from the `logo_source` in
 the data file:
 
-1. `apple-touch-icon` — square, usually 180px, usually the mark alone
-2. `og:image` — the image the institution nominates for sharing
-3. `<link rel="icon">` — the favicon as declared
-4. `/favicon.ico`
+1. `mask-icon` — a vector, so it never needs upscaling
+2. `apple-touch-icon` — square, the mark alone, **largest declared first**
+3. `<link rel="icon">` — the favicon as declared, largest first
+4. `og:image` — what the institution nominates for sharing
+5. `/favicon.ico`
 
 **`apple-touch-icon` is ahead of `og:image` on purpose**, which is the opposite
 of what a link preview does. Running it the other way round is how that was
 found: Clemson's `og:image` is an aerial photograph of the campus. Most
 institutions nominate a hero photo for sharing, because that is what sharing is
 for.
+
+### Taking the first declared icon was wrong, and it cost 22 logos
+
+**Fixed 2026-09-01.** The list above used to be four regexes, and the command
+matched one, took match `[0]`, and committed to it. A site that supports iOS
+properly declares an `apple-touch-icon` per device generation and writes the
+**smallest first**, because the list is historical — Auburn ships 57, 72, 76,
+114, 120 and 144. So Auburn's roster tile was a 57px image upscaled into a space
+four times its size, with a 144 sitting in the same `<head>`.
+
+It now collects every candidate, reads the `sizes` attribute, orders by it, and
+stops as soon as one reaches 180 — the modern single-icon size, so most sites
+still cost one request. An `apple-touch-icon` with no `sizes` is read as 180,
+which is why it is usually the unsized one. `rel="shortcut icon"` is two tokens
+meaning `icon`, and is parsed as such rather than missed.
+
+Each candidate is then **measured** rather than trusted:
+
+- **Wider than 2:1 is rejected** as a banner or a photograph. Mississippi
+  State's `og:image` is 2400x800. This is why `og:image` can stay in the list
+  without being dangerous — it is ranked late and rejected on shape, rather than
+  being trusted because it matched.
+- **An ICO is measured by its largest frame.** An ICO is a container:
+  `favicon.ico` routinely holds 16 through 256 in one file and the browser picks.
+  `getimagesize()` reports the FIRST directory entry, conventionally the
+  smallest, so measuring one the ordinary way calls a 256x256 file 16x16. Bard,
+  Trinity and the Air Force Academy all read as unusable that way and are all
+  fine. **The first review of this data made exactly that mistake**, so part of
+  what looked like a fix was the measurement being corrected rather than a logo
+  being replaced.
+- **Unmeasurable is not unusable.** An SVG has no pixel size and is the best
+  logo there is. Anything the measurement cannot judge scores neutrally and is
+  still stored; this ranks candidates and rejects obvious banners, and it
+  rejects nothing it cannot read.
+
+**Below 96px is kept, not rejected** — a small mark still beats a letter — but
+counted, in a `stored but small` tally. That is the hand-upload worklist, and it
+is 29 organizations: Rhodes, Ohio State, Virginia Tech, Puget Sound and the rest
+declare nothing but a small favicon, and no amount of resolution order finds
+what a site does not publish.
+
+Measured over the real roster: 96 usable of 143 before, **118 of 148 after**,
+with every wrong-shaped image gone.
+
+**Storing a logo deletes the organization's other logo files**, and that is not
+housekeeping. The stored name is `<slug>.<extension>`, so a run that picks a
+different format leaves the old one behind — and the disk fallback above prefers
+richer formats, so a superseded `rice-university.webp` would outrank the `.ico`
+that replaced it and come back on the next refusal. The fallback would
+resurrect exactly the 1500x600 banner the shape check had just thrown out.
+Found by combining the two features, each of which was right on its own.
 
 Clemson has no touch icon either, so it still resolves to the aerial photo —
 which is the honest summary of this command. **It is an accelerator, not an

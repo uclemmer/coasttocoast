@@ -7,6 +7,7 @@ use App\Livewire\Staff\Messages\Index as MessageIndex;
 use App\Livewire\Staff\Messages\Show as ShowMessage;
 use App\Models\Event as Fair;
 use App\Models\Message;
+use App\Models\MessageRecipient;
 use App\Models\Organization;
 use App\Models\Registration;
 use App\Models\User;
@@ -205,6 +206,26 @@ describe('the campaign page', function () {
 
         expect($this->message->refresh()->isSent())->toBeTrue()
             ->and($this->message->recipients()->count())->toBe(1);
+    });
+
+    it('alphabetizes the delivery table on the sort key, with the nameless first', function () {
+        // Ordering on the raw snapshot filed every "The University of ..."
+        // under T, away from its sibling campuses (doc 10, D-10-a).
+        foreach (['Vanderbilt University', 'The University of Alabama at Birmingham', 'University of Alabama'] as $name) {
+            MessageRecipient::factory()->for($this->message)->create(['organization_name' => $name]);
+        }
+        MessageRecipient::factory()->for($this->message)->interestOnly()->create();
+
+        $listed = livewire(ShowMessage::class, ['message' => $this->message])
+            ->instance()
+            ->recipientsProperty();
+
+        expect($listed->pluck('organization_name')->all())->toBe([
+            null,
+            'University of Alabama',
+            'The University of Alabama at Birmingham',
+            'Vanderbilt University',
+        ]);
     });
 
     it('refuses a second send, because there is no unsend', function () {

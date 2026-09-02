@@ -98,11 +98,18 @@ class Show extends Component
         return $this->record->event ?? Event::active();
     }
 
-    /** The delivery table. Paginated: a full campaign is hundreds of rows. */
+    /**
+     * The delivery table. Paginated: a full campaign is hundreds of rows.
+     *
+     * Ordered on the frozen `organization_sort_name` rather than the raw
+     * snapshot, so an institution files where the roster files it (doc 10,
+     * D-10-a). Interest-list recipients have no organization and no key, and
+     * keep sorting first.
+     */
     public function recipientsProperty()
     {
         return $this->record->recipients()
-            ->orderBy('organization_name')
+            ->orderBy('organization_sort_name')
             ->paginate(25);
     }
 

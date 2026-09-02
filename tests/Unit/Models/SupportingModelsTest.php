@@ -10,6 +10,7 @@ use App\Models\EventInterest;
 use App\Models\FaqItem;
 use App\Models\Message;
 use App\Models\MessageRecipient;
+use App\Models\Organization;
 use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\Sponsor;
@@ -183,6 +184,38 @@ describe('MessageRecipient', function () {
         $recipient = MessageRecipient::factory()->create(['email_status' => DeliveryStatus::Sent]);
 
         expect($recipient->resolvedEmailStatus())->toBe(DeliveryStatus::Sent);
+    });
+
+    it('derives an alphabetizing key from the organization snapshot', function () {
+        // Same rule as the roster (doc 10, D-10-a), so the delivery table and
+        // the public list file an institution in the same place.
+        $recipient = MessageRecipient::factory()->create([
+            'organization_name' => 'The University of Alabama at Birmingham',
+        ]);
+
+        expect($recipient->organization_sort_name)->toBe('university of alabama at birmingham');
+    });
+
+    it('leaves the sort key null when there is no organization to file under', function () {
+        // An interest-list recipient is a bare address. An empty string here
+        // would claim an organization named nothing.
+        $recipient = MessageRecipient::factory()->interestOnly()->create();
+
+        expect($recipient->organization_sort_name)->toBeNull();
+    });
+
+    it('derives the sort key from the frozen snapshot, not from the live organization', function () {
+        // These rows record who was mailed. Renaming the organization afterwards
+        // must not reorder a campaign that already went out.
+        $organization = Organization::factory()->named('Aardvark College')->create();
+        $recipient = MessageRecipient::factory()->create([
+            'organization_id' => $organization->id,
+            'organization_name' => 'Zebra College',
+        ]);
+
+        $organization->update(['name' => 'Aardvark University']);
+
+        expect($recipient->fresh()->organization_sort_name)->toBe('zebra college');
     });
 
     it('carries no organization or account for an interest-list recipient', function () {

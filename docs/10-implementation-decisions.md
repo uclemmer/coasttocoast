@@ -1369,7 +1369,32 @@ reintroduces the problem above. Ordering call sites take `sort_name` in seven pl
 (`RosterService`, `ShowsARoster`, `Staff\Organizations\Index` twice, `Staff\Registrations\Create`,
 `Auth\Register`, `FetchOrganizationLogos`).
 
-**One list deliberately left alone.** `Staff\Messages\Show` orders the delivery table on
-`message_recipients.organization_name`, a snapshot column on a different table that records who a
-campaign was sent to at the time it went out. It is a delivery record rather than an organization
-list, and giving it a sort key of its own is a change to the audit trail, not to alphabetization.
+**The delivery table followed, on the owner's call (see D-10-b).** This paragraph originally recorded
+`Staff\Messages\Show` as deliberately left alone.
+
+### D-10-b — The delivery table gets its own frozen sort key
+
+D-10-a left the campaign page ordering on `message_recipients.organization_name`, reasoning that a
+delivery record is an audit trail rather than an organization list. The owner asked for it anyway,
+and the reasoning does not actually survive contact: the audit-trail argument is about what the
+column *records*, and alphabetizing it changes only what order a coordinator reads it in. It was
+misfiling "The University of ..." under T on the one screen where somebody scans a few hundred rows
+looking for one organization.
+
+So `message_recipients.organization_sort_name`, derived in a `saving` hook through the same
+`Organization::sortName()`. One rule, one copy — the delivery table and the roster have to agree on
+where an institution files, or the coordinator learns two different alphabets.
+
+**Derived from the snapshot, never joined to the live organization.** That is where the audit-trail
+argument does bite. These rows are the record of who was mailed, and `MessageRecipient`'s docblock
+is explicit that a later profile edit must not rewrite them. Ordering through a join to
+`organizations.sort_name` would sort last year's delivery record by this year's names, and would
+sort nothing at all for a recipient whose organization has since been merged away. A test pins it:
+rename the organization after the send, and the recipient row keeps the key it was frozen with.
+
+**Nullable, unlike `organizations.sort_name`.** An interest-list recipient is a bare address with no
+organization, so the snapshot is null and the key is null — which keeps those rows sorting first,
+exactly where they sort today. Defaulting to an empty string would have claimed an organization
+named nothing, and would have been indistinguishable from one.
+
+`event_interests.organization_name` is untouched. Nothing orders on it.

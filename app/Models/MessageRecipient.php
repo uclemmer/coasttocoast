@@ -31,6 +31,7 @@ use UClemmer\LaravelPostmaster\Messages\Message as LoggedMessage;
  * @property int|null $user_id
  * @property int|null $organization_id
  * @property string|null $organization_name
+ * @property string|null $organization_sort_name
  * @property string|null $name
  * @property string $email
  * @property string|null $phone
@@ -52,6 +53,28 @@ class MessageRecipient extends Model
     public const HEADER = 'X-CTC-Recipient-Id';
 
     protected $guarded = ['id'];
+
+    /**
+     * Keep `organization_sort_name` in step with the name snapshot.
+     *
+     * It is what the campaign page alphabetizes on, and it uses
+     * `Organization::sortName()` so the delivery table files an institution
+     * exactly where the roster does (doc 10, D-10-a) — one rule, one copy.
+     *
+     * Derived from `organization_name`, the frozen snapshot, and never from the
+     * live organization: these rows are the record of who was mailed, so a
+     * later rename must not reorder a campaign that already went out.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (MessageRecipient $recipient): void {
+            if ($recipient->isDirty('organization_name')) {
+                $recipient->organization_sort_name = $recipient->organization_name === null
+                    ? null
+                    : Organization::sortName($recipient->organization_name);
+            }
+        });
+    }
 
     /**
      * @return array<string, string>

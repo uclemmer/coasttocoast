@@ -7,6 +7,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\RegistrationStatus;
 use App\Livewire\Staff\Concerns\ActsForStaff;
 use App\Models\Event;
+use App\Models\EventInterest;
 use App\Models\Grant;
 use App\Models\Registration;
 use App\Support\Money;
@@ -180,6 +181,39 @@ class Dashboard extends Component
     public function pendingGrants(): int
     {
         return Grant::query()->where('status', GrantStatus::Pending)->count();
+    }
+
+    /**
+     * The notify-me list for the active fair: how many have not been told, and
+     * how many are on it at all.
+     *
+     * Scoped to the active fair like every other number on this page. A total
+     * across every fair the site has ever run would be a bigger number that
+     * answers nothing — an address that asked about 2022 is not somebody
+     * waiting today.
+     *
+     * The headline is the count still waiting rather than the total, because
+     * that is the actionable half and the number the fair page's announcement
+     * would mail. The total goes in the description so the headline has
+     * something to be read against.
+     *
+     * @return array{waiting:int,total:int}|null
+     */
+    #[Computed]
+    public function interestList(): ?array
+    {
+        $fair = $this->fair;
+
+        if (! $fair instanceof Event) {
+            return null;
+        }
+
+        $interests = EventInterest::query()->where('event_id', $fair->getKey());
+
+        return [
+            'waiting' => (clone $interests)->unnotified()->count(),
+            'total' => (clone $interests)->count(),
+        ];
     }
 
     public function formatMoney(?int $cents): string

@@ -22,7 +22,9 @@
     @else
         @php($numbers = $this->numbers)
 
-        <x-ui::stat-group :columns="3">
+        @php($interest = $this->interestList)
+
+        <x-ui::stat-group :columns="4">
             <x-ui::stat :label="__('Confirmed organizations')" :value="(string) $numbers['confirmed']"
                 :description="$this->fair->capacity === null
                     ? $this->fair->name
@@ -46,6 +48,22 @@
                     ['count' => $numbers['awaitingChecks']],
                 )"
                 :sentiment="$numbers['awaited'] > 0 ? 'bad' : 'neutral'" />
+
+            {{-- Scoped to the active fair like the three beside it. The
+                 headline is the count still waiting, not the total, because
+                 that is the set the fair page's announcement would mail.
+
+                 No link on the card: `x-ui::stat` is pure markup with no href,
+                 and the other three are not links either. There are already two
+                 ways to the list — the sidebar, and the fair page's own link to
+                 this fair's waiting set. --}}
+            <x-ui::stat :label="__('Waiting to be told')" :value="(string) $interest['waiting']"
+                :description="trans_choice(
+                    '{0}Nobody has asked about this fair yet|{1}:total person on the notify-me list for this fair|[2,*]:total people on the notify-me list for this fair',
+                    $interest['total'],
+                    ['total' => $interest['total']],
+                )"
+                sentiment="neutral" />
         </x-ui::stat-group>
 
         @if ($this->pendingGrants > 0)

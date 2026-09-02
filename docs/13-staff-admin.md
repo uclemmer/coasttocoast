@@ -489,6 +489,15 @@ three filter properties are `#[Url]`-bound. **That binding and that link are one
 feature**: without it the link lands on the unfiltered list and silently shows
 the wrong set, which is worse than no link.
 
+The dashboard carries the number too, as a fourth stat card scoped to the active
+fair — "Waiting to be told", against the size of that fair's list. Scoped like
+every other figure on that page: a total across every fair the site has run
+would be a bigger number that answers nothing, because an address that asked
+about 2022 is not somebody waiting today. The card is not a link, because
+`x-ui::stat` is pure markup with no href and the three beside it are not links
+either; the sidebar and the fair page already reach the list, and a third path
+would be clutter rather than convenience.
+
 The return link is deliberately conditional. It appears only when a single fair
 is selected, because the announcement is an action on one fair and "all fairs"
 has no fair page to send anybody to. Filtered to all fairs the screen keeps the

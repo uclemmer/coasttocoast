@@ -2,6 +2,7 @@
 
 use App\Livewire\Staff\Dashboard;
 use App\Models\Event as Fair;
+use App\Models\EventInterest;
 use App\Models\Grant;
 use App\Models\Organization;
 use App\Models\Registration;
@@ -46,6 +47,37 @@ it('separates money awaited from money collected, and names the checks', functio
     expect($numbers['collected'])->toBe(21500)
         ->and($numbers['awaited'])->toBe(21500)
         ->and($numbers['awaitingChecks'])->toBe(1);
+});
+
+it('counts the notify-me list for the active fair only', function () {
+    // Scoped like every other number here. An address that asked about a fair
+    // three years ago is not somebody waiting today.
+    $fair = Fair::factory()->published()->create();
+    $other = Fair::factory()->create();
+
+    EventInterest::factory()->count(3)->for($fair, 'event')->create();
+    EventInterest::factory()->for($fair, 'event')->notified()->create();
+    EventInterest::factory()->count(5)->for($other, 'event')->create();
+
+    $interest = livewire(Dashboard::class)->instance()->interestList();
+
+    expect($interest['waiting'])->toBe(3)
+        ->and($interest['total'])->toBe(4);
+});
+
+it('shows the waiting count on the page, against the size of the list', function () {
+    $fair = Fair::factory()->published()->create();
+    EventInterest::factory()->count(2)->for($fair, 'event')->create();
+
+    livewire(Dashboard::class)
+        ->assertSee('Waiting to be told')
+        ->assertSee('2 people on the notify-me list for this fair');
+});
+
+it('has no notify-me numbers when no fair is active', function () {
+    // The card lives inside the "there is a fair" branch, so the computed has
+    // to answer null rather than zero — zero would render as a real figure.
+    expect(livewire(Dashboard::class)->instance()->interestList())->toBeNull();
 });
 
 it('shows the ten most recent registrations for the active fair only', function () {

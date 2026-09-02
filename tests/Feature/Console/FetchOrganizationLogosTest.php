@@ -161,6 +161,94 @@ it('survives an institution whose site is down', function () {
     expect(Organization::query()->matchingName('Rhodes College')->value('logo_path'))->toBeNull();
 });
 
+describe('falling back to a copy already on disk', function () {
+    /**
+     * A file where a previous run would have left it. Filenames are the
+     * organization's slug, which is what makes the fallback need no record of
+     * what was fetched before.
+     */
+    function storedLogoForRhodes(string $extension = 'png'): string
+    {
+        $path = "organization-logos/rhodes-college.{$extension}";
+        Storage::disk('public')->put($path, 'EARLIERDOWNLOAD');
+
+        return $path;
+    }
+
+    it('keeps a good file when the site refuses the request', function () {
+        // The case that prompted this: Rice and North Carolina Outward Bound
+        // both served their logo one day and answered 403/406 the next. A
+        // refusal is not the same as publishing no logo, and treating it as one
+        // throws away a file already in storage.
+        rhodes();
+        $path = storedLogoForRhodes();
+
+        Http::fake(['www.rhodes.edu' => Http::response('', 403)]);
+
+        $this->artisan('fair:fetch-organization-logos', ['--only' => 'Rhodes'])
+            ->expectsOutputToContain('kept the copy already on disk')
+            ->assertSuccessful();
+
+        expect(Organization::query()->matchingName('Rhodes College')->value('logo_path'))->toBe($path);
+    });
+
+    it('keeps a good file when the nominated image turns out not to be one', function () {
+        rhodes();
+        $path = storedLogoForRhodes();
+
+        Http::fake([
+            'www.rhodes.edu' => Http::response('<html><head><meta property="og:image" content="https://www.rhodes.edu/gone"></head></html>'),
+            'www.rhodes.edu/gone' => Http::response('<html>404</html>', 200, ['Content-Type' => 'text/html']),
+        ]);
+
+        $this->artisan('fair:fetch-organization-logos', ['--only' => 'Rhodes'])->assertSuccessful();
+
+        expect(Organization::query()->matchingName('Rhodes College')->value('logo_path'))->toBe($path);
+    });
+
+    it('prefers the richest format when several are stored', function () {
+        // A favicon is the last resort here for the same reason it is last in
+        // the resolution order.
+        rhodes();
+        Storage::disk('public')->put('organization-logos/rhodes-college.ico', 'FAVICON');
+        Storage::disk('public')->put('organization-logos/rhodes-college.svg', 'VECTOR');
+
+        Http::fake(['www.rhodes.edu' => Http::response('', 403)]);
+
+        $this->artisan('fair:fetch-organization-logos', ['--only' => 'Rhodes'])->assertSuccessful();
+
+        expect(Organization::query()->matchingName('Rhodes College')->value('logo_path'))
+            ->toBe('organization-logos/rhodes-college.svg');
+    });
+
+    it('still reports unreachable when there is nothing to fall back to', function () {
+        // The fallback must not paper over a genuine failure — an organization
+        // with no file and no reachable site is still a gap to report.
+        rhodes();
+
+        Http::fake(['www.rhodes.edu' => Http::response('', 403)]);
+
+        $this->artisan('fair:fetch-organization-logos', ['--only' => 'Rhodes'])
+            ->expectsOutputToContain('unreachable')
+            ->assertSuccessful();
+
+        expect(Organization::query()->matchingName('Rhodes College')->value('logo_path'))->toBeNull();
+    });
+
+    it('writes nothing on a dry run', function () {
+        rhodes();
+        storedLogoForRhodes();
+
+        Http::fake(['www.rhodes.edu' => Http::response('', 403)]);
+
+        $this->artisan('fair:fetch-organization-logos', ['--only' => 'Rhodes', '--dry-run' => true])
+            ->expectsOutputToContain('kept the copy already on disk')
+            ->assertSuccessful();
+
+        expect(Organization::query()->matchingName('Rhodes College')->value('logo_path'))->toBeNull();
+    });
+});
+
 it('ignores an organization the research never covered', function () {
     Organization::factory()->named('A College Nobody Researched')->create(['logo_path' => null]);
 

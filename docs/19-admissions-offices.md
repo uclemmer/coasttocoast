@@ -199,6 +199,31 @@ oracle.** Run `--dry-run` first, read the list, and let the coordinator upload a
 real logo where the guess is bad. That upload field already exists and always
 was the answer.
 
+### A refusal is not "no logo"
+
+**Added 2026-09-01, after it cost two logos.** When a fetch fails for any reason
+— the site refuses the request, the nominated URL is not an image, the file is
+too big — the command now looks for a copy this organization already has in
+storage and keeps that instead of leaving the column null. Filenames are the
+organization's slug, so it needs no record of what was fetched before, and it
+reports every recovery rather than doing it quietly. `--dry-run` says what it
+would keep and writes nothing.
+
+Roughly one site in twenty answers a scripted request with a 403 or a 406 one
+day and serves the file the next: Rice and North Carolina Outward Bound both
+did, on consecutive runs.
+
+The reason that is a real bug rather than an inconvenience is the split between
+where the two halves live. **`logo_path` is a database column and the files are
+not**, so any reseed nulls all 141 while every file survives on disk. The
+refetch afterwards is where the loss happens, to a different arbitrary handful
+each time depending on who is refusing that afternoon — and the loss is
+invisible, because a null column looks exactly like an institution that
+publishes nothing.
+
+It still reports `unreachable` when there is nothing to fall back to. The
+fallback recovers a file; it does not paper over a gap.
+
 It will not overwrite a logo that is already set (`--force` overrides), refuses
 anything that is not an image or is over 2 MB, and follows only the published
 metadata — there is no crawling. These are third-party marks used to identify
@@ -263,7 +288,10 @@ and is already in that map.
   address).
 - `tests/Feature/Console/FetchOrganizationLogosTest.php` — the resolution order
   including touch-icon-beats-og:image, every fallback, dry run downloading
-  nothing, the two refusals, and an unreachable site.
+  nothing, the two refusals, an unreachable site, and the five cases of keeping
+  a copy already on disk (a refusal, a non-image, richest format wins, still
+  reporting `unreachable` with nothing to keep, and writing nothing on a dry
+  run).
 
 Both build their organizations with factories rather than seeding the participant
 export, so they run on a machine that does not have it — which is every machine

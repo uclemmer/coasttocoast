@@ -83,6 +83,7 @@ class FetchOrganizationLogos extends Command
         'downloaded' => 0,
         'resolved (dry run)' => 0,
         'already had one' => 0,
+        'recovered from disk' => 0,
         'no logo found' => 0,
         'unreachable' => 0,
     ];
@@ -133,6 +134,10 @@ class FetchOrganizationLogos extends Command
         try {
             $url = $this->resolveLogoUrl($source);
         } catch (ConnectionException|RuntimeException $e) {
+            if ($this->recover($organization, "{$source} unreachable ({$e->getMessage()})", $dryRun)) {
+                return;
+            }
+
             $this->warn("{$organization->name}: {$source} unreachable ({$e->getMessage()}).");
             $this->tally['unreachable']++;
 
@@ -213,6 +218,10 @@ class FetchOrganizationLogos extends Command
                 ->withHeaders(['User-Agent' => 'CoastToCoastCollegeFair/1.0 (roster logo fetch)'])
                 ->get($url);
         } catch (ConnectionException $e) {
+            if ($this->recover($organization, "{$url} unreachable ({$e->getMessage()})")) {
+                return;
+            }
+
             $this->warn("{$organization->name}: {$url} unreachable ({$e->getMessage()}).");
             $this->tally['unreachable']++;
 
@@ -222,6 +231,10 @@ class FetchOrganizationLogos extends Command
         $type = Str::before((string) $response->header('Content-Type'), ';');
 
         if (! $response->successful() || ! str_starts_with($type, 'image/')) {
+            if ($this->recover($organization, "{$url} is not an image ({$type})")) {
+                return;
+            }
+
             $this->warn("{$organization->name}: {$url} is not an image ({$type}).");
             $this->tally['no logo found']++;
 
@@ -231,6 +244,10 @@ class FetchOrganizationLogos extends Command
         $body = $response->body();
 
         if (strlen($body) > self::MAX_BYTES) {
+            if ($this->recover($organization, "{$url} is larger than 2 MB")) {
+                return;
+            }
+
             $this->warn("{$organization->name}: {$url} is larger than 2 MB — skipped.");
             $this->tally['no logo found']++;
 
@@ -245,6 +262,63 @@ class FetchOrganizationLogos extends Command
 
         $this->line(sprintf('%-46s %s', Str::limit($organization->name, 44), $path));
         $this->tally['downloaded']++;
+    }
+
+    /**
+     * Fall back to a copy this organization already has on disk.
+     *
+     * A fetch failing is not the same as there being no logo. Roughly one site
+     * in twenty answers a scripted request with a 403 or a 406 one day and
+     * serves the file the next — Rice and North Carolina Outward Bound both did
+     * exactly that — so treating a refusal as "no logo" throws away a good file
+     * that is already sitting in storage.
+     *
+     * That matters because `logo_path` is a database column and the files are
+     * not: any reseed nulls all of them while every file survives, so the
+     * refetch afterwards is where the loss happens, to a different arbitrary
+     * handful each time. Without this the command is lossy by design and the
+     * loss is invisible — a null column looks exactly like an institution that
+     * publishes nothing.
+     *
+     * Filenames are the organization's slug, so finding the file needs no
+     * record of what was downloaded before.
+     */
+    protected function recover(Organization $organization, string $why, bool $dryRun = false): bool
+    {
+        $existing = $this->existingFile($organization);
+
+        if ($existing === null) {
+            return false;
+        }
+
+        $this->warn("{$organization->name}: {$why} — kept the copy already on disk ({$existing}).");
+        $this->tally['recovered from disk']++;
+
+        if (! $dryRun) {
+            $organization->forceFill(['logo_path' => $existing])->save();
+        }
+
+        return true;
+    }
+
+    /**
+     * The best file already stored for this organization, richest format first
+     * — a favicon is the last resort here for the same reason it is last in
+     * `resolveLogoUrl()`.
+     */
+    protected function existingFile(Organization $organization): ?string
+    {
+        $slug = Str::slug($organization->name);
+
+        foreach (['svg', 'png', 'webp', 'jpg', 'gif', 'ico'] as $extension) {
+            $path = self::DIRECTORY.'/'.$slug.'.'.$extension;
+
+            if (Storage::disk(self::DISK)->exists($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 
     /**

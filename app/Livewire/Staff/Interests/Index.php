@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
@@ -38,11 +39,30 @@ class Index extends Component
 {
     use ActsForStaff;
 
+    /*
+     * The three filters are URL-bound, and this is the first screen here to do
+     * it. Two things follow. The fair page links straight to this screen's
+     * `waiting` set for one fair — a coordinator reading "40 waiting" gets the
+     * names in one click, and without the binding that link would land on the
+     * unfiltered list and quietly show the wrong thing. And a filtered view is
+     * now bookmarkable and survives a refresh, which is what somebody working
+     * through a list actually does.
+     *
+     * `except: ''` on each, and it is doing real work rather than decorating:
+     * without it Livewire only omits a parameter that was never in the URL, so
+     * arriving on `?eventId=6&status=waiting` from the fair page and then
+     * switching back to "all fairs" left `?eventId=` hanging in the address bar
+     * — a filter that reads as set and is not. Found in the browser; no
+     * assertion would have looked at the URL.
+     */
+    #[Url(except: '')]
     public string $search = '';
 
+    #[Url(except: '')]
     public string $eventId = '';
 
     /** '' (all), 'waiting' (never told), 'notified'. */
+    #[Url(except: '')]
     public string $status = '';
 
     /** Row ids ticked for the bulk bar. Livewire hands these back as strings. */
@@ -102,6 +122,21 @@ class Index extends Component
         return $this->filteredQuery()->clone()->unnotified()->count();
     }
 
+    /**
+     * The fair the list is filtered to, or null while it shows all of them.
+     *
+     * Only that case has somewhere to send the coordinator: the announcement
+     * is an action on one fair, so "all fairs" has no fair page to link to.
+     * Returns null rather than guessing.
+     */
+    #[Computed]
+    public function selectedFair(): ?Event
+    {
+        return $this->eventId === ''
+            ? null
+            : Event::query()->find($this->eventId);
+    }
+
     public function updatedSearch(): void
     {
         $this->resetListing();
@@ -132,7 +167,7 @@ class Index extends Component
     protected function resetListing(): void
     {
         $this->selected = [];
-        unset($this->interests, $this->waitingCount);
+        unset($this->interests, $this->waitingCount, $this->selectedFair);
     }
 
     public function confirmDelete(int $interestId): void
@@ -158,7 +193,7 @@ class Index extends Component
         $interest->delete();
 
         $this->deleting = null;
-        unset($this->interests, $this->waitingCount);
+        unset($this->interests, $this->waitingCount, $this->selectedFair);
 
         $this->dispatch('ui-modal-close', id: 'delete-interest');
         $this->toast(__('Signup removed.'));
@@ -180,7 +215,7 @@ class Index extends Component
 
         $count = $interests->count();
         $this->selected = [];
-        unset($this->interests, $this->waitingCount);
+        unset($this->interests, $this->waitingCount, $this->selectedFair);
 
         $this->toast(trans_choice(':count signup removed.|:count signups removed.', $count, ['count' => $count]));
     }

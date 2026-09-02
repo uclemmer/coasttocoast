@@ -54,6 +54,27 @@
                     :description="$event->registration_closes_at?->toDayDateTimeString() ?? __('No closing date')" />
 
                 <x-ui::description-list.item :term="__('Venue address')" :description="$event->venue_address" />
+
+                {{-- The other half of the seam with /staff/interests: the
+                     announcement below mails exactly this set, and this is
+                     where a coordinator goes to read it first. The link carries
+                     both filters, which only works because that screen's
+                     properties are URL-bound. --}}
+                <x-ui::description-list.item :term="__('Interest list')">
+                    @if ($this->waitingCount > 0)
+                        <a href="{{ route('staff.interests', ['eventId' => $event->id, 'status' => 'waiting']) }}"
+                            class="text-fg-brand hover:underline">
+                            {{ trans_choice(
+                                '{1}One person waiting to be told|[2,*]:count people waiting to be told',
+                                $this->waitingCount,
+                                ['count' => $this->waitingCount],
+                            ) }}
+                        </a>
+                    @else
+                        <a href="{{ route('staff.interests', ['eventId' => $event->id]) }}"
+                            class="text-fg-brand hover:underline">{{ __('Nobody waiting — see the list') }}</a>
+                    @endif
+                </x-ui::description-list.item>
             </x-ui::description-list>
         </x-ui::section>
     </div>

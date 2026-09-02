@@ -34,15 +34,24 @@
                 </x-ui::table.toolbar>
 
                 @if ($this->waitingCount > 0)
-                    {{-- Says what the fair page's button would do, without
-                         offering a second button that does it. --}}
+                    {{-- Points at the fair page's button without offering a
+                         second one that does the same thing. It becomes a link
+                         only when a single fair is selected, because that is
+                         the only time there is one fair page to send someone
+                         to — "all fairs" has no destination and a link that
+                         guessed one would be worse than prose. --}}
                     <div class="px-4 pb-3 text-sm text-body">
                         {{ trans_choice(
                             ':count person here has not been told yet.|:count people here have not been told yet.',
                             $this->waitingCount,
                             ['count' => $this->waitingCount],
                         ) }}
-                        {{ __('Announce registration from the fair page.') }}
+                        @if ($this->selectedFair)
+                            <a href="{{ route('staff.events.show', $this->selectedFair) }}"
+                                class="text-fg-brand hover:underline">{{ __('Announce it from the fair page.') }}</a>
+                        @else
+                            {{ __('Announce registration from the fair page.') }}
+                        @endif
                     </div>
                 @endif
 

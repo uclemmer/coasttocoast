@@ -1427,7 +1427,14 @@ and its prune ask the *same* permission, so there is no gap between them to expl
 still calls `authorize()` for itself rather than trusting `mount()`, so loosening `viewAny` later
 cannot open the prune by accident.
 
-**The announcement stays on the fair page.** Telling the list that registration is open is an action
+**The announcement stays on the fair page, and the two screens link to each
+other.** The fair page's Details list carries a link to this screen filtered to
+that fair's waiting set; this screen links back to the fair page, but only when
+a single fair is chosen, because "all fairs" has no one fair page to send
+somebody to. The link works because the three filters are `#[Url]`-bound — the
+binding and the link are one feature, since without it the link would land on
+the unfiltered list and show the wrong set. Each is `except: ''`, or clearing a
+filter leaves an empty `?eventId=` behind that reads as set and is not. Telling the list that registration is open is an action
 on a fair — it requires the fair published, and it stamps `notified_at` per row so a second press is
 a no-op (card 6.5). Putting a second button here would give the coordinator two controls that look
 like they do the same thing, and only one of them idempotent. Instead the screen carries a `waiting`

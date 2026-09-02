@@ -4,6 +4,7 @@ use App\Livewire\Staff\Interests\Index as InterestIndex;
 use App\Models\Event as Fair;
 use App\Models\EventInterest;
 use App\Models\User;
+use Livewire\Attributes\Url;
 use UClemmer\LaravelCore\Admin\Permissions as AdminPermissions;
 use UClemmer\LaravelCore\Auth\Role;
 
@@ -96,6 +97,85 @@ describe('the list', function () {
 
         livewire(InterestIndex::class)
             ->assertDontSee('wire:click="announce"', escape: false)
+            ->assertSee('Announce registration from the fair page');
+    });
+});
+
+describe('the seam with the fair page', function () {
+    it('reads its filters from the query string', function () {
+        // The fair page's link carries both filters, so this is what makes
+        // that link mean anything. Driven over HTTP rather than through the
+        // component, because a query string is exactly what a link delivers.
+        $waiting = EventInterest::factory()->for($this->fair, 'event')
+            ->create(['organization_name' => 'Kenyon College']);
+        EventInterest::factory()->for($this->fair, 'event')->notified()
+            ->create(['organization_name' => 'Rhodes College']);
+        EventInterest::factory()->for(Fair::factory()->create(), 'event')
+            ->create(['organization_name' => 'Berry College']);
+
+        $this->get(route('staff.interests', ['eventId' => $this->fair->id, 'status' => 'waiting']))
+            ->assertOk()
+            ->assertSee($waiting->email)
+            ->assertDontSee('Rhodes College')
+            ->assertDontSee('Berry College');
+    });
+
+    it('links from the fair page to exactly the set the announcement would mail', function () {
+        // Without the URL bindings this link would land on the unfiltered list
+        // and quietly show the wrong thing, so the two are one feature.
+        EventInterest::factory()->for($this->fair, 'event')->create();
+
+        // Asserted through the default escaping, not around it: the href is
+        // written by `{{ }}`, so the `&` between the two parameters is
+        // `&amp;` on the page and a raw-string match would never fire.
+        $expected = route('staff.interests', ['eventId' => $this->fair->id, 'status' => 'waiting']);
+
+        $this->get(route('staff.events.show', $this->fair))
+            ->assertOk()
+            ->assertSee($expected);
+    });
+
+    it('declares every filter as droppable from the query string', function () {
+        /*
+         * Without `except: ''` Livewire keeps the key and empties it, so
+         * arriving from the fair page and switching back to "all fairs" left
+         * `?eventId=` in the address bar — a filter that reads as set and is
+         * not. Found in a browser pass.
+         *
+         * Asserted through reflection, which is not the usual shape and is the
+         * honest one here: Livewire 4 applies `#[Url]` entirely in the browser.
+         * There is no URL in the effects, none in the snapshot memo, and
+         * `Testable` has no query-string assertion — both were checked before
+         * settling for this. The attribute is the only part of the behaviour a
+         * server-side test can see, and it is also the part somebody would
+         * delete.
+         */
+        $component = new ReflectionClass(InterestIndex::class);
+
+        foreach (['search', 'eventId', 'status'] as $filter) {
+            $attributes = $component->getProperty($filter)->getAttributes(Url::class);
+
+            expect($attributes)->toHaveCount(1, "{$filter} is not URL-bound.")
+                ->and($attributes[0]->newInstance()->except)->toBe('', "{$filter} keeps an empty key in the URL.");
+        }
+    });
+
+    it('links back to the fair page once a single fair is chosen', function () {
+        EventInterest::factory()->for($this->fair, 'event')->create();
+
+        livewire(InterestIndex::class)
+            ->set('eventId', (string) $this->fair->id)
+            ->assertSee(route('staff.events.show', $this->fair), escape: false);
+    });
+
+    it('does not guess a fair page while showing every fair', function () {
+        // The announcement is an action on one fair, so "all fairs" has no
+        // destination. Prose, not a link that picks one.
+        EventInterest::factory()->for($this->fair, 'event')->create();
+        EventInterest::factory()->for(Fair::factory()->create(), 'event')->create();
+
+        livewire(InterestIndex::class)
+            ->assertDontSee(route('staff.events.show', $this->fair), escape: false)
             ->assertSee('Announce registration from the fair page');
     });
 });

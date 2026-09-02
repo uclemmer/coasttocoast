@@ -465,10 +465,42 @@ Named `updatedSearch()` / `updatedEventId()` / `updatedStatus()` hooks instead.
 **Copying a hook is copying its preconditions**, and this one's precondition was
 written nowhere.
 
-A test caught that one, and the browser pass afterwards found nothing further:
-the bulk bar appears on a tick, the filters narrow the list and clear the
-selection, the waiting line disappears when the filtered set is empty, the
-confirm dialog opens, and the console is clean. Worth recording as the one pass
-in this project that came back empty — because the defect it would have found
-had already been caught by a test written for exactly that behaviour. That is
-the argument for testing the interaction and not only the query.
+A test caught that one, and the first browser pass found nothing further: the
+bulk bar appears on a tick, the filters narrow the list and clear the selection,
+the waiting line disappears when the filtered set is empty, the confirm dialog
+opens, and the console is clean.
+
+**That was briefly recorded here as the one pass in this project that came back
+empty. The second pass, over the fair-page links added the same day, broke the
+streak** — see below. The first pass came back clean because the defect it would
+have found had already been caught by a test written for exactly that behaviour,
+which is the argument for testing the interaction and not only the query; it is
+not evidence that a pass had stopped being worth running.
+
+### The links between this screen and the fair page (2026-09-02)
+
+The fair page shows a waiting count and the button that mails those people; this
+screen shows who they are. Neither linked to the other, so the two halves of one
+job were three clicks apart.
+
+Both directions are wired now, and the fair page's link carries **both** filters
+— `?eventId=6&status=waiting` — which only means anything because the screen's
+three filter properties are `#[Url]`-bound. **That binding and that link are one
+feature**: without it the link lands on the unfiltered list and silently shows
+the wrong set, which is worse than no link.
+
+The return link is deliberately conditional. It appears only when a single fair
+is selected, because the announcement is an action on one fair and "all fairs"
+has no fair page to send anybody to. Filtered to all fairs the screen keeps the
+plain-prose sentence it had.
+
+**What the second browser pass found, and no test could have.** Livewire only
+omits a URL parameter that was never in the URL to begin with. Arriving from the
+fair page on `?eventId=6&status=waiting` and switching back to "all fairs" left
+`?eventId=` hanging in the address bar — a filter that reads as set and is not.
+`#[Url(except: '')]` drops it. It is pinned by a **reflection** test rather than
+a behavioural one, and that shape is deliberate: Livewire 4 applies `#[Url]`
+entirely in the browser, so there is no URL in the component's effects, none in
+its snapshot memo, and `Testable` carries no query-string assertion. All three
+were checked. The attribute is the only part a server-side test can see, and it
+is also the part somebody would delete.

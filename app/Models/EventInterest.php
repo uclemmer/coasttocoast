@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property int $event_id
  * @property string $email
  * @property string|null $organization_name
+ * @property string|null $organization_sort_name
  * @property Carbon|null $notified_at
  */
 class EventInterest extends Model
@@ -29,6 +30,25 @@ class EventInterest extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+
+    /**
+     * Keep `organization_sort_name` in step with the name the visitor typed.
+     *
+     * The staff interest list alphabetizes on it, through the same
+     * `Organization::sortName()` the roster and the delivery table use — one
+     * alphabet across all three (doc 10, D-10-c). Null when the signup skipped
+     * the optional organization field, so those rows sort first.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (EventInterest $interest): void {
+            if ($interest->isDirty('organization_name')) {
+                $interest->organization_sort_name = $interest->organization_name === null
+                    ? null
+                    : Organization::sortName($interest->organization_name);
+            }
+        });
+    }
 
     /**
      * @return array<string, string>

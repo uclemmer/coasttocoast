@@ -1407,9 +1407,47 @@ name given*, not *came from the interest list* — the phrase in the view is wha
 An extra test now covers the named-interest path, which nothing had exercised.
 
 **`event_interests.organization_name` was considered for the same treatment and declined**
-(2026-09-02). Nothing lists that table: it is counted on `Staff\Events\Show`, iterated unordered to
-notify, and read by `AudienceBuilder`. The only place its names appear in an ordered list is the
-delivery table, which sorts them through the recipient key above — so a third column would be
-indexed, hooked, migrated and read by nothing. The package roadmap's rule applies here too: a rule
-with no case to serve rots. **What would change the answer** is a `/staff` screen for the interest
-list, which does not exist today; build the column with it, not before it.
+(2026-09-02), on the grounds that nothing listed the table. **The screen that changes that answer was
+built the same day — see D-10-c**, so the column exists now. The declining is kept because the
+condition it named is the thing that fired: a column earns its place when something reads it, and
+naming the trigger up front meant nobody had to re-argue the case when the trigger arrived.
+
+### D-10-c — The notify-me list gets a screen, and the column D-10-b declined
+
+`event_interests` had no staff UI at all. A coordinator could see on the fair page that forty people
+were waiting to be told when registration opened, and had no way to see who they were — the rows
+were reachable only as a count and as an `Audience::InterestList` in the campaign composer. The
+screen is `/staff/interests`.
+
+**It is the first `/staff` screen with no Filament ancestor.** Every other one in docs/13 is a port
+with behaviour to carry across; this had no resource to port, so the traps that section records —
+implicit policy resolution, dehydration, persistent notifications — did not apply. What did apply is
+the one about **visibility not being authorization**, and the shape here is worth naming: the screen
+and its prune ask the *same* permission, so there is no gap between them to exploit. The delete
+still calls `authorize()` for itself rather than trusting `mount()`, so loosening `viewAny` later
+cannot open the prune by accident.
+
+**The announcement stays on the fair page.** Telling the list that registration is open is an action
+on a fair — it requires the fair published, and it stamps `notified_at` per row so a second press is
+a no-op (card 6.5). Putting a second button here would give the coordinator two controls that look
+like they do the same thing, and only one of them idempotent. Instead the screen carries a `waiting`
+filter, which shows exactly the set that button would mail, and a line of copy pointing at it. A
+test asserts there is no `announce` action on this screen.
+
+**`events.manage`, not a permission of its own.** An interest row is an attribute of a fair: it
+carries `event_id`, it cascade-deletes with the fair, and the pre-existing action on it
+(`Staff\Events\Show::announce()`) already authorises `update` on the Event. A second name for the
+same job would need granting separately, and a permission granted to nobody is invisible with no
+error. Narrow it the day someone may run fairs without reading the lead list — the same day this app
+grows a second staff role, which `RoleSeeder` says it has not.
+
+**No create or edit.** These rows come from the public form. They are read, announced to, or thrown
+away; removal is for a typo'd address that bounces or a spam signup, and the confirm copy says the
+person can sign up again.
+
+**A bug the tests caught before the browser did.** The component first used a blanket `updated()`
+hook to drop stale selections on a filter change, copied from `Staff\Registrations\Index`. That
+screen can afford it because it has no selection; this one cannot — `updated()` fires for
+`$selected` too, so every tick cleared itself the instant it was made and the bulk bar could never
+appear. Named `updatedSearch()` / `updatedEventId()` / `updatedStatus()` hooks instead. **Copying a
+hook is copying its preconditions**, and this one's precondition was written nowhere.

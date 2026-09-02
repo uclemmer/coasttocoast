@@ -100,6 +100,31 @@ describe('EventInterest', function () {
         expect($interest->event->is($event))->toBeTrue()
             ->and($interest->organization_name)->toBeNull();
     });
+
+    it('derives the same alphabetizing key the roster uses', function () {
+        // One alphabet across the roster, the delivery table and this list
+        // (doc 10, D-10-c) — the staff screen orders on it.
+        $interest = EventInterest::factory()
+            ->create(['organization_name' => 'The University of Alabama at Birmingham']);
+
+        expect($interest->organization_sort_name)->toBe('university of alabama at birmingham');
+    });
+
+    it('has no sort key when the optional organization field was left blank', function () {
+        $interest = EventInterest::factory()->withoutOrganizationName()->create();
+
+        expect($interest->organization_sort_name)->toBeNull();
+    });
+
+    it('re-derives the sort key when the name is corrected', function () {
+        // Unlike the delivery table's frozen snapshot, this row is live: a
+        // coordinator fixing a typo should see it re-file.
+        $interest = EventInterest::factory()->create(['organization_name' => 'Zebra College']);
+
+        $interest->update(['organization_name' => 'The Aardvark University']);
+
+        expect($interest->fresh()->organization_sort_name)->toBe('aardvark university');
+    });
 });
 
 describe('Sponsor', function () {

@@ -202,6 +202,7 @@ it('serves the pages a coordinator actually works from, by name', function () {
         '/staff/grants/'.$this->grant->id,
         '/staff/sponsors',
         '/staff/faq',
+        '/staff/interests',
         '/staff/messages',
         '/staff/messages/'.$this->message->id,
     ];

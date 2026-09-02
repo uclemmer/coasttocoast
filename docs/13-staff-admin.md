@@ -429,3 +429,46 @@ Two things worth keeping from how it was found and fixed:
   separately. The field has been `organization_id` since card 1.2, so the screen
   said "organization id" before the rename too. Fixing it in the rename commit
   would have implied the rename caused it.
+
+
+## The notify-me list — the first screen with no ancestor (2026-09-02)
+
+Everything above this is a port: a Filament resource existed, and the work was
+carrying its behaviour across. `/staff/interests` had none. `event_interests`
+rows were reachable only as a count on the fair page and as an
+`Audience::InterestList` in the campaign composer, so a coordinator could see
+that forty people were waiting and not who they were.
+
+That changes which of this document's traps apply. Implicit policy resolution,
+dehydration and persistent-versus-toast were all about recovering something
+Filament did for free, and there was nothing to recover. What still applied:
+
+- **Every mount and every action authorises itself.** Here the screen and its
+  prune ask the same permission, so there is no visibility-versus-authorization
+  gap — but `delete()` still calls `authorize()` rather than trusting `mount()`,
+  so loosening `viewAny` later cannot open the prune by accident.
+- **`#[Computed]` memoises for the request**, so every action that writes
+  `unset()`s both the list and the waiting count before re-rendering.
+
+Three decisions specific to it, with the reasoning in doc 10 D-10-c: the
+announcement stays on the fair page and this screen carries a `waiting` filter
+instead of a second button; it gates on `events.manage` rather than a permission
+of its own; and there is no create or edit, because the rows come from the
+public form.
+
+**One trap this screen added to the list, and it generalises.** The component
+first dropped stale selections with a blanket `updated()` hook, copied from
+`Staff\Registrations\Index`. That screen can afford it because it has no
+selection; this one cannot — `updated()` fires for `$selected` too, so every
+tick cleared itself the instant it was made and the bulk bar could never appear.
+Named `updatedSearch()` / `updatedEventId()` / `updatedStatus()` hooks instead.
+**Copying a hook is copying its preconditions**, and this one's precondition was
+written nowhere.
+
+A test caught that one, and the browser pass afterwards found nothing further:
+the bulk bar appears on a tick, the filters narrow the list and clear the
+selection, the waiting line disappears when the filtered set is empty, the
+confirm dialog opens, and the console is clean. Worth recording as the one pass
+in this project that came back empty — because the defect it would have found
+had already been caught by a test written for exactly that behaviour. That is
+the argument for testing the interaction and not only the query.

@@ -86,13 +86,16 @@
             {{--
                 A hardcoded list, as the portal's is. A nav registry would be
                 the obvious abstraction and is not worth it for one file that
-                changes when a screen is added — which is six more times, and
-                then never.
+                changes when a screen is added. The original note said that was
+                "six more times, and then never"; the seven ported resources all
+                landed, and then the notify-me list arrived on 2026-09-02 as a
+                screen nothing had ever ported, so treat the count as a guess
+                that expired rather than a plan.
 
                 Links are not permission-filtered yet. Every screen authorises
                 itself on mount, so a link somebody cannot use 403s rather than
                 misleading them into a broken page; hiding them is a courtesy to
-                add once all seven exist and the permission set is settled.
+                add once the permission set is settled.
             --}}
             <ul class="space-y-1 font-medium">
                 @foreach ([
@@ -101,6 +104,7 @@
         ['staff.organizations', __('Organizations')],
         ['staff.registrations', __('Registrations')],
         ['staff.grants', __('Fee assistance')],
+        ['staff.interests', __('Notify-me list')],
         ['staff.messages', __('Campaigns')],
         ['staff.faq', __('FAQ')],
         ['staff.sponsors', __('Sponsors')],

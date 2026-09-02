@@ -14,4 +14,7 @@ model's `saving()` hook from the `organization_name` **snapshot** — never join
 organization, or a rename would reorder a campaign that already went out. It is nullable, so
 interest-list recipients with no organization sort first.
 
+`event_interests.organization_sort_name` is the third, same rule, derived live rather than frozen —
+correcting a typo there re-files the row. `Staff\Interests\Index` orders on it.
+
 Do not sort on `normalized_name` instead. It looks equivalent but exists for duplicate matching, so tuning that heuristic would silently reorder every public list. Reasoning: docs/10 D-10-a.

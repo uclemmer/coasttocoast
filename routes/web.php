@@ -23,6 +23,7 @@ use App\Livewire\Staff\Faq\Edit as EditFaqItem;
 use App\Livewire\Staff\Faq\Index as FaqIndex;
 use App\Livewire\Staff\Grants\Index as GrantIndex;
 use App\Livewire\Staff\Grants\Show as ShowGrant;
+use App\Livewire\Staff\Interests\Index as InterestIndex;
 use App\Livewire\Staff\Messages\Edit as EditMessage;
 use App\Livewire\Staff\Messages\Index as MessageIndex;
 use App\Livewire\Staff\Messages\Show as ShowMessage;
@@ -126,6 +127,10 @@ Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(
     // is never swallowed by `{event}`.
     Route::get('/events/{event}', ShowEvent::class)->name('events.show');
     Route::get('/events/{event}/edit', EditEvent::class)->name('events.edit');
+
+    // Read and prune only. Announcing registration to this list is an action
+    // on a fair and lives on the fair page — see the component's class note.
+    Route::get('/interests', InterestIndex::class)->name('interests');
 
     Route::get('/messages', MessageIndex::class)->name('messages');
     Route::get('/messages/create', EditMessage::class)->name('messages.create');

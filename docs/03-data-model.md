@@ -166,7 +166,13 @@ Enums added (`app/Enums`): `MembershipStatus`, `GrantStatus`, `GrantBenefit`.
 
 | column | type |
 |---|---|
-| id, event_id fk, email, organization_name null, notified_at null, timestamps; unique (event_id, email) |
+| id, event_id fk, email, organization_name null, organization_sort_name null index, notified_at null, timestamps; unique (event_id, email) |
+
+`organization_sort_name` is derived in a `saving` hook through the same `Organization::sortName()`
+the roster and the delivery table use, so `/staff/interests` files an institution where the other
+two screens file it (doc 10, D-10-c). Null when the signup skipped the form's optional organization
+field, so those rows sort first. Unlike the delivery table's copy this row is live, and correcting a
+typo re-files it.
 
 ### sponsors / sponsor_staff
 

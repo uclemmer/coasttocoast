@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * The sponsoring schools (R3.5) — the Livewire replacement for the admin
@@ -61,7 +62,7 @@ class Index extends Component
     {
         return Sponsor::query()
             ->withCount('staff')
-            ->when($this->search !== '', fn ($query) => $query->where('name', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn ($query) => $query->whereRaw(LikeTerm::clause('name'), [LikeTerm::contains($this->search)]))
             ->ordered()
             ->get();
     }

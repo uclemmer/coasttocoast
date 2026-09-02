@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * The public FAQ (R3.5) — the Livewire replacement for the admin panel's
@@ -57,7 +58,7 @@ class Index extends Component
     public function items(): Collection
     {
         return FaqItem::query()
-            ->when($this->search !== '', fn ($query) => $query->where('question', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn ($query) => $query->whereRaw(LikeTerm::clause('question'), [LikeTerm::contains($this->search)]))
             ->when($this->published !== '', fn ($query) => $query->where('is_published', $this->published === 'yes'))
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -82,6 +83,11 @@ class Index extends Component
     #[Computed]
     public function needsCopyCount(): int
     {
+        /*
+         * The one unescaped LIKE left in this app, and deliberately so: the
+         * `%` here are the caller's own wildcards around a fixed marker, not
+         * a user's search term. There is nothing to escape.
+         */
         return FaqItem::query()->where('answer', 'like', '%TODO-OWNER%')->count();
     }
 

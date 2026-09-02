@@ -30,7 +30,7 @@
         "php": "^8.4",
         "stripe/stripe-php": "^21.2",
         "twilio/sdk": "^8.12",
-        "uclemmer/laravel-core": "^0.5",
+        "uclemmer/laravel-core": "^0.5.1",
         "uclemmer/laravel-postmaster": "^0.2",
         "uclemmer/laravel-ui": "^0.6"
     },

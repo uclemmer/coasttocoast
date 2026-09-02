@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * The fair calendar (R3.2) — the Livewire replacement for the admin panel's
@@ -40,7 +41,7 @@ class Index extends Component
     {
         return Event::query()
             ->withCount('registrations')
-            ->when($this->search !== '', fn ($query) => $query->where('name', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn ($query) => $query->whereRaw(LikeTerm::clause('name'), [LikeTerm::contains($this->search)]))
             ->when($this->published !== '', fn ($query) => $query->where('is_published', $this->published === 'yes'))
             ->orderByDesc('starts_at')
             ->get();

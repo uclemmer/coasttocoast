@@ -12,6 +12,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * The grant review queue (R3.3b) — the Livewire replacement for the admin
@@ -54,7 +55,7 @@ class Index extends Component
             ->when($this->eventId !== '', fn ($query) => $query->where('event_id', $this->eventId))
             ->when($this->search !== '', fn ($query) => $query->whereHas(
                 'organization',
-                fn ($organization) => $organization->where('name', 'like', '%'.$this->search.'%'),
+                fn ($organization) => $organization->whereRaw(LikeTerm::clause('name'), [LikeTerm::contains($this->search)]),
             ))
             ->orderByDesc('created_at')
             ->get();

@@ -11,6 +11,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Throwable;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * The organization directory (R3.3a) — the Livewire replacement for the admin
@@ -68,7 +69,7 @@ class Index extends Component
     {
         return Organization::query()
             ->withCount(['activeReps', 'registrations'])
-            ->when($this->search !== '', fn ($query) => $query->where('name', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn ($query) => $query->whereRaw(LikeTerm::clause('name'), [LikeTerm::contains($this->search)]))
             ->when($this->filter === 'needs_a_rep', fn ($query) => $query->whereDoesntHave('activeReps'))
             ->when($this->filter === 'possible_duplicates', fn ($query) => $query->whereIn(
                 'normalized_name',

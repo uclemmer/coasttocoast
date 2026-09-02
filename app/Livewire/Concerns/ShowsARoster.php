@@ -7,6 +7,7 @@ use App\Models\Registration;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 use Livewire\WithPagination;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * The public roster of attending colleges (R1.3, R1.4).
@@ -59,7 +60,7 @@ trait ShowsARoster
             ->join('organizations', 'organizations.id', '=', 'registrations.organization_id')
             ->when(
                 filled($this->search),
-                fn ($query) => $query->where('organizations.name', 'like', '%'.trim($this->search).'%'),
+                fn ($query) => $query->whereRaw(LikeTerm::clause('organizations.name'), [LikeTerm::contains(trim($this->search))]),
             )
             ->orderBy('organizations.sort_name')
             ->select('registrations.*')

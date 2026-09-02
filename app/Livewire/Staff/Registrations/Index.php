@@ -17,6 +17,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * The registration list (R3.4) — the Livewire replacement for the admin
@@ -81,11 +82,11 @@ class Index extends Component
             ->when($this->hasGrant === 'yes', fn ($query) => $query->whereNotNull('grant_id'))
             ->when($this->hasGrant === 'no', fn ($query) => $query->whereNull('grant_id'))
             ->when($this->search !== '', fn ($query) => $query->where(function ($inner): void {
-                $inner->where('rep_name', 'like', '%'.$this->search.'%')
-                    ->orWhere('rep_email', 'like', '%'.$this->search.'%')
+                $inner->whereRaw(LikeTerm::clause('rep_name'), [LikeTerm::contains($this->search)])
+                    ->orWhereRaw(LikeTerm::clause('rep_email'), [LikeTerm::contains($this->search)])
                     ->orWhereHas(
                         'organization',
-                        fn ($organization) => $organization->where('name', 'like', '%'.$this->search.'%'),
+                        fn ($organization) => $organization->whereRaw(LikeTerm::clause('name'), [LikeTerm::contains($this->search)]),
                     );
             }));
     }

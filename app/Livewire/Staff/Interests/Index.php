@@ -12,6 +12,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * The notify-me list (R2.7) — the people who found the site between fairs and
@@ -88,8 +89,8 @@ class Index extends Component
             ->when($this->status === 'waiting', fn ($query) => $query->unnotified())
             ->when($this->status === 'notified', fn ($query) => $query->whereNotNull('notified_at'))
             ->when($this->search !== '', fn ($query) => $query->where(function ($inner): void {
-                $inner->where('email', 'like', '%'.$this->search.'%')
-                    ->orWhere('organization_name', 'like', '%'.$this->search.'%');
+                $inner->whereRaw(LikeTerm::clause('email'), [LikeTerm::contains($this->search)])
+                    ->orWhereRaw(LikeTerm::clause('organization_name'), [LikeTerm::contains($this->search)]);
             }));
     }
 

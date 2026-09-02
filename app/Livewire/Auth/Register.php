@@ -15,6 +15,7 @@ use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * Signing up as a representative (D9) — the Livewire replacement for the
@@ -100,7 +101,7 @@ class Register extends Component
         }
 
         return Organization::query()
-            ->where('name', 'like', '%'.trim($this->organization_search).'%')
+            ->whereRaw(LikeTerm::clause('name'), [LikeTerm::contains(trim($this->organization_search))])
             ->orderBy('sort_name')
             ->limit(25)
             ->get(['id', 'name']);

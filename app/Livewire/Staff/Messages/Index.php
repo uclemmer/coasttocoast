@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * The campaign list (doc 07 §3, R3.6) — the Livewire replacement for the admin
@@ -48,7 +49,7 @@ class Index extends Component
         return Message::query()
             ->with('event')
             ->withCount('recipients')
-            ->when($this->search !== '', fn ($query) => $query->where('subject', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn ($query) => $query->whereRaw(LikeTerm::clause('subject'), [LikeTerm::contains($this->search)]))
             ->when($this->audience !== '', fn ($query) => $query->where('audience', $this->audience))
             ->orderByDesc('created_at')
             ->get();

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
+use UClemmer\LaravelCore\Support\LikeTerm;
 
 /**
  * Download each organization's logo from its own website, for the roster.
@@ -127,7 +128,16 @@ class FetchOrganizationLogos extends Command
         $sources = $this->sources();
 
         $organizations = Organization::query()
-            ->when(is_string($only) && $only !== '', fn ($query) => $query->where('name', 'like', "%{$only}%"))
+            /*
+             * Escaped like every other name filter here. `--only` is an
+             * operator's shorthand for "organizations whose name contains
+             * this", not a pattern language — nothing documents a wildcard, so
+             * an operator typing one should get the character they typed.
+             */
+            ->when(
+                is_string($only) && $only !== '',
+                fn ($query) => $query->whereRaw(LikeTerm::clause('name'), [LikeTerm::contains((string) $only)]),
+            )
             ->orderBy('sort_name')
             ->get();
 

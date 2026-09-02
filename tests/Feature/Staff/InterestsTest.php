@@ -56,6 +56,28 @@ describe('the list', function () {
             ->and($byOrganization->pluck('email')->all())->toBe(['sam@rhodes.example']);
     });
 
+    it('finds an email containing an underscore', function () {
+        /*
+         * Underscores are ordinary in email addresses, and this search returned
+         * NOTHING for one on this app's SQLite database until 2026-09-02.
+         *
+         * The term was interpolated raw, so `_` reached the query as the
+         * match-any-character wildcard rather than as itself. `LikeTerm` escapes
+         * it and names the escape character in the same breath — both halves are
+         * needed, and SQLite has no default escape character, so escaping
+         * without the clause matches a literal backslash instead.
+         */
+        EventInterest::factory()->for($this->fair, 'event')
+            ->create(['email' => 'dana_lee@kenyon.example', 'organization_name' => 'Kenyon College']);
+        EventInterest::factory()->for($this->fair, 'event')
+            ->create(['email' => 'danaxlee@kenyon.example', 'organization_name' => 'Rhodes College']);
+
+        $found = livewire(InterestIndex::class)->set('search', 'dana_lee')->instance()->interests();
+
+        // Exactly the address typed — not the one where `_` stood in for `x`.
+        expect($found->pluck('email')->all())->toBe(['dana_lee@kenyon.example']);
+    });
+
     it('filters to the people the announcement would still reach', function () {
         // The seam with the fair page's button: this filter is exactly the set
         // that `Staff\Events\Show::announce()` sends to.

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4b919571f0ccfb369dd42ba17d65aa0d",
+    "content-hash": "14ca651c37b832a0d591c8f5d5d2ca7b",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -6770,16 +6770,16 @@
         },
         {
             "name": "uclemmer/laravel-postmaster",
-            "version": "v0.2.0",
+            "version": "v0.6.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-postmaster.git",
-                "reference": "eb9daf0fcabdd53fc41a89ff55d06f8ce4c6eaf7"
+                "reference": "0059da14f2c804c30d258f10ab2d2d18fb6ddf97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-postmaster/zipball/eb9daf0fcabdd53fc41a89ff55d06f8ce4c6eaf7",
-                "reference": "eb9daf0fcabdd53fc41a89ff55d06f8ce4c6eaf7",
+                "url": "https://api.github.com/repos/uclemmer/laravel-postmaster/zipball/0059da14f2c804c30d258f10ab2d2d18fb6ddf97",
+                "reference": "0059da14f2c804c30d258f10ab2d2d18fb6ddf97",
                 "shasum": ""
             },
             "require": {
@@ -6873,10 +6873,10 @@
                 "postmark"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-postmaster/tree/v0.2.0",
+                "source": "https://github.com/uclemmer/laravel-postmaster/tree/v0.6.0",
                 "issues": "https://github.com/uclemmer/laravel-postmaster/issues"
             },
-            "time": "2026-09-01T16:19:49+00:00"
+            "time": "2026-09-03T21:48:04+00:00"
         },
         {
             "name": "uclemmer/laravel-ui",

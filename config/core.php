@@ -482,27 +482,51 @@ return [
     | private surface it has mounted -- here that is the admin at /admin -- so
     | a new private area never ships indexable by omission.
     |
-    | OFF here, because this app serves public/robots.txt instead and a static
-    | file wins: every web server answers it before Laravel boots, so turning
-    | this on without deleting that file changes nothing and only makes
-    | core:doctor warn. Switching over is a decision, not a bump: see the
-    | maintenance log for 2026-09-07.
+    | ON since 2026-09-07 (doc 21), replacing the stock public/robots.txt that
+    | had permitted everything since the Laravel install. That file is DELETED,
+    | and it had to be: a static public/robots.txt is answered by the web server
+    | before Laravel boots, so leaving it would have made this whole section
+    | dead config. core:doctor warns if one ever comes back.
     |
-    | Note for whoever makes it. Core derives its lines from config, and this
-    | app's `auth.routes.prefix` is an EMPTY string -- login lives at /login,
-    | not /core/login. Core drops an empty prefix rather than writing
-    | `Disallow: /`, which would hide the entire site from search. So the
-    | derived file here would be /admin and nothing else, and anything under
-    | the auth prefix needs naming in `disallow` by hand.
+    | Core derives `/admin` itself from `admin.path`. Everything below is named
+    | by hand, and the reason is this app's `auth.routes.prefix`, which is an
+    | EMPTY string -- core's auth IS this app's auth, so login lives at /login
+    | rather than /core/login. Core drops an empty prefix rather than deriving
+    | `Disallow: /`, which would hide the entire site from search; the price of
+    | that correctness is that nothing under the auth prefix is derived either.
+    |
+    | RobotsTest walks the route table and fails if a gated GET route is not
+    | covered here, so a new private area cannot ship indexable by omission.
+    | It also asserts the public pages are still crawlable, which is what would
+    | catch a rule broad enough to swallow the fair's own content.
     |
     */
     'robots' => [
-        'enabled' => false,
+        'enabled' => true,
 
-        // Extra paths to keep out of the index, e.g. '/billing/'.
-        'disallow' => [],
+        'disallow' => [
+            // Behind a login. /admin is derived from admin.path, not listed.
+            '/portal',
+            '/staff',
+            '/email/verify',
 
-        // Absolute URL of a sitemap to advertise, or null.
+            // The auth pages. Public by necessity and worth nothing in an
+            // index; not derived, because the auth prefix is empty.
+            '/login',
+            '/register',
+            '/forgot-password',
+
+            // The URL is itself the credential. An indexed one is a working
+            // way into somebody else's account, with no gate behind it.
+            '/reset-password/',
+
+            // Uploaded files keep working at their path after the page that
+            // showed them closes, so an indexed one outlives its gate. The
+            // pages that embed them stay crawlable; the bare files do not.
+            '/storage/',
+        ],
+
+        // No sitemap is generated here yet. Point this at one if that changes.
         'sitemap' => null,
     ],
 

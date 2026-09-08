@@ -1,8 +1,10 @@
-# 21 — Core `0.5.1` → `0.6.0`
+# 21 — Core `0.5.1` → `0.6.0`, and a `robots.txt` worth having
 
-Upgraded 2026-09-07. One release, one new feature, and **no code changed here**
-— the constraint moved and a config section was added. There is no migration to
-publish: core `0.6.0` adds a route and a config key, and no table.
+Upgraded 2026-09-07. The bump itself changed no code: core `0.6.0` adds a route
+and a config key and no table, so there is no migration to publish. What the
+bump surfaced was worth more than the version — this app had been telling
+crawlers to index everything since the day it was installed — and the owner
+took the fix the same day.
 
 ---
 
@@ -10,87 +12,127 @@ publish: core `0.6.0` adds a route and a config key, and no table.
 
 | Release | Change | Effect here |
 | --- | --- | --- |
-| `0.6.0` | `GET /robots.txt` served from config, behind `core.robots.enabled` (off by default), plus a `robots.txt` doctor check | none until switched on — and it is **not** switched on, see §2 |
+| `0.6.0` | `GET /robots.txt` served from config, behind `core.robots.enabled` (off by default), plus a `robots.txt` doctor check | **adopted** — see §2 |
 
 Core `0.6.0` is itself a rebuild: the original was tagged on 2026-09-04, lost
 unpushed with the machine it was made on, and reconstructed and re-tagged on
 2026-09-06. The workspace `CLAUDE.md` section "The 2026-09-06 Machine Move" is
-the record. 987 tests here pass against it (953 passed, the rest skipped), which
-is what a version-only bump is supposed to demonstrate.
+the record.
 
-## 2. The finding: this app has a `robots.txt` that permits everything
+## 2. The finding: a `robots.txt` that permitted everything
 
-**Left as a decision for the owner rather than made during a version bump**, but
-it is the reason this doc is longer than the table above.
-
-`public/robots.txt` is tracked here and has never been edited since the Laravel
-install (`edbe0b4`). It is the framework's stock file, in full:
+`public/robots.txt` was tracked here and had never been edited since the Laravel
+install (`edbe0b4`). It was the framework's stock file, in full:
 
 ```
 User-agent: *
 Disallow:
 ```
 
-A bare `Disallow:` permits everything. So the fair's **admin at `/admin`** is
-not kept out of any search index, and neither is anything else. That is not a
-leak on its own — every one of those routes is behind a gate, and the gate is
-what keeps them private. It is the second line of defence that is missing, and
-`ckbs` is the worked example of why the workspace decided to care: its show
-gallery spent a fortnight public ahead of its show because a condition was
-missing from its gate, and there was nothing behind that gate when it failed.
+A bare `Disallow:` permits everything. So the fair's **admin at `/admin`**, the
+**rep portal**, the **staff screens** and the **password-reset links** were not
+kept out of any search index, and neither was anything else.
 
-Core `0.6.0` exists to close exactly this, and it will not fight the file. **A
-static `public/robots.txt` wins**: every web server answers it before Laravel
-boots, so switching the flag on without deleting the file changes nothing that
-a crawler can see. The new doctor check reports that state as a warning; with
-the flag off, as it is here, it reports:
+That was not a leak on its own — every one of those routes is behind a gate, and
+the gate is what keeps them private. What was missing is the second line of
+defence, and `ckbs` is the worked example of why this workspace decided to care:
+its show gallery spent a fortnight public ahead of its show because a condition
+was missing from its gate, and there was nothing behind that gate when it
+failed.
+
+## 3. What was done
+
+Three steps, and the second is the one that is easy to miss.
+
+1. **`core.robots.enabled` is true** in `config/core.php`.
+2. **`public/robots.txt` is deleted.** It had to go: a static file under
+   `public/` is answered by the web server before Laravel boots, so leaving it
+   would have made the whole config section dead — the route would exist, return
+   200 to the test suite, and reach no crawler. The doctor check warns if one
+   ever comes back.
+3. **The disallow list was drawn from the route table**, not from memory.
+
+### What is served now
 
 ```
-  SKIP  robots.txt
-        core.robots.enabled is false.
+User-agent: *
+Disallow: /admin
+Disallow: /portal
+Disallow: /staff
+Disallow: /email/verify
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password/
+Disallow: /storage/
 ```
 
-### What switching over would produce, measured
+`/admin` is **derived** by core from `core.admin.path`; if that path moves, this
+follows without anybody editing a list. Everything else is named by hand, and
+the reason is worth keeping:
 
-Not guessed — `Robots::disallows()` was called against this application's real
-config on 2026-09-07 and returned:
+**This app's `core.auth.routes.prefix` is an empty string.** Core's auth *is*
+this app's auth, so login lives at `/login` rather than `/core/login`. An empty
+prefix would derive `Disallow: /` — which hides the entire site from search —
+so core drops it instead. The price of that correctness is that nothing under
+the auth prefix is derived either, which is why `/login`, `/register` and
+`/forgot-password` are listed explicitly. This app is the first host to
+exercise that branch against real config.
 
-```php
-['/admin']
-```
+The last three lines follow `ckbs`'s categories rather than being invented here:
 
-One line, and the interesting half is what is **absent**. This app sets
-`core.auth.routes.prefix` to an **empty string**, because core's auth *is* this
-app's auth and login lives at `/login` rather than `/core/login`. An empty
-prefix would derive `Disallow: /`, which hides the entire site from search —
-core drops it instead, deliberately, and this host is the first place that
-branch has been exercised against real config.
+- **`/reset-password/`** — the URL *is* the credential. An indexed one is a
+  working way into somebody else's account, with no gate behind it to refuse
+  the visitor, which makes it worse than an indexed private page.
+- **`/storage/`** — an uploaded file keeps working at its path after the page
+  that showed it closes, so an indexed one outlives the gate in front of it.
+  The pages that embed them stay crawlable; only the bare files do not.
 
-So the switch is three steps, not one, and the second is the one that is easy
-to miss:
+### What is deliberately *not* disallowed
 
-1. Set `core.robots.enabled` to true in `config/core.php`.
-2. **Delete `public/robots.txt`.** Until it goes, the route is unreachable.
-3. Name anything else that should stay out of the index in
-   `core.robots.disallow` — the auth pages among them, since the empty prefix
-   contributes nothing. `/portal` is a candidate; the public fair pages,
-   `/contact` and the sponsor pages are not, and should stay crawlable.
+The fair's own content: `/`, `/about`, `/events/{event}`, `/faq`, `/sponsors`,
+`/representatives`, `/contact`. `RobotsTest` asserts that too, because a rule
+broad enough to swallow a public page would otherwise be invisible until the
+traffic went.
 
-## 3. The config section was spliced in by hand
+## 4. The test that keeps it honest
+
+`tests/Feature/Foundation/RobotsTest.php` walks the route table and fails if any
+auth-gated GET route is not covered by a rule — so a new private area cannot
+ship indexable by omission. It fetches `/robots.txt` **over HTTP** rather than
+reading config back, which is the difference from `ckbs`'s version of the same
+file: there the document is a static file, here a route builds it, and asserting
+on config would prove nothing about what is served.
+
+Two things in it are worth knowing before editing:
+
+- **The static-file assertion is an absence.** The inverse is a real trap —
+  `saltglass-chartworks` once carried a test asserting Filament's published
+  assets were *present*, which passed happily while defending the very files
+  that should have gone.
+- **Middleware are matched by exact class name.** Loose matching bites: the
+  substring `Authenticate` also matches `RedirectIfAuthenticated`, which marks
+  **guest-only** routes — the opposite of gated. That false positive put
+  `/register` on the private list while this list was being drawn up, and
+  `/register` is a public page. The list above was corrected before anything
+  was written to config.
+
+## 5. The config section was spliced in by hand
 
 `config/core.php` here is this app's copy. Re-publishing with `--force` to pick
-up the new section would reset **every other value in the file** — which is not
-hypothetical, it is what happened to postmaster's master switch on this very app
-during the `0.6` upgrade and mailed a campaign to somebody who had unsubscribed
-(doc 20 §3). The block was added by hand, with the reasoning above written into
-its comment so the next person reading the config finds the decision rather than
-re-deriving it.
+up the new section would reset **every other value in the file** — not
+hypothetical, it is what reset postmaster's master switch on this app during the
+`0.6` upgrade and mailed a campaign to somebody who had unsubscribed (doc 20
+§3).
 
 ## Definition of done
 
-- [x] `uclemmer/laravel-core` `^0.6`, `composer.lock` updated to `v0.6.0`
+- [x] `uclemmer/laravel-core` `^0.6`, `composer.lock` at `v0.6.0`
 - [x] No migration owed — verified, `vendor:publish --tag=core-migrations` copies nothing
-- [x] `robots` config section spliced in, off, with the reasoning in its comment
-- [x] Suite green: 987 tests, 953 passed, 0 failed
-- [x] `core:doctor` reports the new check
-- [ ] **Owner decision: adopt the served `robots.txt` and delete the static one?** §2
+- [x] `robots` config section spliced in by hand, with the reasoning in its comment
+- [x] `public/robots.txt` deleted, so the route is reachable
+- [x] Disallow list drawn from the route table, false positive caught and corrected
+- [x] `RobotsTest`: 7 tests — served document, absent static file, every gated route covered, credential URLs, uploads, public pages still crawlable, derived admin path
+- [x] Suite green: 994 tests, 960 passed, 0 failed
+- [x] `core:doctor` reports **OK robots.txt — Served at /robots.txt, keeping 9 paths out of the index**
+- [ ] Confirm on the deployed site that `/robots.txt` serves this and not a cached file

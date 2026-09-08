@@ -475,6 +475,39 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | robots.txt (laravel-core docs/11-robots.md, new in core 0.6.0)
+    |--------------------------------------------------------------------------
+    |
+    | When true the package answers GET /robots.txt itself, naming every
+    | private surface it has mounted -- here that is the admin at /admin -- so
+    | a new private area never ships indexable by omission.
+    |
+    | OFF here, because this app serves public/robots.txt instead and a static
+    | file wins: every web server answers it before Laravel boots, so turning
+    | this on without deleting that file changes nothing and only makes
+    | core:doctor warn. Switching over is a decision, not a bump: see the
+    | maintenance log for 2026-09-07.
+    |
+    | Note for whoever makes it. Core derives its lines from config, and this
+    | app's `auth.routes.prefix` is an EMPTY string -- login lives at /login,
+    | not /core/login. Core drops an empty prefix rather than writing
+    | `Disallow: /`, which would hide the entire site from search. So the
+    | derived file here would be /admin and nothing else, and anything under
+    | the auth prefix needs naming in `disallow` by hand.
+    |
+    */
+    'robots' => [
+        'enabled' => false,
+
+        // Extra paths to keep out of the index, e.g. '/billing/'.
+        'disallow' => [],
+
+        // Absolute URL of a sitemap to advertise, or null.
+        'sitemap' => null,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Diagnostics (php artisan core:doctor)
     |--------------------------------------------------------------------------
     |

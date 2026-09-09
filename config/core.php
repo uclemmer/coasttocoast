@@ -90,6 +90,25 @@ return [
             'digits' => 6,
             'period' => 30,
             'window' => 1,
+
+            /*
+             * Added by hand for core 0.7.0 rather than re-published: a
+             * `vendor:publish --force` would have reset every other value in
+             * this file, which is how a master switch got turned back on
+             * during the postmaster upgrade.
+             *
+             * Both values are the package's own defaults, so nothing changes
+             * here -- they are written out because a reader of this file
+             * should be able to see that the choice exists. Two-factor is off
+             * above in any case; turn `enabled` on before either matters.
+             *
+             *   app   -- an authenticator code. Nothing is sent.
+             *   email -- a one-time code, mailed on demand.
+             *   sms   -- the same, handed to `sms_sender`, which the package
+             *            deliberately does not supply.
+             */
+            'channels' => ['app'],
+            'sms_sender' => null,
         ],
     ],
 

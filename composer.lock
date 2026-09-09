@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d23b66f29248602dba03ae0927988a31",
+    "content-hash": "d08b06b25a329c4f17194c176b7405c2",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -6647,16 +6647,16 @@
         },
         {
             "name": "uclemmer/laravel-core",
-            "version": "v0.6.0",
+            "version": "v0.7.1",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-core.git",
-                "reference": "fd5bb3e5198685e4ef9a50e4ae6a2e2f6273a0ae"
+                "reference": "3e7d7134c0fa84848138e634bb96489988d94d1b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/fd5bb3e5198685e4ef9a50e4ae6a2e2f6273a0ae",
-                "reference": "fd5bb3e5198685e4ef9a50e4ae6a2e2f6273a0ae",
+                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/3e7d7134c0fa84848138e634bb96489988d94d1b",
+                "reference": "3e7d7134c0fa84848138e634bb96489988d94d1b",
                 "shasum": ""
             },
             "require": {
@@ -6757,7 +6757,7 @@
                 "laravel-core"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-core/tree/v0.6.0",
+                "source": "https://github.com/uclemmer/laravel-core/tree/v0.7.1",
                 "issues": "https://github.com/uclemmer/laravel-core/issues"
             },
             "funding": [
@@ -6766,7 +6766,7 @@
                     "url": "https://github.com/UClemmer"
                 }
             ],
-            "time": "2026-09-07T03:46:28+00:00"
+            "time": "2026-09-08T19:49:38+00:00"
         },
         {
             "name": "uclemmer/laravel-postmaster",

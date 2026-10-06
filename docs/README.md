@@ -65,6 +65,7 @@ cards from 05 under the rules in 06):
 | [20-postmaster-06-upgrade.md](20-postmaster-06-upgrade.md) | Postmaster `0.2` → `0.6` in one step: why the `0.4.0` breaking change and the `0.6.0` bounce-policy reversal both missed this app, the migration a `composer update` does not bring, and the config refresh that reset the master switch and took the send-time suppression guard down with it — including why the diff that was supposed to catch that could not, and the admin URI collision guard added because one provider's surface tripled |
 | [21-core-06-upgrade.md](21-core-06-upgrade.md) | Core `0.5.1` → `0.6.0`, and the `robots.txt` it surfaced: the stock file had permitted everything since the install, so it is deleted and the served one lists nine paths, drawn from the route table and pinned by `RobotsTest` |
 | [22-core-07-upgrade.md](22-core-07-upgrade.md) | Core `0.6.0` → `0.7.1`: no code change, but the two things a `composer update` never does — publishing the migration the release added, and writing its new config keys into a file this app owns rather than re-publishing over it |
+| [23-like-escape-patches.md](23-like-escape-patches.md) | Core `0.7.1` → `0.7.2` and postmaster `0.6.0` → `0.6.2`: every search here wrote `ESCAPE '\'`, a syntax error on MySQL — this app's production engine — that a SQLite suite cannot see; and `/admin`'s message log search was broken on every engine by an unquoted `to`. No code change; one test pinning the clause |
 
 **Golden rules** (duplicated from the docs because they matter):
 

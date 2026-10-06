@@ -6647,16 +6647,16 @@
         },
         {
             "name": "uclemmer/laravel-core",
-            "version": "v0.7.1",
+            "version": "v0.7.2",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-core.git",
-                "reference": "3e7d7134c0fa84848138e634bb96489988d94d1b"
+                "reference": "858f07b5fafd21ff36a348e7d6d7703341b5da12"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/3e7d7134c0fa84848138e634bb96489988d94d1b",
-                "reference": "3e7d7134c0fa84848138e634bb96489988d94d1b",
+                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/858f07b5fafd21ff36a348e7d6d7703341b5da12",
+                "reference": "858f07b5fafd21ff36a348e7d6d7703341b5da12",
                 "shasum": ""
             },
             "require": {
@@ -6757,7 +6757,7 @@
                 "laravel-core"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-core/tree/v0.7.1",
+                "source": "https://github.com/uclemmer/laravel-core/tree/v0.7.2",
                 "issues": "https://github.com/uclemmer/laravel-core/issues"
             },
             "funding": [
@@ -6766,20 +6766,20 @@
                     "url": "https://github.com/UClemmer"
                 }
             ],
-            "time": "2026-09-08T19:49:38+00:00"
+            "time": "2026-10-06T09:32:58+00:00"
         },
         {
             "name": "uclemmer/laravel-postmaster",
-            "version": "v0.6.0",
+            "version": "v0.6.2",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-postmaster.git",
-                "reference": "0059da14f2c804c30d258f10ab2d2d18fb6ddf97"
+                "reference": "9db1c6f8f9dcf1861f96dcbad6265a44919bf5bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-postmaster/zipball/0059da14f2c804c30d258f10ab2d2d18fb6ddf97",
-                "reference": "0059da14f2c804c30d258f10ab2d2d18fb6ddf97",
+                "url": "https://api.github.com/repos/uclemmer/laravel-postmaster/zipball/9db1c6f8f9dcf1861f96dcbad6265a44919bf5bf",
+                "reference": "9db1c6f8f9dcf1861f96dcbad6265a44919bf5bf",
                 "shasum": ""
             },
             "require": {
@@ -6801,7 +6801,7 @@
                 "phpstan/phpstan-deprecation-rules": "^2.0",
                 "phpstan/phpstan-phpunit": "^2.0",
                 "spatie/laravel-ray": "^1.35",
-                "uclemmer/laravel-core": "^0.5"
+                "uclemmer/laravel-core": "^0.7"
             },
             "type": "library",
             "extra": {
@@ -6873,10 +6873,10 @@
                 "postmark"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-postmaster/tree/v0.6.0",
+                "source": "https://github.com/uclemmer/laravel-postmaster/tree/v0.6.2",
                 "issues": "https://github.com/uclemmer/laravel-postmaster/issues"
             },
-            "time": "2026-09-03T21:48:04+00:00"
+            "time": "2026-10-06T09:48:49+00:00"
         },
         {
             "name": "uclemmer/laravel-ui",

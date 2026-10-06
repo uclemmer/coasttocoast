@@ -4,6 +4,7 @@ use App\Livewire\Staff\Interests\Index as InterestIndex;
 use App\Models\Event as Fair;
 use App\Models\EventInterest;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use UClemmer\LaravelCore\Admin\Permissions as AdminPermissions;
 use UClemmer\LaravelCore\Auth\Role;
@@ -76,6 +77,29 @@ describe('the list', function () {
 
         // Exactly the address typed — not the one where `_` stood in for `x`.
         expect($found->pluck('email')->all())->toBe(['dana_lee@kenyon.example']);
+    });
+
+    it('names ! as the escape character in the SQL it runs, never a backslash', function () {
+        /*
+         * Every search in this app goes through core's `LikeTerm`, and until
+         * core `0.7.2` that wrote `ESCAPE '\'` — a syntax error on MySQL, this
+         * app's production engine (docs/02, docs/11), because MySQL reads the
+         * backslash as escaping the closing quote. SQLite has no such rule, so
+         * the test above passed throughout. Asserted on the SQL, since this
+         * suite cannot run MySQL; see docs/23.
+         */
+        $statements = [];
+        DB::listen(function ($query) use (&$statements) {
+            $statements[] = $query->sql;
+        });
+
+        livewire(InterestIndex::class)->set('search', 'dana_lee')->instance()->interests();
+
+        $searches = array_values(array_filter($statements, fn (string $sql) => str_contains($sql, ' LIKE ? ')));
+
+        expect($searches)->not->toBeEmpty()
+            ->and($searches[0])->toContain("ESCAPE '!'")
+            ->and($searches[0])->not->toContain(chr(92));
     });
 
     it('filters to the people the announcement would still reach', function () {

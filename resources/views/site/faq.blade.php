@@ -16,8 +16,9 @@
     repointed at the handoff's green — so the accordion arrives in the site's
     voice with no class strings at the call site.
 
-    Answers are markdown written in the admin panel, rendered through
-    `<x-ui.prose>` — Tailwind's preflight strips list and heading styling, so
+    Answers are markdown written in the admin panel, rendered by
+    `App\Support\Markdown` (raw HTML escaped, unsafe links dropped — docs/24
+    §5) inside `<x-ui.prose>` — Tailwind's preflight strips list and heading styling, so
     rendered markdown needs explicit typography or it lands as a wall of
     identical lines (doc 10, D-8-b).
 --}}
@@ -42,7 +43,7 @@
                     <x-ui::accordion.item level="h2"
                                           :heading="$item->question"
                                           :open="$loop->first">
-                        <x-ui.prose :html="Str::markdown($item->answer)" class="text-[16px] leading-[1.7]" />
+                        <x-ui.prose :html="\App\Support\Markdown::render($item->answer)" class="text-[16px] leading-[1.7]" />
 
                         {{-- The attachment, when the coordinator has uploaded
                              one — the signed W-9 is what this exists for. Not

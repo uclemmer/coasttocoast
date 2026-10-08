@@ -1,8 +1,9 @@
 {{--
     Write or edit one FAQ question (docs/13).
 
-    The preview renders through the same `Str::markdown()` the public FAQ page
-    uses, so what is typed here and what a visitor reads cannot drift. The
+    The preview renders through the same `App\Support\Markdown` the public FAQ
+    page uses (raw HTML escaped), so what is typed here and what a visitor
+    reads cannot drift. The
     editor is a styled textarea, not a rich editor — the owner's call when the
     package was built (docs/12) — which is exactly why a preview earns its
     place.

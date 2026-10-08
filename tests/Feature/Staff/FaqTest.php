@@ -58,8 +58,9 @@ describe('writing a question', function () {
     /*
      * The editor is a textarea, so what is typed and what a visitor reads are
      * not the same string. The preview renders through the same
-     * `Str::markdown()` the public page uses; if one is ever swapped for
-     * another renderer this is what notices.
+     * `App\Support\Markdown` the public page uses; if one is ever swapped for
+     * another renderer this is what notices (and MarkdownEscapingTest checks
+     * that renderer escapes raw HTML on every surface).
      */
     it('previews the answer as markdown', function () {
         $preview = livewire(EditFaqItem::class)

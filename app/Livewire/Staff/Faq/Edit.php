@@ -4,9 +4,9 @@ namespace App\Livewire\Staff\Faq;
 
 use App\Livewire\Staff\Concerns\ActsForStaff;
 use App\Models\FaqItem;
+use App\Support\Markdown;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -20,7 +20,7 @@ use Livewire\WithFileUploads;
  *
  * THE ANSWER IS MARKDOWN, and `x-ui::forms.markdown` is a styled textarea
  * rather than a rich editor — the owner's call when the package was built
- * (docs/12). The public page renders it through `Str::markdown()`, so what is
+ * (docs/12). The public page renders it through `App\Support\Markdown`, so what is
  * typed here and what a visitor reads can diverge; the preview below is here to
  * close that gap rather than to look clever.
  */
@@ -77,14 +77,15 @@ class Edit extends Component
     /**
      * The answer as a visitor will see it.
      *
-     * Rendered through the same `Str::markdown()` the public FAQ page uses, so
-     * the two cannot drift. Not a computed property: it depends on `$answer`,
+     * Rendered through the same `App\Support\Markdown` the public FAQ page
+     * uses — raw HTML escaped — so the two cannot drift, and a pasted tag
+     * shows here exactly as it will there: as text. Not a computed property: it depends on `$answer`,
      * which changes on every keystroke that syncs, and a computed value is
      * cached for the request.
      */
     public function preview(): string
     {
-        return Str::markdown($this->answer === '' ? '' : $this->answer);
+        return Markdown::render($this->answer);
     }
 
     public function save(): void

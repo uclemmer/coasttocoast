@@ -96,8 +96,21 @@ Measured on 2.10.3: `<b>`, `<div>`, `<img src=x onerror=…>` and a
 (`<script>` among it) is neutralised. The authors are trusted — FAQ editors,
 and coordinators holding `messages.send` — so this is not a public injection
 path, but a pasted fragment reaches the public FAQ and recipients' inboxes as
-live HTML. Escaping it (`Str::markdown($x, ['html_input' => 'escape',
-'allow_unsafe_links' => false])`) would change what existing answers render
-if any use HTML on purpose, so it is the owner's call and is left open. The
-template's comment is corrected to say what the converter actually does and to
-point here; no rendering changed.
+live HTML. Escaping it would change what existing answers render if any use
+HTML on purpose, so it was left to the owner.
+
+**Escaped, 2026-10-08 (owner).** All four surfaces now render through one
+helper, `App\Support\Markdown::render()` — `Str::markdown()` with
+`html_input: escape` and `allow_unsafe_links: false` — so raw HTML shows as
+text and a `javascript:` link keeps its words and loses its target, while
+Markdown itself (emphasis, lists, links, headings) renders as before. One
+helper is also what keeps the editor's preview honest. Before switching, the
+content was checked: no seeded FAQ answer and nothing in the dev database used
+HTML (the live site's map embed was never transcribed). **Production's FAQ
+answers and campaign bodies were not visible from here**; any that used HTML
+will now show the tags as text, and an answer that genuinely needs an embed
+wants a field of its own rather than a hole in the escaping.
+`tests/Feature/Foundation/MarkdownEscapingTest.php` asserts each surface
+separately — public FAQ, editor preview, campaign email, staff campaign page —
+plus a guard that fails if any class or view calls `Str::markdown()` around
+the helper; with the old call sites restored, all five of those fail.

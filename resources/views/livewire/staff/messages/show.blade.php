@@ -53,7 +53,7 @@
 
         @if (filled($message->email_body))
             <x-ui::section :heading="__('Email')">
-                <x-ui.prose :html="Str::markdown($message->email_body)" class="text-[15px]" />
+                <x-ui.prose :html="\App\Support\Markdown::render($message->email_body)" class="text-[15px]" />
             </x-ui::section>
         @endif
 

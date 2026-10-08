@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\AudienceBuilder;
 use App\Services\Audiences\RecipientDto;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
@@ -213,12 +214,19 @@ describe('dedupe', function () {
         expect($this->builder->resolve(Audience::AnyPreviousEvent, $this->thisYear))->toHaveCount(1);
     });
 
+    // SQLite only: MySQL and MariaDB compare under a case-insensitive collation, so
+    // the (event_id, email) unique key refuses the second row and the database does
+    // this dedupe there. Both write paths lowercase anyway — EventInterestTest's
+    // "treats addresses case-insensitively" holds that on every engine.
     it('dedupes by address when there is no account', function () {
         EventInterest::factory()->for($this->thisYear)->create(['email' => 'Dana@Kenyon.example']);
         EventInterest::factory()->for($this->thisYear)->create(['email' => 'dana@kenyon.example']);
 
         expect($this->builder->resolve(Audience::InterestList, $this->thisYear))->toHaveCount(1);
-    });
+    })->skip(
+        fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
+        'The unique key refuses a mixed-case duplicate on a case-insensitive collation.',
+    );
 });
 
 describe('the interest list', function () {

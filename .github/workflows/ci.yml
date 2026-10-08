@@ -1,0 +1,136 @@
+# The suite, Pint and the dependency audit, on every push to main and every PR.
+#
+# Added 2026-10-08. Until then nothing ran this app's checks but a person on
+# their own machine, and a green suite was a sentence in docs/ rather than
+# something anyone could look up.
+#
+# TWO THINGS THIS WORKFLOW NEEDS THAT A CLONE DOES NOT.
+#
+#   1. The uclemmer/* packages are PRIVATE repositories, pulled through `vcs`
+#      entries in composer.json, and the runner's own GITHUB_TOKEN reads only
+#      this repo. The COMPOSER_GITHUB_TOKEN secret must hold a token with
+#      Contents: read on the laravel-* repos -- the same secret, under the same
+#      name, the packages' own CI uses. Without it the first step says so,
+#      rather than composer failing inside the resolver.
+#
+#      The token is the owner's, so CI spends from the owner's GitHub API
+#      quota. "Could not authenticate against github.com" is usually that
+#      quota running out, not a bad secret (workspace CLAUDE.md).
+#
+#   2. public/build is gitignored, so the assets are built here. The suite
+#      renders pages carrying @vite, and a missing manifest fails every one of
+#      them with an error about the manifest rather than about the test.
+#
+# The suite runs on in-memory SQLite, as it does locally (phpunit.xml). It has
+# never been run against the engine production uses; that is a job to add, and
+# derby-days' and semperstat's workflows are the worked examples.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: '8.5'
+
+jobs:
+  test:
+    name: Pest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Refuse to run without the package token
+        env:
+          TOKEN: ${{ secrets.COMPOSER_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::The COMPOSER_GITHUB_TOKEN secret is not set. The uclemmer/* packages are private; see the header of this workflow."
+            exit 1
+          fi
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v6
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: composer install
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.COMPOSER_GITHUB_TOKEN }}"}}'
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build the front end
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+
+      - name: Prepare .env
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Pest
+        run: php artisan test --compact
+
+  lint:
+    name: Pint · audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Refuse to run without the package token
+        env:
+          TOKEN: ${{ secrets.COMPOSER_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::The COMPOSER_GITHUB_TOKEN secret is not set. The uclemmer/* packages are private; see the header of this workflow."
+            exit 1
+          fi
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v6
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: composer install
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.COMPOSER_GITHUB_TOKEN }}"}}'
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Pint
+        run: vendor/bin/pint --test
+
+      - name: composer audit
+        run: composer audit --no-interaction

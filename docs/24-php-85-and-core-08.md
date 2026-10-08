@@ -114,3 +114,11 @@ wants a field of its own rather than a hole in the escaping.
 separately — public FAQ, editor preview, campaign email, staff campaign page —
 plus a guard that fails if any class or view calls `Str::markdown()` around
 the helper; with the old call sites restored, all five of those fail.
+
+## 6. Core `0.8.1`, the same day
+
+A lock move only — `^0.8` admits it. Core `0.8.1` measures queued-job
+durations for `core_job_metrics` with `hrtime()`, PHP's monotonic clock,
+instead of `microtime()`, which reads the wall clock and can step mid-job.
+Nothing else moved in the lock, and no migration or config key is involved.
+1,004 tests: 970 passed, 34 skipped, as before.

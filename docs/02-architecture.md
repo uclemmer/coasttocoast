@@ -51,7 +51,7 @@ No app code, packages, or migrations beyond the skeleton exist yet.
 
 | Concern | Choice | Notes |
 |---|---|---|
-| Framework | Laravel 13, **PHP 8.4** | Skeleton allows ^8.3, but `uclemmer/laravel-core` requires `^8.4` — set Herd/production to PHP 8.4 and bump the app's composer constraint |
+| Framework | Laravel 13, **PHP 8.5** | `uclemmer/laravel-core` requires `^8.5` since `0.8.0` (2026-10-07; `^8.4` before, and the skeleton allowed ^8.3) — Herd and production run PHP 8.5 |
 | Foundation | **`uclemmer/laravel-core`** (owner's package, sibling repo at `C:\Users\uriah\Herd\laravel-core`) | Decision D6. Provides admin panel shell, roles/permissions, email logging, contact, content blocks, queue metrics, profiles, `core:doctor`. Install via a composer **path repository** in dev (`"repositories": [{"type": "path", "url": "../laravel-core"}]`); switch to VCS/Packagist for deployment. Read its `/docs` before building on it. |
 | Database | SQLite in dev (as scaffolded); MySQL/Postgres in production | Keep migrations portable — no driver-specific SQL |
 | Admin UI | **Off Filament as of 2026-08-21** (doc 13). The fair's own screens are Livewire on `uclemmer/laravel-ui` at `/staff`; `app/Filament/` is deleted. laravel-core's Filament panel keeps `/admin` for users, roles, the email log, content and settings until core goes headless | Both are live and both ask the same `admin.access` permission, so whoever can reach one can reach the other |
@@ -121,7 +121,7 @@ stale):
 | `laravel/framework` | `^13.8` |
 | `livewire/livewire` | `^4.3` |
 | `pestphp/pest` | `^5.0` |
-| PHP | `^8.4` |
+| PHP | `^8.5` |
 
 **`filament/filament` is not here, and that is the point.** It used to arrive transitively through
 `laravel-core` and this table listed it at v5.7.6. Core `0.4` dropped it, the `/staff` rebuild removed

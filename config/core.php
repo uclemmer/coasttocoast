@@ -76,6 +76,16 @@ return [
         ],
 
         /*
+         * Whether core's login form offers "remember me" (core 0.7.3). A
+         * remember cookie signs a browser back in without the password and
+         * without the second factor, so it only matters here once two-factor
+         * below is turned on — at that point set this false, or the second
+         * factor holds for one sign-in per browser. Written in by hand at the
+         * package default (2026-10-07), for the reason given under `channels`.
+         */
+        'remember' => true,
+
+        /*
          * TOTP two-factor authentication (RFC 6238), implemented in-house — no
          * third-party auth package, nothing to install. The host user model
          * needs `use UClemmer\LaravelCore\Auth\HasTwoFactorAuth;` and the
@@ -109,6 +119,16 @@ return [
              */
             'channels' => ['app'],
             'sms_sender' => null,
+
+            // The emailed and texted codes (also core 0.7.0, missed when the
+            // two keys above were written in; added 2026-10-07 at the package
+            // defaults): hashed in the cache, expiring after `ttl` seconds,
+            // refused after `max_attempts` wrong guesses.
+            'code' => [
+                'length' => 6,
+                'ttl' => 300,
+                'max_attempts' => 5,
+            ],
         ],
     ],
 
@@ -446,6 +466,20 @@ return [
         'logo' => null,
         'logo_height' => '1.5rem',
         'favicon' => null,
+
+        /*
+         * The middleware every admin route runs behind (core 0.4, when it
+         * replaced Filament's panel authentication). This key was missing
+         * from this file until 2026-10-07 — it was published before 0.4 —
+         * and core's route registrar falls back to exactly this list, so
+         * /admin was guarded the whole time; `route:list --path=admin`
+         * showed it. Written in so the guard is visible where it is set.
+         */
+        'middleware' => [
+            'web',
+            'core.auth',
+            'core.permission:admin.access',
+        ],
 
         /*
          * Screen providers attached to the admin, as class-strings. This is how

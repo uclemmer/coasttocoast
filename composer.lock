@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d08b06b25a329c4f17194c176b7405c2",
+    "content-hash": "16f1bec78e8bd7cebde488c41df90de3",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -3716,16 +3716,16 @@
         },
         {
             "name": "spatie/laravel-package-tools",
-            "version": "1.93.2",
+            "version": "1.93.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-package-tools.git",
-                "reference": "e927d5b5b05e9fecae098e559e51918aa608ad02"
+                "reference": "7aeef26bd8d4909bec744dbf47aee7d1395588c1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-package-tools/zipball/e927d5b5b05e9fecae098e559e51918aa608ad02",
-                "reference": "e927d5b5b05e9fecae098e559e51918aa608ad02",
+                "url": "https://api.github.com/repos/spatie/laravel-package-tools/zipball/7aeef26bd8d4909bec744dbf47aee7d1395588c1",
+                "reference": "7aeef26bd8d4909bec744dbf47aee7d1395588c1",
                 "shasum": ""
             },
             "require": {
@@ -3765,7 +3765,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/laravel-package-tools/issues",
-                "source": "https://github.com/spatie/laravel-package-tools/tree/1.93.2"
+                "source": "https://github.com/spatie/laravel-package-tools/tree/1.93.3"
             },
             "funding": [
                 {
@@ -3773,7 +3773,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-26T09:13:25+00:00"
+            "time": "2026-09-28T07:16:50+00:00"
         },
         {
             "name": "stripe/stripe-php",
@@ -6647,25 +6647,25 @@
         },
         {
             "name": "uclemmer/laravel-core",
-            "version": "v0.7.2",
+            "version": "v0.8.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-core.git",
-                "reference": "858f07b5fafd21ff36a348e7d6d7703341b5da12"
+                "reference": "848ca71e20c09667b1a9798613f42c13fa61d192"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/858f07b5fafd21ff36a348e7d6d7703341b5da12",
-                "reference": "858f07b5fafd21ff36a348e7d6d7703341b5da12",
+                "url": "https://api.github.com/repos/uclemmer/laravel-core/zipball/848ca71e20c09667b1a9798613f42c13fa61d192",
+                "reference": "848ca71e20c09667b1a9798613f42c13fa61d192",
                 "shasum": ""
             },
             "require": {
                 "ext-fileinfo": "*",
                 "illuminate/contracts": "^13.0",
                 "livewire/livewire": "^4.3",
-                "php": "^8.4",
+                "php": "^8.5",
                 "spatie/laravel-package-tools": "^1.16",
-                "uclemmer/laravel-ui": "^0.6"
+                "uclemmer/laravel-ui": "^0.7"
             },
             "require-dev": {
                 "larastan/larastan": "^3.0",
@@ -6757,7 +6757,7 @@
                 "laravel-core"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-core/tree/v0.7.2",
+                "source": "https://github.com/uclemmer/laravel-core/tree/v0.8.0",
                 "issues": "https://github.com/uclemmer/laravel-core/issues"
             },
             "funding": [
@@ -6766,28 +6766,28 @@
                     "url": "https://github.com/UClemmer"
                 }
             ],
-            "time": "2026-10-06T09:32:58+00:00"
+            "time": "2026-10-08T01:30:53+00:00"
         },
         {
             "name": "uclemmer/laravel-postmaster",
-            "version": "v0.6.2",
+            "version": "v0.7.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-postmaster.git",
-                "reference": "9db1c6f8f9dcf1861f96dcbad6265a44919bf5bf"
+                "reference": "c6324c671f9c7afab3bf235c2204c9ea9ac16c0b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-postmaster/zipball/9db1c6f8f9dcf1861f96dcbad6265a44919bf5bf",
-                "reference": "9db1c6f8f9dcf1861f96dcbad6265a44919bf5bf",
+                "url": "https://api.github.com/repos/uclemmer/laravel-postmaster/zipball/c6324c671f9c7afab3bf235c2204c9ea9ac16c0b",
+                "reference": "c6324c671f9c7afab3bf235c2204c9ea9ac16c0b",
                 "shasum": ""
             },
             "require": {
                 "illuminate/contracts": "^13.0",
                 "livewire/livewire": "^4.3",
-                "php": "^8.4",
+                "php": "^8.5",
                 "spatie/laravel-package-tools": "^1.16",
-                "uclemmer/laravel-ui": "^0.6"
+                "uclemmer/laravel-ui": "^0.7"
             },
             "require-dev": {
                 "larastan/larastan": "^3.0",
@@ -6801,7 +6801,7 @@
                 "phpstan/phpstan-deprecation-rules": "^2.0",
                 "phpstan/phpstan-phpunit": "^2.0",
                 "spatie/laravel-ray": "^1.35",
-                "uclemmer/laravel-core": "^0.7"
+                "uclemmer/laravel-core": "^0.8"
             },
             "type": "library",
             "extra": {
@@ -6873,28 +6873,28 @@
                 "postmark"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-postmaster/tree/v0.6.2",
+                "source": "https://github.com/uclemmer/laravel-postmaster/tree/v0.7.0",
                 "issues": "https://github.com/uclemmer/laravel-postmaster/issues"
             },
-            "time": "2026-10-06T09:48:49+00:00"
+            "time": "2026-10-08T01:42:30+00:00"
         },
         {
             "name": "uclemmer/laravel-ui",
-            "version": "v0.6.0",
+            "version": "v0.7.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:uclemmer/laravel-ui.git",
-                "reference": "f9b08b50c7df9668a84b6062c4a6d5d98443f709"
+                "reference": "12f6b93fe62a22b652b60fe33db5aa2e02d7a8c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uclemmer/laravel-ui/zipball/f9b08b50c7df9668a84b6062c4a6d5d98443f709",
-                "reference": "f9b08b50c7df9668a84b6062c4a6d5d98443f709",
+                "url": "https://api.github.com/repos/uclemmer/laravel-ui/zipball/12f6b93fe62a22b652b60fe33db5aa2e02d7a8c2",
+                "reference": "12f6b93fe62a22b652b60fe33db5aa2e02d7a8c2",
                 "shasum": ""
             },
             "require": {
                 "illuminate/contracts": "^13.0",
-                "php": "^8.4",
+                "php": "^8.5",
                 "spatie/laravel-package-tools": "^1.16"
             },
             "require-dev": {
@@ -6981,16 +6981,16 @@
                 "ui"
             ],
             "support": {
-                "source": "https://github.com/uclemmer/laravel-ui/tree/v0.6.0",
+                "source": "https://github.com/uclemmer/laravel-ui/tree/v0.7.0",
                 "issues": "https://github.com/uclemmer/laravel-ui/issues"
             },
             "funding": [
                 {
                     "type": "github",
-                    "url": "https://github.com/:vendor_name"
+                    "url": "https://github.com/UClemmer"
                 }
             ],
-            "time": "2026-08-22T12:20:51+00:00"
+            "time": "2026-10-08T01:26:23+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
@@ -11128,7 +11128,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.4"
+        "php": "^8.5"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"

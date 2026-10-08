@@ -6,8 +6,8 @@
 
 ## Prerequisites
 
-- **PHP 8.4** — `uclemmer/laravel-core` requires `^8.4`, and `composer.json` now pins the app to it too.
-  In Herd: *Settings → PHP → 8.4*, then set this site to 8.4 (`herd use 8.4` inside the project also works).
+- **PHP 8.5** — `uclemmer/laravel-core` requires `^8.5` (since `0.8.0`, 2026-10-07), and `composer.json` pins the app to it too.
+  In Herd: *Settings → PHP → 8.5*, then set this site to 8.5 (`herd use 8.5` inside the project also works).
 - The sibling package repo at `C:\Users\uriah\Herd\laravel-core` — `composer.json` references it as a
   **path repository** (`../laravel-core`, symlinked), so edits to the package are live here with no
   re-install. Deployment swaps this for a VCS/Packagist entry.
@@ -17,7 +17,7 @@
 ```bash
 cd C:\Users\uriah\Herd\coasttocoastcollegefair
 
-php -v                          # must report 8.4.x before anything else
+php -v                          # must report 8.5.x before anything else
 
 composer update                 # resolves uclemmer/laravel-core
 ```

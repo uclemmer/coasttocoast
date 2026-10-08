@@ -77,11 +77,27 @@ against the file as it was. A second test asserts the admin guard on the
 
 998 tests under PHP 8.5: 964 passed, 34 skipped — the same 34 skipped at [22](22-core-07-upgrade.md), plus the three new tests above. Run a second time with deprecations, warnings and notices displayed: none, from this app or from vendor. Pint clean. No source file in this app changed; a version-only bump is indistinguishable from one nobody ran, so the numbers are recorded rather than asserted.
 
-## 5. Left open
+## 5. The commonmark advisories, cleared the same day
 
-`composer audit` reports two `league/commonmark` advisories (one high: a
-quadratic-time denial of service in the GFM table extension; one medium: a
-raw-HTML filter bypass), affecting `<=2.10.1` and fixed in `2.10.2`. They
-predate this change and were not taken here, because this app was not part of
-the same day's dependency refresh; `composer update league/commonmark` is the
-whole fix.
+`composer audit` reported two `league/commonmark` advisories, affecting
+`<=2.10.1`: one high (a quadratic-time denial of service in the GFM table
+extension) and one medium (a bypass of `DisallowedRawHtml`, the GFM filter
+that neutralises `<script>` and similar tags). They predated this change.
+`composer update league/commonmark -w` took it `2.10.0` → `2.10.3` and
+`symfony/polyfill-php80` with it, nothing else; `composer audit` is clean.
+998 tests, 964 passed and 34 skipped, as above.
+
+**What checking it found, and did not change.** Every Markdown render here is
+`Str::markdown()` on staff-written text — the FAQ (public page and the staff
+preview) and campaign emails and their staff view. The campaign template's
+comment says that converter "escapes raw HTML by default". **It does not.**
+Measured on 2.10.3: `<b>`, `<div>`, `<img src=x onerror=…>` and a
+`javascript:` link all render live; only the short `DisallowedRawHtml` list
+(`<script>` among it) is neutralised. The authors are trusted — FAQ editors,
+and coordinators holding `messages.send` — so this is not a public injection
+path, but a pasted fragment reaches the public FAQ and recipients' inboxes as
+live HTML. Escaping it (`Str::markdown($x, ['html_input' => 'escape',
+'allow_unsafe_links' => false])`) would change what existing answers render
+if any use HTML on purpose, so it is the owner's call and is left open. The
+template's comment is corrected to say what the converter actually does and to
+point here; no rendering changed.

@@ -3,8 +3,11 @@
 
     `$body` is markdown she wrote in the composer, rendered to HTML here. It is
     trusted authored content — only someone holding `messages.send` can write
-    it — but it is rendered with Laravel's markdown converter, which escapes
-    raw HTML by default, so a pasted fragment cannot break the layout.
+    it. Laravel's markdown converter does NOT escape raw HTML by default
+    (measured 2026-10-07, docs/24 §5): `<div>`, `<img onerror>` and
+    `javascript:` links render live, and only a short list of tags such as
+    `<script>` is neutralised. So a pasted fragment reaches the inbox as HTML.
+    Escaping it is an open decision, recorded there.
 
     `:campaign="true"` adds the CAN-SPAM explanation line to the footer.
 --}}

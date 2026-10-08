@@ -1,4 +1,5 @@
-# The suite, Pint and the dependency audit, on every push to main and every PR.
+# The suite on three engines, Pint and the dependency audit, on every push to
+# main and every PR.
 #
 # Added 2026-10-08. Until then nothing ran this app's checks but a person on
 # their own machine, and a green suite was a sentence in docs/ rather than
@@ -21,9 +22,9 @@
 #      renders pages carrying @vite, and a missing manifest fails every one of
 #      them with an error about the manifest rather than about the test.
 #
-# The suite runs on in-memory SQLite, as it does locally (phpunit.xml). It has
-# never been run against the engine production uses; that is a job to add, and
-# derby-days' and semperstat's workflows are the worked examples.
+# The suite runs three times: on in-memory SQLite as it does locally
+# (phpunit.xml), and on MySQL 8.4 and MariaDB 11 service containers (added
+# 2026-10-08; see the test job).
 
 name: CI
 
@@ -41,10 +42,53 @@ env:
   PHP_VERSION: '8.5'
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # The suite, three times: on the in-memory SQLite it runs on locally
+  # (phpunit.xml), then on MySQL 8.4 and on MariaDB 11.
+  #
+  # ⚠ BOTH SERVER ENGINES, UNTIL EVERY APP IS ON MARIADB (owner, 2026-10-08).
+  # MariaDB is the target; MySQL stays in the matrix until nothing deploys to
+  # it. They are not interchangeable: MariaDB reads ANSI double quotes as
+  # strings, MySQL 8 has its own reserved words, and the workspace has lost a
+  # production deploy and a month of admin search to SQL that one engine
+  # accepted and another refused. Neither row is `continue-on-error`: a job
+  # that may fail is a job nobody reads.
+  # ---------------------------------------------------------------------------
   test:
-    name: Pest
+    name: Pest · ${{ matrix.database }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # A service block cannot be conditional, so the sqlite row starts a
+          # MariaDB it never connects to.
+          - database: sqlite
+            image: mariadb:11
+            health: healthcheck.sh --connect --innodb_initialized
+          - database: mysql
+            image: mysql:8.4
+            health: mysqladmin ping -h 127.0.0.1 -uroot -proot --silent
+          - database: mariadb
+            image: mariadb:11
+            health: healthcheck.sh --connect --innodb_initialized
+
+    services:
+      db:
+        image: ${{ matrix.image }}
+        env:
+          # The MariaDB image accepts the MYSQL_* names as aliases.
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="${{ matrix.health }}"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
 
     steps:
       - uses: actions/checkout@v7
@@ -61,6 +105,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo_sqlite, pdo_mysql
           coverage: none
           tools: composer:v2
 
@@ -91,7 +136,23 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
 
-      - name: Pest
+      - name: Pest (sqlite)
+        if: matrix.database == 'sqlite'
+        run: php artisan test --compact
+
+      - name: Pest (${{ matrix.database }})
+        if: matrix.database != 'sqlite'
+        # ⚠ SHELL ENV BEATS phpunit.xml. PHPUnit does not overwrite a variable
+        # that is already set unless its <env> carries force="true", and none
+        # here do, so these move the whole suite onto the service. The
+        # connection is named for the engine: config/database.php has both.
+        env:
+          DB_CONNECTION: ${{ matrix.database }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
         run: php artisan test --compact
 
   lint:

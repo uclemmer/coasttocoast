@@ -100,10 +100,15 @@ describe('viewing one registration', function () {
         // Test-inventory item 14. The resource scope means the record is not
         // found at all, which beats "found, but forbidden" — the latter
         // confirms a registration with that id exists.
-        $theirs = Registration::factory()->create();
+        //
+        // Livewire (somewhere in 4.4.4–4.4.7) stopped propagating
+        // ModelNotFoundException out of livewire() and renders the 404 a browser
+        // would get, so this asserts the status, not the exception (docs/26).
+        $theirs = Registration::factory()->create(['rep_name' => 'Somebody Elsewhere']);
 
-        expect(fn () => livewire(ViewRegistration::class, ['registration' => $theirs]))
-            ->toThrow(ModelNotFoundException::class);
+        livewire(ViewRegistration::class, ['registration' => $theirs])
+            ->assertStatus(404)
+            ->assertDontSee('Somebody Elsewhere');
     });
 });
 

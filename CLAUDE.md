@@ -108,10 +108,9 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 # Test Enforcement
 
-- Add or update tests for behavior and logic changes when a test provides meaningful regression coverage.
-- Pure copy, styling, and layout-only changes do not require new or updated tests.
-- When test coverage applies, run the affected tests and ensure they pass.
-- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Every change ships with tests in the same change. That includes copy, styling and layout changes: assert the rendered text, the route, or the class that must compile, so the change cannot silently regress.
+- Update existing tests when behaviour changes; never delete, skip or weaken a test to make a suite pass without approval.
+- Run the affected tests and make sure they pass before finishing.
 - Read the `testing-best-practices` skill before writing tests.
 
 === laravel/core rules ===

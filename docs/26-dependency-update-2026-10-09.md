@@ -70,3 +70,24 @@ That is Boost's default, not this project's rule — golden rule 6 in
 | `npm audit` | — | 0 vulnerabilities |
 
 Run on SQLite locally; CI (doc 25) covers MySQL 8.4 and MariaDB 11.
+
+## 5. Follow-up, 2026-10-10: the test rule now survives regeneration
+
+§3's conflict is closed by Boost's own override seam rather than by text
+anyone has to remember to re-add. Boost resolves every built-in guideline
+against `.ai/guidelines/` first, by the same relative path, so
+`.ai/guidelines/enforce-tests.blade.php` **replaces** its
+`enforce-tests.blade.php` on every `boost:install` / `boost:update` — measured
+in `vendor/laravel/boost/src/Install/GuidelineComposer.php::guidelinePath()`,
+then proven by regenerating. The extension has to match (`.blade.php`), or
+the file is added beside Boost's text instead of replacing it.
+
+The override states golden rule 6: every change ships with tests, copy and
+layout included. `tests/Feature/AgentGuidelinesTest.php` fails if
+`CLAUDE.md` and `AGENTS.md` drift apart, if either lacks the rule or carries
+Boost's "do not require new or updated tests", if any `.ai/guidelines/` file
+is missing from them, or if the "running on PHP" stamp disagrees with
+`composer.json` — the stamp trap the workspace `CLAUDE.md` records. It was
+red against the files as they stood and green after `boost:update`.
+
+The same change went into every app in the workspace on 2026-10-10.

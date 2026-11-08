@@ -69,6 +69,7 @@ cards from 05 under the rules in 06):
 | [24-php-85-and-core-08.md](24-php-85-and-core-08.md) | PHP `8.4` → `8.5` with the package family: core `0.8`, postmaster `0.7`, ui `0.7`, none with a code change. And five config keys this file had never received — `admin.middleware` among them, which looked like an unguarded `/admin` and was not, because core falls back to the same list. A test now fails on any key the installed packages ship that the published config lacks |
 | [25-ci.md](25-ci.md) | CI, for the first time: the suite on SQLite, MySQL 8.4 and MariaDB 11 (both server engines until every app is on MariaDB), Pint and `composer audit` on every push and PR. Needs the `COMPOSER_GITHUB_TOKEN` secret. `core:doctor` not yet wired in. |
 | [26-dependency-update-2026-10-09.md](26-dependency-update-2026-10-09.md) | 2026-10-09 dependency update inside the existing constraints: Laravel 13.35, Livewire 4.4.7, Pest 5.3, Boost 2.10; no `uclemmer/*` package moved. Livewire's test harness now renders a missing model as a 404 instead of throwing, so one portal test asserts the status. 970 passed before and after |
+| [27-security-patches-2026-11-07.md](27-security-patches-2026-11-07.md) | 2026-11-07 security patches inside the existing constraints: Symfony 8.1.11 (http-foundation, http-kernel, routing, yaml), symfony/mime 8.1.10, Livewire 4.4.8, PHPUnit 13.4.5 with Pest 5.3.5. Ten advisories cleared; no code change, 977 passed before and after |
 
 **Golden rules** (duplicated from the docs because they matter):
 

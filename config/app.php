@@ -63,9 +63,15 @@ return [
     | will be used by the PHP date and date-time functions. The timezone
     | is set to "UTC" by default as it is suitable for most use cases.
     |
+    | This app runs on Chattanooga time (owner, 2026-11-10; docs/29). Every
+    | fair time is typed, stored, shown and compared as Eastern time, so a
+    | registration window or the late-fee cutoff turns over at local
+    | midnight rather than 7 p.m. Not an env value: a host that set it
+    | differently would silently shift every deadline.
+    |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'America/New_York',
 
     /*
     |--------------------------------------------------------------------------

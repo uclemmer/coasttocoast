@@ -389,3 +389,60 @@ describe('publishing a fair that still has its placeholder name', function () {
         expect($fair->refresh()->venue_name)->toBe('Somewhere Else');
     });
 });
+
+describe('the late fee and the hotel booking link (docs/29)', function () {
+    it('saves both fees in cents and the hotel link', function () {
+        $event = Event::factory()->priced(21500)->create();
+
+        livewire(EditEvent::class, ['event' => $event])
+            ->set('priceDollars', '275')
+            ->set('latePriceDollars', '325')
+            ->set('late_price_starts_at', '2027-01-01T00:00')
+            ->set('hotel_booking_url', 'https://www.marriott.com/event-reservations/reservation-link.mi?id=1')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $event->refresh();
+
+        expect($event->price_cents)->toBe(27500)
+            ->and($event->late_price_cents)->toBe(32500)
+            ->and($event->late_price_starts_at->format('Y-m-d H:i'))->toBe('2027-01-01 00:00')
+            ->and($event->hotel_booking_url)->toBe('https://www.marriott.com/event-reservations/reservation-link.mi?id=1');
+    });
+
+    it('shows the stored late fee and link when editing', function () {
+        $event = Event::factory()->withLateFee(Carbon::parse('2027-01-01 00:00'))
+            ->create(['hotel_booking_url' => 'https://example.com/book']);
+
+        $page = livewire(EditEvent::class, ['event' => $event]);
+
+        expect($page->get('latePriceDollars'))->toBe('325.00')
+            ->and($page->get('late_price_starts_at'))->toBe('2027-01-01T00:00')
+            ->and($page->get('hotel_booking_url'))->toBe('https://example.com/book');
+    });
+
+    it('clears the late fee when both fields are emptied', function () {
+        $event = Event::factory()->withLateFee(Carbon::parse('2027-01-01 00:00'))->create();
+
+        livewire(EditEvent::class, ['event' => $event])
+            ->set('latePriceDollars', '')
+            ->set('late_price_starts_at', '')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        expect($event->refresh()->hasLatePrice())->toBeFalse();
+    });
+
+    it('refuses a late fee without a start date, and a start date without a fee', function () {
+        livewire(EditEvent::class)->fill(validFair(['latePriceDollars' => '325']))
+            ->call('save')->assertHasErrors(['late_price_starts_at' => 'required_with']);
+
+        livewire(EditEvent::class)->fill(validFair(['late_price_starts_at' => '2028-01-01T00:00']))
+            ->call('save')->assertHasErrors(['latePriceDollars' => 'required_with']);
+    });
+
+    it('refuses a hotel link that is not an https URL', function () {
+        livewire(EditEvent::class)->fill(validFair(['hotel_booking_url' => 'javascript:alert(1)']))
+            ->call('save')->assertHasErrors(['hotel_booking_url']);
+    });
+});

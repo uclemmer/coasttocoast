@@ -7,8 +7,8 @@ use App\Enums\RegistrationStatus;
 use App\Livewire\Staff\Concerns\ActsForStaff;
 use App\Models\Event;
 use App\Models\Registration;
+use App\Services\RegistrationCsv;
 use App\Services\RegistrationService;
-use App\Support\Money;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -129,28 +129,8 @@ class Index extends Component
         return response()->streamDownload(function () use ($rows): void {
             $handle = fopen('php://output', 'wb');
 
-            fputcsv($handle, [
-                'Organization', 'Fair', 'Status', 'Payment method', 'Price', 'Grant',
-                'Contact name', 'Contact email', 'Contact phone',
-                'On roster', 'Registered', 'Confirmed',
-            ]);
-
-            foreach ($rows as $registration) {
-                fputcsv($handle, [
-                    $registration->organization?->name,
-                    $registration->event?->name,
-                    $registration->status->getLabel(),
-                    $registration->payment_method?->getLabel() ?? 'Free',
-                    Money::format($registration->price_cents),
-                    $registration->grant?->benefitSummary() ?? '',
-                    $registration->rep_name,
-                    $registration->rep_email,
-                    $registration->rep_phone ?? '',
-                    $registration->show_on_roster ? 'yes' : 'no',
-                    $registration->created_at?->toDateString(),
-                    $registration->confirmed_at?->toDateString() ?? '',
-                ]);
-            }
+            // The same columns the monthly report email attaches (docs/29).
+            app(RegistrationCsv::class)->write($handle, $rows);
 
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv']);

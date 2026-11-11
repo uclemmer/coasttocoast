@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\GrantBenefit;
 use App\Enums\GrantStatus;
 use App\Enums\RegistrationStatus;
+use App\Support\Money;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,7 +26,10 @@ use Illuminate\Support\Str;
  * @property Carbon|null $reception_starts_at
  * @property string $venue_name
  * @property string $venue_address
+ * @property string|null $hotel_booking_url
  * @property int $price_cents
+ * @property int|null $late_price_cents
+ * @property Carbon|null $late_price_starts_at
  * @property int|null $capacity
  * @property Carbon|null $registration_opens_at
  * @property Carbon|null $registration_closes_at
@@ -50,6 +54,8 @@ class Event extends Model
             'registration_opens_at' => 'datetime',
             'registration_closes_at' => 'datetime',
             'price_cents' => 'integer',
+            'late_price_cents' => 'integer',
+            'late_price_starts_at' => 'datetime',
             'capacity' => 'integer',
             'is_published' => 'boolean',
         ];
@@ -109,13 +115,18 @@ class Event extends Model
      *
      * Only an approved grant moves the price: pending, denied, revoked and
      * withdrawn applications are invisible to pricing (GrantStatus).
+     *
+     * The list price is whichever fee is current at `$at` (see
+     * `listPriceAt()`). A percent-off grant discounts that fee. A custom price
+     * is a fixed figure and ignores the deadline.
      */
-    public function priceFor(?Organization $organization = null): int
+    public function priceFor(?Organization $organization = null, ?Carbon $at = null): int
     {
         $grant = $organization ? $this->approvedGrantFor($organization) : null;
+        $listPrice = $this->listPriceAt($at);
 
         if (! $grant instanceof Grant) {
-            return $this->price_cents;
+            return $listPrice;
         }
 
         return match ($grant->benefit_type) {
@@ -126,11 +137,72 @@ class Event extends Model
             GrantBenefit::CustomPrice => max(0, (int) $grant->custom_price_cents),
             // Round DOWN, so a 33%-off grant on $215.00 charges $144.05 rather
             // than $144.06. The half cent goes to the organization, not to the fair.
-            GrantBenefit::PercentOff => (int) floor($this->price_cents * (100 - (int) $grant->percent_off) / 100),
+            GrantBenefit::PercentOff => (int) floor($listPrice * (100 - (int) $grant->percent_off) / 100),
             // An approved grant with no benefit recorded is a data fault, not a
             // free ride: charge list price and let the coordinator notice.
-            null => $this->price_cents,
+            null => $listPrice,
         };
+    }
+
+    /**
+     * The fee before any grant: the early fee, or the late fee from
+     * `late_price_starts_at` onward (docs/29).
+     *
+     * The late fee applies only when both late columns are set, so a fair
+     * with one price is unaffected. The app runs on Chattanooga time
+     * (`config/app.php`), so a cutoff of January 1 00:00 ends the early fee
+     * at local midnight.
+     */
+    public function listPriceAt(?Carbon $at = null): int
+    {
+        return $this->hasLatePrice() && ! $this->isEarlyPriceAt($at)
+            ? (int) $this->late_price_cents
+            : $this->price_cents;
+    }
+
+    /**
+     * Whether this fair has a late fee at all.
+     */
+    public function hasLatePrice(): bool
+    {
+        return $this->late_price_cents !== null && $this->late_price_starts_at !== null;
+    }
+
+    /**
+     * Whether the early fee still applies at `$at` (false when the fair has
+     * no late fee).
+     */
+    public function isEarlyPriceAt(?Carbon $at = null): bool
+    {
+        return $this->hasLatePrice() && ($at ?? Carbon::now())->lt($this->late_price_starts_at);
+    }
+
+    /**
+     * The last day of the early fee, for copy like "through December 31".
+     */
+    public function earlyPriceLastDay(): ?Carbon
+    {
+        return $this->hasLatePrice() ? $this->late_price_starts_at->copy()->subMinute() : null;
+    }
+
+    /**
+     * The fee as a visitor should read it.
+     *
+     * "$275" for one price, or "$275 through December 31, then $325" while
+     * the early fee lasts. Once the late fee applies, the early fee is gone,
+     * so it shows the late fee alone.
+     */
+    public function feeSummary(?Carbon $at = null): string
+    {
+        if (! $this->isEarlyPriceAt($at)) {
+            return Money::format($this->listPriceAt($at));
+        }
+
+        return __(':early through :date, then :late', [
+            'early' => Money::format($this->price_cents),
+            'date' => $this->earlyPriceLastDay()->format('F j'),
+            'late' => Money::format((int) $this->late_price_cents),
+        ]);
     }
 
     /**

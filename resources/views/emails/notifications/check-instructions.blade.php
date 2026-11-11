@@ -46,4 +46,6 @@
     <x-emails::panel :heading="__('Where to send it')" :rows="$whereToSend" />
 
     <p>{{ __('The printable registration form is attached — send it with the check so we can match the two.') }}</p>
+
+    @include('emails.notifications.partials.hotel-booking', ['event' => $registration->event])
 </x-emails::layout>

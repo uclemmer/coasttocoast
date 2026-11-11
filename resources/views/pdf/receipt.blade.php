@@ -66,7 +66,7 @@
         </tr>
         <tr>
             <td class="label">Registration fee</td>
-            <td>{{ Money::format($registration->event?->price_cents) }}</td>
+            <td>{{ Money::format($registration->event?->listPriceAt($registration->created_at)) }}</td>
         </tr>
 
         {{-- Shown only when a grant actually moved the price, so a full-price
@@ -109,6 +109,7 @@
         {{ config('app.name') }}<br>
         {{ $fair['name'] ?? '' }} ·
         {{ $fair['address_line1'] ?? '' }},
+        @if (! empty($fair['address_line2'])){{ $fair['address_line2'] }},@endif
         {{ $fair['city'] ?? '' }}, {{ $fair['state'] ?? '' }} {{ $fair['postal_code'] ?? '' }}<br>
         {{ $fair['email'] ?? '' }} · {{ $fair['phone'] ?? '' }}
     </div>

@@ -224,6 +224,28 @@ describe('the alerts toggle', function () {
     });
 });
 
+describe('several coordinators (docs/29)', function () {
+    it('sends every alert to each address in a comma-separated list', function () {
+        config()->set('fair.alerts.email', 'megan@mccallie.example, client@example.edu');
+
+        app(RegistrationService::class)->create($this->fair, $this->organization, $this->rep, PaymentMethod::Check);
+
+        Notification::assertSentOnDemand(
+            AdminAlert::class,
+            fn ($notification, $channels, $notifiable): bool => $notifiable->routes['mail'] === ['megan@mccallie.example', 'client@example.edu'],
+        );
+    });
+
+    it('still sends a single address as a plain string', function () {
+        app(RegistrationService::class)->create($this->fair, $this->organization, $this->rep, PaymentMethod::Check);
+
+        Notification::assertSentOnDemand(
+            AdminAlert::class,
+            fn ($notification, $channels, $notifiable): bool => $notifiable->routes['mail'] === 'coordinator@example.edu',
+        );
+    });
+});
+
 describe('SMS consent', function () {
     it('texts only a rep who opted in', function () {
         // Consent is enforced on the model, so no notification can text

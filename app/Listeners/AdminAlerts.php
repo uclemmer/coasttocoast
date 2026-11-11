@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\Notification;
  *
  *  - `enabled` false silences everything — the switch for a bulk import, or
  *    for a coordinator on holiday;
- *  - `email` blank falls back to `mail.from.address`, so a host that forgets
- *    still finds the alerts somewhere obvious rather than losing them;
+ *  - `email` is one address or a comma-separated list (the client and the
+ *    coordinator both get them; docs/29). Blank falls back to
+ *    `mail.from.address`, so a host that forgets still finds the alerts
+ *    somewhere obvious rather than losing them;
  *  - `phone` blank means email only. SMS is a bonus channel, never a
  *    requirement, and a missing number must not fail a queued job.
  */
@@ -27,13 +29,13 @@ class AdminAlerts
             return;
         }
 
-        $email = static::email();
+        $emails = static::emails();
 
-        if (blank($email)) {
+        if ($emails === []) {
             return;
         }
 
-        $routes = ['mail' => $email];
+        $routes = ['mail' => count($emails) === 1 ? $emails[0] : $emails];
 
         if (filled($phone = config('fair.alerts.phone'))) {
             $routes['sms'] = $phone;
@@ -42,8 +44,28 @@ class AdminAlerts
         Notification::routes($routes)->notify($alert);
     }
 
-    public static function email(): ?string
+    /**
+     * Everyone who gets the coordinator's mail: alerts, and the monthly
+     * registration report (`fair:send-registration-report`).
+     *
+     * @return list<string>
+     */
+    public static function emails(): array
     {
-        return config('fair.alerts.email') ?: config('mail.from.address');
+        $configured = static::parseList(config('fair.alerts.email'));
+
+        return $configured !== [] ? $configured : static::parseList(config('mail.from.address'));
+    }
+
+    /**
+     * A comma-separated string, or an array, as a clean list of addresses.
+     *
+     * @return list<string>
+     */
+    public static function parseList(mixed $value): array
+    {
+        $items = is_array($value) ? $value : explode(',', (string) $value);
+
+        return array_values(array_filter(array_map(fn (mixed $item): string => trim((string) $item), $items)));
     }
 }

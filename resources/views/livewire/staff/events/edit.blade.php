@@ -29,6 +29,12 @@
                     <x-ui::forms.textarea name="venue_address" wire:model="venue_address" rows="3"
                         :label="__('Venue address')" required />
                 </div>
+
+                <div class="sm:col-span-2">
+                    <x-ui::forms.input name="hotel_booking_url" wire:model="hotel_booking_url" type="url"
+                        :label="__('Hotel booking link')"
+                        :hint="__('Optional. The group-rate link, sent in the registration confirmation and pay-by-check emails.')" />
+                </div>
             </div>
         </x-ui::section>
 
@@ -48,8 +54,16 @@
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-ui::forms.input name="priceDollars" wire:model="priceDollars" type="number" step="0.01"
                     min="0" :label="__('Registration fee')"
-                    :hint="__('In dollars. The list price — approved grants reduce what an individual organization pays.')"
+                    :hint="__('In dollars. The list price, or the early fee if there is a late fee. Approved grants reduce what an individual organization pays.')"
                     required />
+
+                <x-ui::forms.input name="latePriceDollars" wire:model="latePriceDollars" type="number" step="0.01"
+                    min="0" :label="__('Late fee')"
+                    :hint="__('Optional. In dollars. Charged from the date below; leave both blank for one price all season.')" />
+
+                <x-ui::forms.input name="late_price_starts_at" wire:model="late_price_starts_at"
+                    type="datetime-local" :label="__('Late fee starts')"
+                    :hint="__('Chattanooga time. For “early through December 31”, enter January 1 at 12:00 AM.')" />
 
                 <x-ui::forms.input name="capacity" wire:model="capacity" type="number" min="1"
                     :label="__('Capacity')"

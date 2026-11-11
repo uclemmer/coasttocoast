@@ -53,7 +53,7 @@
                     <div>
                         <p class="mb-1 text-[12.5px] font-semibold uppercase tracking-[0.12em] text-ink-400">{{ __('Registration') }}</p>
                         <p class="m-0 text-[16px] leading-[1.6]">
-                            {{ \App\Support\Money::format($fair->price_cents) }}
+                            {{ $fair->feeSummary() }}
                             <span class="text-ink-500">{{ __('per institution') }}</span>
                         </p>
                         <p class="mt-1 text-[15px] text-ink-500">{{ __('Free for students and families. No registration needed.') }}</p>

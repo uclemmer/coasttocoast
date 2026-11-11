@@ -38,7 +38,7 @@
         <meta name="description" content="{{ $description }}">
     @endif
 
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    @include('partials.favicons')
 
     {{-- @fonts before @vite, so the @font-face rules are parsed before the
          stylesheet that uses them. laravel-vite-plugin downloads the three

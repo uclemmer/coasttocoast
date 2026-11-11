@@ -59,6 +59,9 @@ class EventSeeder extends Seeder
 
     protected const VENUE_ADDRESS = "1150 Carter Street\nChattanooga, TN 37402";
 
+    /** The Westin's group-rate link for 2027, as the owner sent it (docs/29). */
+    protected const WESTIN_2027_BOOKING_URL = 'https://www.marriott.com/event-reservations/reservation-link.mi?id=1793027880667&key=GRP&app=resvlink&_branch_match_id=1392198146511130508&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXTywo0MtNLCrKzC8p0UvOz9UvSi0uy0wtN7LPTLE1NLc0NjAyt7AwMDMzV8tOrbR1DwpQSywosAWpysnMy1arK0pNSy0qysxLj08qyi8vTi2ydc4oys9NBQDDxvW8YQAAAA%3D%3D';
+
     public function run(): void
     {
         foreach ($this->fairs() as $fair) {
@@ -69,7 +72,7 @@ class EventSeeder extends Seeder
     /**
      * The calendar, oldest first.
      *
-     * @return list<array{slug: string, name: string, date: string, priceCents: int, published?: bool, registrationOpensAt?: string, registrationClosesAt?: string}>
+     * @return list<array{slug: string, name: string, date: string, priceCents: int, published?: bool, registrationOpensAt?: string, registrationClosesAt?: string, latePriceCents?: int, latePriceStartsAt?: string, venueName?: string, venueAddress?: string, hotelBookingUrl?: string}>
      */
     protected function fairs(): array
     {
@@ -85,20 +88,24 @@ class EventSeeder extends Seeder
             // 2026 — confirmed from the live site: Tuesday, April 21, 2026, $215.
             ['slug' => 'college-fair-2026', 'name' => 'College Fair 2026', 'date' => '2026-04-21 18:30', 'priceCents' => 21500],
 
-            // 2027 — TODO-OWNER. The date and price are NOT confirmed (doc 01
-            // open questions; standing answer A4 in doc 10 authorised a
-            // placeholder). Left UNPUBLISHED on purpose: an unpublished event
-            // cannot take money, so a forgotten placeholder cannot quietly
-            // charge an organization the wrong fee. Publishing it is the
-            // coordinator's deliberate act once the real figures are known.
+            // 2027 — confirmed by the owner on 2026-11-10 (docs/29): Tuesday,
+            // April 6, 2027, at The Westin, same hours as 2026. $275 through
+            // December 31, 2026, then $325. Still left UNPUBLISHED: publishing is
+            // the coordinator's deliberate act, and the registration window
+            // below is a placeholder nobody has confirmed.
             [
                 'slug' => 'college-fair-2027',
-                'name' => 'College Fair 2027 (date and price not yet confirmed — TODO-OWNER)',
-                'date' => '2027-04-20 18:30',
-                'priceCents' => 21500,
+                'name' => 'College Fair 2027',
+                'date' => '2027-04-06 18:30',
+                'priceCents' => 27500,
                 'published' => false,
                 'registrationOpensAt' => '2026-12-01 09:00',
-                'registrationClosesAt' => '2027-04-06 17:00',
+                'latePriceCents' => 32500,
+                'latePriceStartsAt' => '2027-01-01 00:00',
+                'venueName' => 'The Westin Chattanooga',
+                'venueAddress' => '801 Pine Street
+Chattanooga, TN 37402',
+                'hotelBookingUrl' => self::WESTIN_2027_BOOKING_URL,
             ],
         ];
     }
@@ -111,6 +118,11 @@ class EventSeeder extends Seeder
         bool $published = true,
         ?string $registrationOpensAt = null,
         ?string $registrationClosesAt = null,
+        ?int $latePriceCents = null,
+        ?string $latePriceStartsAt = null,
+        string $venueName = self::VENUE_NAME,
+        string $venueAddress = self::VENUE_ADDRESS,
+        ?string $hotelBookingUrl = null,
     ): Event {
         $starts = Carbon::parse($date);
 
@@ -122,9 +134,12 @@ class EventSeeder extends Seeder
                 'ends_at' => $starts->copy()->setTime(20, 0),
                 // Counselor reception, 5:00-6:30 PM (doc 00).
                 'reception_starts_at' => $starts->copy()->setTime(17, 0),
-                'venue_name' => self::VENUE_NAME,
-                'venue_address' => self::VENUE_ADDRESS,
+                'venue_name' => $venueName,
+                'venue_address' => $venueAddress,
+                'hotel_booking_url' => $hotelBookingUrl,
                 'price_cents' => $priceCents,
+                'late_price_cents' => $latePriceCents,
+                'late_price_starts_at' => $latePriceStartsAt ? Carbon::parse($latePriceStartsAt) : null,
                 'capacity' => null,
                 'registration_opens_at' => $registrationOpensAt
                     ? Carbon::parse($registrationOpensAt)

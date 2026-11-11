@@ -593,25 +593,55 @@ describe('the FAQ attachment download', function () {
 });
 
 describe('the venue map', function () {
-    // doc 10, D-9-f. The fonts are self-hosted so a visitor is not announced to
-    // Google before the page paints; shipping the Maps iframe eagerly would
-    // have undone half of that on the same page.
-    it('does not request Google on page load', function () {
-        Fair::factory()->published()->create();
+    // Loads with the page since 2026-11-10 (owner: "we do not need to hide it
+    // for privacy"), reversing doc 10 D-9-f's click-to-load (docs/29).
+    it('loads the map with the page, pinned at the venue', function () {
+        Fair::factory()->published()->create([
+            'venue_name' => 'The Westin Chattanooga',
+            'venue_address' => '801 Pine Street
+Chattanooga, TN 37402',
+        ]);
 
         $html = $this->get('/')->assertOk()->getContent();
 
-        // The URL is in the markup -- Alpine needs it -- but not in a src that
-        // the browser will fetch.
-        expect($html)->not->toContain('<iframe src="https://www.google.com/maps/embed')
-            ->toContain('x-if="loaded"');
+        expect($html)
+            ->toContain('<iframe src="https://www.google.com/maps?q='.e(urlencode('The Westin Chattanooga, 801 Pine Street, Chattanooga, TN 37402')).'&amp;output=embed"')
+            ->not->toContain('x-if="loaded"')
+            ->not->toContain('Show the map');
     });
 
-    it('offers a plain link that works without JavaScript', function () {
-        // The button is x-cloak'd, so with no Alpine it never appears. The link
-        // is outside the Alpine block for exactly that reason.
-        Fair::factory()->published()->create();
+    it('offers a plain link to the same place', function () {
+        Fair::factory()->published()->create(['venue_name' => 'The Westin Chattanooga']);
 
-        $this->get('/')->assertOk()->assertSee('maps/search/?api=1', escape: false);
+        $this->get('/')->assertOk()
+            ->assertSee('maps/search/?api=1&amp;query='.urlencode('The Westin Chattanooga'), escape: false);
+    });
+});
+
+describe('the move to The Westin (docs/29)', function () {
+    it('no longer promises Convention Center parking or a Carter Street drop-off', function () {
+        Fair::factory()->published()->create(['venue_name' => 'The Westin Chattanooga']);
+
+        $this->get('/')->assertOk()
+            ->assertDontSee('Convention Center')
+            ->assertDontSee('Carter Street')
+            ->assertDontSee('Complimentary parking')
+            ->assertSee('The Westin Chattanooga');
+    });
+
+    it('falls back to the Westin before any fair is published', function () {
+        $this->get('/')->assertOk()
+            ->assertSee('The Westin Chattanooga')
+            ->assertSee('801 Pine Street');
+    });
+
+    it('prints both lines of the mailing address for checks', function () {
+        config()->set('fair.contact.name', 'Megan Cooper');
+        config()->set('fair.contact.address_line1', 'McCallie School');
+        config()->set('fair.contact.address_line2', '500 Dodds Avenue');
+        config()->set('fair.contact.postal_code', '37404');
+
+        $this->get('/')->assertOk()
+            ->assertSeeInOrder(['ATTN: Megan Cooper', 'McCallie School', '500 Dodds Avenue', '37404']);
     });
 });

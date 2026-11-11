@@ -142,7 +142,7 @@ Student/parent registration or ticketing, multi-fair/multi-city support beyond t
 
 ## Open questions for the owner
 
-- Exact 2027 fair date/price (seed with placeholders).
+- ~~Exact 2027 fair date/price (seed with placeholders).~~ **Settled 2026-11-10**: Tuesday, April 6, 2027, at The Westin Chattanooga; $275 through December 31, 2026, then $325 (doc 29).
 - Refund/cancellation policy text.
 - Should check-pending organizations appear on the public roster? (Default: no — confirmed only.)
 - Whether grant totals need reporting for the sponsors. *(Application form/wording: settled — Appendix A. Roster logos: settled — yes, R1.3.)*

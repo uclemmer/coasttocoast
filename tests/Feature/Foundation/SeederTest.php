@@ -89,14 +89,23 @@ describe('the production seed', function () {
             ->and($past->every(fn (Event $fair): bool => $fair->is_published))->toBeTrue();
     });
 
-    it('leaves the 2027 fair unpublished because its date and price are placeholders', function () {
-        // An unpublished event cannot take money, so a forgotten placeholder
-        // cannot quietly charge an organization the wrong fee.
+    it('seeds the 2027 fair as the owner confirmed it, still unpublished', function () {
+        // Confirmed 2026-11-10 (docs/29). Publishing stays the coordinator's
+        // act, because the registration window is still a placeholder.
         $fair = Event::query()->where('slug', 'college-fair-2027')->firstOrFail();
 
         expect($fair->is_published)->toBeFalse()
             ->and($fair->isRegistrationOpen())->toBeFalse()
-            ->and($fair->name)->toContain('TODO-OWNER');
+            ->and($fair->name)->toBe('College Fair 2027')
+            ->and($fair->starts_at->format('Y-m-d H:i'))->toBe('2027-04-06 18:30')
+            ->and($fair->ends_at->format('H:i'))->toBe('20:00')
+            ->and($fair->reception_starts_at->format('H:i'))->toBe('17:00')
+            ->and($fair->venue_name)->toBe('The Westin Chattanooga')
+            ->and($fair->venue_address)->toContain('801 Pine Street')
+            ->and($fair->price_cents)->toBe(27500)
+            ->and($fair->late_price_cents)->toBe(32500)
+            ->and($fair->late_price_starts_at->format('Y-m-d H:i'))->toBe('2027-01-01 00:00')
+            ->and($fair->hotel_booking_url)->toStartWith('https://www.marriott.com/event-reservations/');
     });
 
     it('invents no organizations, reps, registrations, grants or payments', function () {

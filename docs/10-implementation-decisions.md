@@ -1284,6 +1284,11 @@ is exactly that, and editing its venue or dates must not be blocked on renaming 
 
 ### D-9-f — The venue map loads on click, not on page load
 
+> **Reversed 2026-11-10 (owner): "we do not need to hide it for privacy."** The map now loads with
+> the page, pinned at the venue's own name and address through Google's keyless `?q=…&output=embed`
+> form, so a venue edited in `/staff` moves the pin with no deploy. The TODO-OWNER note below is
+> closed with it. What follows is the decision as it stood; see [29](29-fair-2027-setup.md) §5.
+
 **Context.** The landing page embedded Google's Maps iframe directly. That is a third-party request
 fired for every visitor before anyone asked for a map — on the same page whose fonts are self-hosted
 specifically so visitors are not announced to Google before it paints (D-8.1-a). Half of that

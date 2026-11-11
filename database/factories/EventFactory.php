@@ -38,6 +38,18 @@ class EventFactory extends Factory
         ];
     }
 
+    /**
+     * An early fee of $275 until `$lateFrom`, then $325 (the 2027 pricing).
+     */
+    public function withLateFee(Carbon $lateFrom, int $earlyCents = 27500, int $lateCents = 32500): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'price_cents' => $earlyCents,
+            'late_price_cents' => $lateCents,
+            'late_price_starts_at' => $lateFrom,
+        ]);
+    }
+
     public function published(): static
     {
         return $this->state(fn (array $attributes) => ['is_published' => true]);

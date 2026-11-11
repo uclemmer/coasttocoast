@@ -31,5 +31,7 @@
 
     <x-emails::panel :heading="__('Your registration')" :rows="$rows" />
 
+    @include('emails.notifications.partials.hotel-booking', ['event' => $registration->event])
+
     <p>{{ __('We will be in touch closer to the date with parking, check-in and shipping details.') }}</p>
 </x-emails::layout>

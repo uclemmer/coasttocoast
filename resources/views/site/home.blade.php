@@ -52,7 +52,7 @@
                 </x-ui.button>
 
                 <x-ui.button variant="on-photo" href="#venue">
-                    {{ __('Venue & parking') }}
+                    {{ __('Venue & map') }}
                 </x-ui.button>
             </div>
         </div>
@@ -110,7 +110,7 @@
                          decides. Additive — it displaces none of the design's
                          copy. --}}
                     <p class="mt-4 text-[16px] leading-[1.7] text-white">
-                        <span class="font-display text-[22px] font-bold">{{ \App\Support\Money::format($fair->price_cents) }}</span>
+                        <span class="font-display text-[22px] font-bold">{{ $fair->feeSummary() }}</span>
                         <span class="text-brand-400">{{ __('per institution') }}</span>
                     </p>
                 @endif
@@ -137,16 +137,20 @@
                 </x-ui.button>
             </div>
 
-            <div class="grid">
-                @foreach ([
+            {{-- The Convention Center's parking and Carter Street drop-off lines
+                 left with the move to The Westin (owner, 2026-11-10; docs/29).
+                 They come back when the Westin's arrangements are known. --}}
+            @php
+                $included = [
                     [__('Exhibit table on the fair floor'), __('6:30–8:00 p.m., alongside 100+ peer institutions.')],
                     [__('Pre-fair dinner reception'), __('5:00–6:00 p.m. in downtown Chattanooga, with local high school counselors.')],
-                    [__('Complimentary parking'), __('In the Convention Center garage, reserved for representatives.')],
-                    [__('Volunteer drop-off service'), __('Student volunteers meet you on Carter Street and carry your exhibit materials to your table.')],
-                ] as $index => [$heading, $body])
+                ];
+            @endphp
+            <div class="grid">
+                @foreach ($included as $index => [$heading, $body])
                     <div @class([
                         'py-4',
-                        'border-b border-white/25' => $index < 3,
+                        'border-b border-white/25' => $index < count($included) - 1,
                     ])>
                         <h3 class="font-display text-[17px] font-bold">{{ $heading }}</h3>
                         <p class="mt-1.5 text-[14.5px] leading-[1.6] text-brand-400">{{ $body }}</p>
@@ -155,21 +159,27 @@
             </div>
         </section>
 
-        {{-- ── Venue & parking ────────────────────────────────────────────── --}}
+        {{-- ── Venue ──────────────────────────────────────────────────────── --}}
+        @php
+            // Fallbacks for a site with no published fair yet: the 2027 venue.
+            $venueName = $fair?->venue_name ?? __('The Westin Chattanooga');
+            $venueAddress = $fair?->venue_address ?? "801 Pine Street\nChattanooga, TN 37402";
+            $venueQuery = $venueName.', '.preg_replace('/\s*\R\s*/', ', ', trim($venueAddress));
+            $mapEmbed = 'https://www.google.com/maps?q='.urlencode($venueQuery).'&output=embed';
+            $mapLink = 'https://www.google.com/maps/search/?api=1&query='.urlencode($venueQuery);
+        @endphp
         <section id="venue"
                  class="mb-20 grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-x-[clamp(32px,6vw,90px)]">
             <div>
-                <x-ui.eyebrow class="mb-2.5 text-[28px]">{{ __('Venue & parking') }}</x-ui.eyebrow>
+                <x-ui.eyebrow class="mb-2.5 text-[28px]">{{ __('Venue') }}</x-ui.eyebrow>
 
                 <x-ui.section-heading class="!text-[clamp(26px,3vw,34px)]">
-                    {{ $fair?->venue_name ?? __('Chattanooga Convention & Trade Center') }}
+                    {{ $venueName }}
                 </x-ui.section-heading>
 
                 <div class="mt-6 grid gap-4">
                     @foreach ([
-                        [__('Address'), $fair?->venue_address ?? '1 Carter Plaza, Chattanooga, TN 37402'],
-                        [__('Representative drop-off'), __('Pull up to the College Rep Drop-Off Area on Carter Street; student volunteers will take your exhibit materials and direct you to the garage.')],
-                        [__('Parking'), __('Complimentary for college representatives in the Convention Center parking garage.')],
+                        [__('Address'), $venueAddress],
                     ] as [$label, $value])
                         <div>
                             <p class="mb-1 text-[12.5px] font-semibold uppercase tracking-[0.12em] text-ink-400">{{ $label }}</p>
@@ -179,72 +189,22 @@
                 </div>
             </div>
 
-            {{--
-                The map loads on click, not on page load.
-
-                Google's embed is a third-party request that fires for every
-                visitor before they have asked for a map, and this site's
-                visitors are largely high school students and their parents. The
-                fonts are self-hosted for exactly that reason (doc 10, D-8.1-a);
-                shipping the iframe eagerly would have undone half of it. See
-                doc 10, D-9-f.
-
-                Costs nothing to the visitor who wants the map: one click, and
-                the iframe is the same one. Without JavaScript the button is
-                absent and the address link below is the whole feature — which is
-                why that link is not inside the Alpine block.
-
-                TODO-OWNER: the embed is the handoff's placeholder, pinned at
-                Chattanooga generally rather than at the venue. Replace the
-                `src` with a Maps embed for the Convention Center.
-            --}}
-            @php
-                $venueName = $fair?->venue_name ?? __('Chattanooga Convention & Trade Center');
-                $mapEmbed = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d208917.77311510406!2d-85.37877454266417!3d35.09821494037796!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x886060408a83e785%3A0x2471261f898728aa!2sChattanooga%2C%20TN!5e0!3m2!1sen!2sus!4v1666630094698!5m2!1sen!2sus';
-                $mapLink = 'https://www.google.com/maps/search/?api=1&query='.urlencode($venueName.', Chattanooga, TN');
-            @endphp
-
             <div class="grid gap-3">
-                <div x-data="{ loaded: false, src: @js($mapEmbed) }"
-                     class="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-brand-50 shadow-map">
-                    {{-- x-if, not x-show: the iframe must not exist until asked
-                         for. A hidden iframe still fetches. --}}
-                    <template x-if="loaded">
-                        <iframe :src="src"
-                                title="{{ __('Map — :venue', ['venue' => $venueName]) }}"
-                                allowfullscreen
-                                referrerpolicy="no-referrer-when-downgrade"
-                                class="block h-full w-full border-0"></iframe>
-                    </template>
-
-                    {{-- x-cloak so the button is hidden when Alpine never runs:
-                         a button that does nothing is worse than no button, and
-                         the link below covers that case. --}}
-                    <button type="button"
-                            x-show="! loaded"
-                            x-cloak
-                            @click="loaded = true"
-                            class="absolute inset-0 grid place-content-center justify-items-center gap-2 px-6 text-center">
-                        <svg class="h-9 w-9 text-brand-600" fill="none" viewBox="0 0 24 24"
-                             stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                        </svg>
-
-                        <span class="font-display text-[13.5px] font-bold uppercase tracking-[0.04em] text-brand-600">
-                            {{ __('Show the map') }}
-                        </span>
-
-                        <span class="max-w-[34ch] text-[13.5px] leading-[1.5] text-ink-500">
-                            {{ __('Loads a map from Google, which will see your visit.') }}
-                        </span>
-                    </button>
+                {{-- Loads with the page, pinned at the venue's own address
+                     (owner, 2026-11-10: "we do not need to hide it for
+                     privacy"). This reverses doc 10 D-9-f, which held the
+                     iframe back until a click. The `?q=…&output=embed` form
+                     needs no API key and follows the venue fields in /staff,
+                     so a new venue moves the pin without a deploy. --}}
+                <div class="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-brand-50 shadow-map">
+                    <iframe src="{{ $mapEmbed }}"
+                            title="{{ __('Map — :venue', ['venue' => $venueName]) }}"
+                            loading="lazy"
+                            allowfullscreen
+                            referrerpolicy="no-referrer-when-downgrade"
+                            class="block h-full w-full border-0"></iframe>
                 </div>
 
-                {{-- Outside the Alpine block on purpose: this is the whole
-                     feature when JavaScript never runs. --}}
                 <a href="{{ $mapLink }}" target="_blank" rel="noopener noreferrer"
                    class="justify-self-start text-[14px] font-semibold text-brand-600 underline underline-offset-2 hover:text-brand-700">
                     {{ __('Open :venue in Google Maps', ['venue' => $venueName]) }}
@@ -311,6 +271,9 @@
                         {{ __('ATTN: :name', ['name' => config('fair.contact.name')]) }}<br>
                     @endif
                     {{ config('fair.contact.address_line1') }}<br>
+                    @if (config('fair.contact.address_line2'))
+                        {{ config('fair.contact.address_line2') }}<br>
+                    @endif
                     {{ config('fair.contact.city') }}, {{ config('fair.contact.state') }} {{ config('fair.contact.postal_code') }}
                 </p>
             </div>

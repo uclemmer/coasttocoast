@@ -35,6 +35,12 @@ Schedule::command('core:prune-contact-submissions')->dailyAt('03:20');
 Schedule::command('fair:send-scheduled-campaigns')->everyMinute()->withoutOverlapping();
 
 /*
+ * The monthly registration report to the coordinator and the client (docs/29).
+ * 8:00 on the first, Chattanooga time.
+ */
+Schedule::command('fair:send-registration-report')->monthlyOn(1, '08:00');
+
+/*
  * Message recipient rows past the 24-month privacy promise (N3, card 7.1).
  */
 Schedule::command('fair:prune-message-recipients')->dailyAt('03:30');

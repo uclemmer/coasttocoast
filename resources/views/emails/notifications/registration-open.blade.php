@@ -7,7 +7,7 @@
         __('Date') => $event->starts_at?->format('l, F j, Y'),
         __('Time') => $event->starts_at?->format('g:i A').' – '.$event->ends_at?->format('g:i A'),
         __('Venue') => trim($event->venue_name."\n".$event->venue_address),
-        __('Registration') => Money::format($event->price_cents),
+        __('Registration') => $event->feeSummary(),
         __('Closes') => $event->registration_closes_at?->format('l, F j, Y'),
     ];
 @endphp

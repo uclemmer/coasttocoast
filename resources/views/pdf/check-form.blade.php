@@ -60,7 +60,7 @@
             <tr>
                 <td class="label">Fee assistance applied</td>
                 <td>{{ $registration->grant->benefitSummary() }}
-                    <span class="muted">(list price {{ Money::format($registration->event?->price_cents) }})</span></td>
+                    <span class="muted">(list price {{ Money::format($registration->event?->listPriceAt($registration->created_at)) }})</span></td>
             </tr>
         @endif
     </table>

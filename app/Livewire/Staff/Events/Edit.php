@@ -60,6 +60,13 @@ class Edit extends Component
     /** Dollars, as typed. Cents on the way in and out — see the class note. */
     public string $priceDollars = '';
 
+    /** The late fee in dollars, as typed. Blank means one price all season. */
+    public string $latePriceDollars = '';
+
+    public string $late_price_starts_at = '';
+
+    public string $hotel_booking_url = '';
+
     public string $capacity = '';
 
     public string $registration_opens_at = '';
@@ -89,6 +96,11 @@ class Edit extends Component
         $this->ends_at = $this->forInput($event->ends_at);
         $this->reception_starts_at = $this->forInput($event->reception_starts_at);
         $this->priceDollars = number_format(Money::toDollars($event->price_cents), 2, '.', '');
+        $this->latePriceDollars = $event->late_price_cents === null
+            ? ''
+            : number_format(Money::toDollars($event->late_price_cents), 2, '.', '');
+        $this->late_price_starts_at = $this->forInput($event->late_price_starts_at);
+        $this->hotel_booking_url = (string) $event->hotel_booking_url;
         $this->capacity = $event->capacity === null ? '' : (string) $event->capacity;
         $this->registration_opens_at = $this->forInput($event->registration_opens_at);
         $this->registration_closes_at = $this->forInput($event->registration_closes_at);
@@ -128,6 +140,11 @@ class Edit extends Component
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'reception_starts_at' => ['nullable', 'date'],
             'priceDollars' => ['required', 'numeric', 'min:0'],
+            // A late fee and its start date only mean something together, so
+            // each one requires the other.
+            'latePriceDollars' => ['nullable', 'required_with:late_price_starts_at', 'numeric', 'min:0'],
+            'late_price_starts_at' => ['nullable', 'required_with:latePriceDollars', 'date'],
+            'hotel_booking_url' => ['nullable', 'url:https', 'max:2048'],
             'capacity' => ['nullable', 'integer', 'min:1'],
             'registration_opens_at' => ['nullable', 'date'],
             'registration_closes_at' => ['nullable', 'date', 'after:registration_opens_at'],
@@ -178,6 +195,9 @@ class Edit extends Component
             'reception_starts_at' => $this->blankToNull($this->reception_starts_at),
             // The one conversion. See the class note.
             'price_cents' => Money::toCents($this->priceDollars),
+            'late_price_cents' => $this->latePriceDollars === '' ? null : Money::toCents($this->latePriceDollars),
+            'late_price_starts_at' => $this->blankToNull($this->late_price_starts_at),
+            'hotel_booking_url' => $this->blankToNull(trim($this->hotel_booking_url)),
             'capacity' => $this->capacity === '' ? null : (int) $this->capacity,
             'registration_opens_at' => $this->blankToNull($this->registration_opens_at),
             'registration_closes_at' => $this->blankToNull($this->registration_closes_at),
@@ -224,6 +244,9 @@ class Edit extends Component
             'registration_opens_at' => __('registration opening time'),
             'registration_closes_at' => __('registration closing time'),
             'priceDollars' => __('registration fee'),
+            'latePriceDollars' => __('late fee'),
+            'late_price_starts_at' => __('late fee start time'),
+            'hotel_booking_url' => __('hotel booking link'),
             // Labelled "Venue", not "Venue name".
             'venue_name' => __('venue'),
         ];

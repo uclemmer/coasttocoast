@@ -25,14 +25,15 @@ return [
     */
 
     'contact' => [
-        'name' => env('FAIR_CONTACT_NAME', 'Meg Conner'),
+        // Megan Cooper at McCallie School since 2026-11-10 (owner, docs/29).
+        'name' => env('FAIR_CONTACT_NAME', 'Megan Cooper'),
         'email' => env('FAIR_CONTACT_EMAIL', 'contact@coasttocoastcollegefair.com'),
         'phone' => env('FAIR_CONTACT_PHONE', '(423) 757-2845'),
-        'address_line1' => env('FAIR_CONTACT_ADDRESS1', '171 Baylor School Road'),
-        'address_line2' => env('FAIR_CONTACT_ADDRESS2', ''),
+        'address_line1' => env('FAIR_CONTACT_ADDRESS1', 'McCallie School'),
+        'address_line2' => env('FAIR_CONTACT_ADDRESS2', '500 Dodds Avenue'),
         'city' => env('FAIR_CONTACT_CITY', 'Chattanooga'),
         'state' => env('FAIR_CONTACT_STATE', 'TN'),
-        'postal_code' => env('FAIR_CONTACT_POSTAL', '37405'),
+        'postal_code' => env('FAIR_CONTACT_POSTAL', '37404'),
     ],
 
     /*
@@ -110,9 +111,10 @@ return [
     | Admin alerts
     |--------------------------------------------------------------------------
     |
-    | Where new-registration and payment-received notices go (card 6.2). SMS is
-    | opt-in per channel: with no number configured, alerts stay email-only
-    | rather than failing.
+    | Where new-registration and payment-received notices go (card 6.2), and
+    | the monthly registration report. `email` may be a comma-separated list
+    | (docs/29). SMS is opt-in per channel: with no number configured, alerts
+    | stay email-only rather than failing.
     |
     */
 

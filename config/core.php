@@ -348,7 +348,9 @@ return [
 
         // Who is alerted. Empty falls back to `mail.from.address`, so a host
         // who forgets still finds the messages somewhere obvious.
-        'recipients' => array_values(array_filter([env('ADMIN_ALERT_EMAIL')])),
+        // ADMIN_ALERT_EMAIL may be a comma-separated list, so the client and
+        // the coordinator both get every contact-form message (docs/29).
+        'recipients' => array_values(array_filter(array_map('trim', explode(',', (string) env('ADMIN_ALERT_EMAIL'))))),
 
         // Prepended to both mail subjects, e.g. '[Acme]'.
         'subject_prefix' => '[Coast to Coast College Fair]',
@@ -465,7 +467,8 @@ return [
         // which you can publish and rewrite entirely.
         'logo' => null,
         'logo_height' => '1.5rem',
-        'favicon' => null,
+        // The site's own icon (docs/29), so /admin matches /staff and the public site.
+        'favicon' => 'favicon.svg',
 
         /*
          * The middleware every admin route runs behind (core 0.4, when it

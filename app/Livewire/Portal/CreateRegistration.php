@@ -136,7 +136,7 @@ class CreateRegistration extends Component
         if ($grant !== null) {
             return __('Registration for :event is :list. Your grant (:benefit) brings that to :price.', [
                 'event' => $event->name,
-                'list' => Money::format($event->price_cents),
+                'list' => Money::format($event->listPriceAt()),
                 'benefit' => (string) $grant->benefitSummary(),
                 'price' => Money::format($price),
             ]);

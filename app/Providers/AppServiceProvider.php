@@ -7,6 +7,8 @@ use App\Services\Payments\StripeCheckoutService;
 use App\Services\Sms\NullSms;
 use App\Services\Sms\SmsService;
 use App\Services\Sms\TwilioSms;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -66,7 +68,28 @@ class AppServiceProvider extends ServiceProvider
     {
         Blade::anonymousComponentPath(resource_path('views/emails'), 'emails');
 
+        $this->pointPasswordResetsAtCore();
+
         $this->trustConfiguredProxies();
+    }
+
+    /**
+     * Build the password-reset link against core's route name (docs/30).
+     *
+     * Laravel's `ResetPassword` notification links `route('password.reset')`.
+     * laravel-core registers its auth routes under a `core.` name prefix, so
+     * that route does not exist, and every "Forgot password" submission threw
+     * `RouteNotFoundException` after the token was created. Core sets no URL
+     * callback of its own (still true of 0.9.0), and its suite fakes the
+     * notification, so it never builds the link. This belongs in core; until a
+     * core release carries it, the host sets it.
+     */
+    protected function pointPasswordResetsAtCore(): void
+    {
+        ResetPassword::createUrlUsing(fn (CanResetPassword $user, string $token): string => route('core.password.reset', [
+            'token' => $token,
+            'email' => $user->getEmailForPasswordReset(),
+        ]));
     }
 
     /**

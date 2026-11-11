@@ -109,3 +109,31 @@ it('rejects a wrong password without signing anyone in', function () {
 it('does not expose the package registration route', function () {
     expect(Route::has('core.register'))->toBeFalse();
 });
+
+/*
+ * The forgot-password email, through the real mail transport (docs/30).
+ *
+ * Laravel's ResetPassword notification links route('password.reset'), which
+ * does not exist under core's `core.` name prefix, so every submission threw
+ * RouteNotFoundException. Core's own test fakes the notification and never
+ * builds the link; this one sends it and follows it.
+ */
+it('emails a reset link that opens the reset page', function () {
+    config()->set('mail.default', 'array');
+    $transport = app('mail.manager')->mailer('array')->getSymfonyTransport();
+    $transport->flush();
+
+    User::factory()->create(['email' => 'megan@mccallie.example']);
+
+    post('/forgot-password', ['email' => 'megan@mccallie.example'])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    $body = (string) $transport->messages()->last()?->getOriginalMessage()->getHtmlBody();
+
+    expect(preg_match('#https?://[^"\s]+/reset-password/[A-Za-z0-9]+\?email=[^"\s]+#', html_entity_decode($body), $match))->toBe(1);
+
+    get(parse_url($match[0], PHP_URL_PATH).'?'.parse_url($match[0], PHP_URL_QUERY))
+        ->assertOk()
+        ->assertSee('name="password"', false);
+});

@@ -72,7 +72,7 @@ class EventSeeder extends Seeder
     /**
      * The calendar, oldest first.
      *
-     * @return list<array{slug: string, name: string, date: string, priceCents: int, published?: bool, registrationOpensAt?: string, registrationClosesAt?: string, latePriceCents?: int, latePriceStartsAt?: string, venueName?: string, venueAddress?: string, hotelBookingUrl?: string}>
+     * @return list<array{slug: string, name: string, date: string, priceCents: int, published?: bool, registrationOpensAt?: string, registrationClosesAt?: string, regularPriceCents?: int, regularPriceStartsAt?: string, venueName?: string, venueAddress?: string, hotelBookingUrl?: string}>
      */
     protected function fairs(): array
     {
@@ -88,11 +88,13 @@ class EventSeeder extends Seeder
             // 2026 — confirmed from the live site: Tuesday, April 21, 2026, $215.
             ['slug' => 'college-fair-2026', 'name' => 'College Fair 2026', 'date' => '2026-04-21 18:30', 'priceCents' => 21500],
 
-            // 2027 — confirmed by the owner on 2026-11-10 (docs/29): Tuesday,
-            // April 6, 2027, at The Westin, same hours as 2026. $275 through
-            // December 31, 2026, then $325. Still left UNPUBLISHED: publishing is
-            // the coordinator's deliberate act, and the registration window
-            // below is a placeholder nobody has confirmed.
+            // 2027 — confirmed by the owner on 2026-11-10/11 (docs/29): Tuesday,
+            // April 6, 2027, at The Westin, same hours as 2026. Early bird $275
+            // through December 31, 2026, then the regular $325. Registration
+            // closes two weeks before the fair, on March 23, which is the
+            // advertised deadline; December 31 is only a price increase. The
+            // opening date is still a placeholder nobody has confirmed, and the
+            // fair is left UNPUBLISHED: publishing is the coordinator's act.
             [
                 'slug' => 'college-fair-2027',
                 'name' => 'College Fair 2027',
@@ -100,8 +102,10 @@ class EventSeeder extends Seeder
                 'priceCents' => 27500,
                 'published' => false,
                 'registrationOpensAt' => '2026-12-01 09:00',
-                'latePriceCents' => 32500,
-                'latePriceStartsAt' => '2027-01-01 00:00',
+                // End of the day, two weeks before the fair.
+                'registrationClosesAt' => '2027-03-23 23:59',
+                'regularPriceCents' => 32500,
+                'regularPriceStartsAt' => '2027-01-01 00:00',
                 'venueName' => 'The Westin Chattanooga',
                 'venueAddress' => '801 Pine Street
 Chattanooga, TN 37402',
@@ -118,8 +122,8 @@ Chattanooga, TN 37402',
         bool $published = true,
         ?string $registrationOpensAt = null,
         ?string $registrationClosesAt = null,
-        ?int $latePriceCents = null,
-        ?string $latePriceStartsAt = null,
+        ?int $regularPriceCents = null,
+        ?string $regularPriceStartsAt = null,
         string $venueName = self::VENUE_NAME,
         string $venueAddress = self::VENUE_ADDRESS,
         ?string $hotelBookingUrl = null,
@@ -138,8 +142,8 @@ Chattanooga, TN 37402',
                 'venue_address' => $venueAddress,
                 'hotel_booking_url' => $hotelBookingUrl,
                 'price_cents' => $priceCents,
-                'late_price_cents' => $latePriceCents,
-                'late_price_starts_at' => $latePriceStartsAt ? Carbon::parse($latePriceStartsAt) : null,
+                'regular_price_cents' => $regularPriceCents,
+                'regular_price_starts_at' => $regularPriceStartsAt ? Carbon::parse($regularPriceStartsAt) : null,
                 'capacity' => null,
                 'registration_opens_at' => $registrationOpensAt
                     ? Carbon::parse($registrationOpensAt)

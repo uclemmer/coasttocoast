@@ -103,9 +103,11 @@ describe('the production seed', function () {
             ->and($fair->venue_name)->toBe('The Westin Chattanooga')
             ->and($fair->venue_address)->toContain('801 Pine Street')
             ->and($fair->price_cents)->toBe(27500)
-            ->and($fair->late_price_cents)->toBe(32500)
-            ->and($fair->late_price_starts_at->format('Y-m-d H:i'))->toBe('2027-01-01 00:00')
-            ->and($fair->hotel_booking_url)->toStartWith('https://www.marriott.com/event-reservations/');
+            ->and($fair->regular_price_cents)->toBe(32500)
+            ->and($fair->regular_price_starts_at->format('Y-m-d H:i'))->toBe('2027-01-01 00:00')
+            ->and($fair->hotel_booking_url)->toStartWith('https://www.marriott.com/event-reservations/')
+            // The advertised deadline: two weeks before the fair (owner, 2026-11-11).
+            ->and($fair->registration_closes_at->format('Y-m-d H:i'))->toBe('2027-03-23 23:59');
     });
 
     it('invents no organizations, reps, registrations, grants or payments', function () {

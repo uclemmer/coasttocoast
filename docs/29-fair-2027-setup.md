@@ -41,23 +41,34 @@ unchecked). A live database would hold `created_at` and `paid_at` values
 written in UTC, and those would now read 4–5 hours off. If the app has been
 deployed with real data since, that needs a look before this ships.
 
-## 2. Early and late fee
+## 2. Early bird pricing
 
-The fee is $275 through December 31, 2026, then $325. Three decisions were
-made on the owner's behalf (owner accepted all three):
+The early bird price is $275 through December 31, 2026. The regular price,
+$325, applies from January 1.
+
+**Vocabulary (owner, 2026-11-11).** December 31 marks a price increase, not a
+deadline. The fair's one advertised deadline is when registration closes, two
+weeks before the fair (March 23, 2027). Say "early bird" and "regular price",
+never "late fee". The first version of this doc and of the code said "late
+fee". The columns were renamed the next day and the copy reworded, so nothing
+in the app tells a rep they are late in January.
+
+Three decisions were made on the owner's behalf (owner accepted all three):
 - The cutoff is the end of December 31, Chattanooga time.
 - The price locks when the registration is created, not when it is paid. A
   check registration made on December 30 owes $275 in January.
-- A percent-off grant discounts whichever fee is current. A custom-price
+- A percent-off grant discounts whichever price is current. A custom-price
   grant stays at its figure.
 
-**Schema.** Migration `add_late_price_and_hotel_booking_url_to_events_table`
-adds two columns, both nullable:
-- `late_price_cents`
-- `late_price_starts_at`
+**Schema.** Two nullable columns on `events`:
+- `regular_price_cents`
+- `regular_price_starts_at`
 
-The late fee applies only when both are set, so every existing fair keeps one
-price. `price_cents` is the early (or only) fee.
+They were added as `late_price_*` by
+`add_late_price_and_hotel_booking_url_to_events_table` and renamed by
+`rename_late_price_to_regular_price_on_events_table` (2026-11-11). Early bird
+pricing applies only when both are set, so every existing fair keeps one
+price. `price_cents` is the early bird price, or the only price.
 
 **Code.**
 - `Event::listPriceAt($at)` returns the fee before grants.
@@ -65,15 +76,23 @@ price. `price_cents` is the early (or only) fee.
   the only price source. `RegistrationService` snapshots it into
   `registrations.price_cents`, and Stripe charges the snapshot, so nothing on
   the payment path changed.
-- `Event::feeSummary()` gives the public wording: "$275.00 through December 31,
-  then $325.00", or the late fee alone once it applies. It is used on the home
-  page, the event page and the "registration is open" email.
+- `hasRegularPrice()`, `isEarlyBirdAt()` and `earlyBirdLastDay()` answer the
+  questions the copy asks.
+- `Event::feeSummary()` gives the public wording: "$275.00 early bird through
+  December 31, then $325.00", or the regular price alone once the early bird
+  ends. It is used on the home page, the event page and the "registration is
+  open" email. Those pages show the registration deadline separately, from
+  `registration_closes_at`.
 - The check form and the receipt print the list price as of the
   registration's `created_at`.
 
-**In `/staff/events/{slug}/edit`:** "Late fee" and "Late fee starts". For the
-2027 fair, the late fee starts January 1 at 12:00 AM. Each field requires the
-other.
+**In `/staff/events/{slug}/edit`:**
+- "Registration fee": the early bird price.
+- "Regular price (after early bird)".
+- "Early bird ends": for the 2027 fair, January 1 at 12:00 AM.
+
+The last two each require the other. Registration closing stays its own
+field, and it is the deadline.
 
 ## 3. Hotel booking link
 
@@ -173,17 +192,24 @@ these three files later with no code change.
 `EventSeeder`'s 2027 row now carries the confirmed facts:
 - April 6, 2027: reception 5:00, fair 6:30–8:00 p.m.;
 - The Westin Chattanooga, 801 Pine Street;
-- $275 early, then $325 from January 1;
+- early bird $275 through December 31, then the regular $325;
+- registration closes March 23, 2027 at 11:59 p.m., two weeks before the fair
+  (owner, 2026-11-11). This is the advertised deadline. End of day is an
+  inference from "two weeks before the fair".
 - the booking link.
 
 It no longer carries the TODO-OWNER name. It stays **unpublished**, and its
-registration window (opens December 1, closes two weeks before the fair) is
-still a placeholder nobody has confirmed.
+opening date (December 1) is still a placeholder nobody has confirmed.
 
 **The seeder is idempotent by slug.** On a database that already has a 2027
 row, re-seeding changes nothing. That row has to be edited in
-`/staff/events/college-fair-2027/edit`: name, date, venue, both fees, the
-cutoff and the booking link. Then confirm the registration window and publish.
+`/staff/events/college-fair-2027/edit`:
+- name, date and venue;
+- the early bird price, the regular price and when the early bird ends;
+- registration closes March 23;
+- the booking link.
+
+Then confirm the opening date and publish.
 
 ## 9. Not code: the owner's to do
 

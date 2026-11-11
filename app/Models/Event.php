@@ -28,8 +28,8 @@ use Illuminate\Support\Str;
  * @property string $venue_address
  * @property string|null $hotel_booking_url
  * @property int $price_cents
- * @property int|null $late_price_cents
- * @property Carbon|null $late_price_starts_at
+ * @property int|null $regular_price_cents
+ * @property Carbon|null $regular_price_starts_at
  * @property int|null $capacity
  * @property Carbon|null $registration_opens_at
  * @property Carbon|null $registration_closes_at
@@ -54,8 +54,8 @@ class Event extends Model
             'registration_opens_at' => 'datetime',
             'registration_closes_at' => 'datetime',
             'price_cents' => 'integer',
-            'late_price_cents' => 'integer',
-            'late_price_starts_at' => 'datetime',
+            'regular_price_cents' => 'integer',
+            'regular_price_starts_at' => 'datetime',
             'capacity' => 'integer',
             'is_published' => 'boolean',
         ];
@@ -145,63 +145,71 @@ class Event extends Model
     }
 
     /**
-     * The fee before any grant: the early fee, or the late fee from
-     * `late_price_starts_at` onward (docs/29).
+     * The fee before any grant: the early bird price, or the regular price
+     * from `regular_price_starts_at` onward (docs/29).
      *
-     * The late fee applies only when both late columns are set, so a fair
-     * with one price is unaffected. The app runs on Chattanooga time
-     * (`config/app.php`), so a cutoff of January 1 00:00 ends the early fee
+     * **Vocabulary (owner, 2026-11-11).** `price_cents` is the early bird
+     * price when a regular price is set, and the one price otherwise. The end
+     * of the early bird is a price increase, not a deadline. The fair's
+     * advertised deadline is `registration_closes_at`, two weeks before the
+     * fair. Say "early bird" and "regular price", never "late fee".
+     *
+     * The regular price applies only when both regular columns are set, so a
+     * fair with one price is unaffected. The app runs on Chattanooga time
+     * (`config/app.php`), so a cutoff of January 1 00:00 ends the early bird
      * at local midnight.
      */
     public function listPriceAt(?Carbon $at = null): int
     {
-        return $this->hasLatePrice() && ! $this->isEarlyPriceAt($at)
-            ? (int) $this->late_price_cents
+        return $this->hasRegularPrice() && ! $this->isEarlyBirdAt($at)
+            ? (int) $this->regular_price_cents
             : $this->price_cents;
     }
 
     /**
-     * Whether this fair has a late fee at all.
+     * Whether this fair has early bird pricing at all (a regular price and
+     * the moment it starts).
      */
-    public function hasLatePrice(): bool
+    public function hasRegularPrice(): bool
     {
-        return $this->late_price_cents !== null && $this->late_price_starts_at !== null;
+        return $this->regular_price_cents !== null && $this->regular_price_starts_at !== null;
     }
 
     /**
-     * Whether the early fee still applies at `$at` (false when the fair has
-     * no late fee).
+     * Whether the early bird price still applies at `$at` (false when the fair has
+     * no early bird pricing).
      */
-    public function isEarlyPriceAt(?Carbon $at = null): bool
+    public function isEarlyBirdAt(?Carbon $at = null): bool
     {
-        return $this->hasLatePrice() && ($at ?? Carbon::now())->lt($this->late_price_starts_at);
+        return $this->hasRegularPrice() && ($at ?? Carbon::now())->lt($this->regular_price_starts_at);
     }
 
     /**
-     * The last day of the early fee, for copy like "through December 31".
+     * The last day of the early bird, for copy like "through December 31".
      */
-    public function earlyPriceLastDay(): ?Carbon
+    public function earlyBirdLastDay(): ?Carbon
     {
-        return $this->hasLatePrice() ? $this->late_price_starts_at->copy()->subMinute() : null;
+        return $this->hasRegularPrice() ? $this->regular_price_starts_at->copy()->subMinute() : null;
     }
 
     /**
      * The fee as a visitor should read it.
      *
-     * "$275" for one price, or "$275 through December 31, then $325" while
-     * the early fee lasts. Once the late fee applies, the early fee is gone,
-     * so it shows the late fee alone.
+     * "$275.00" for one price, or "$275.00 early bird through December 31,
+     * then $325.00" while the early bird lasts. Once the regular price
+     * applies, the early bird is gone, so it shows that price alone. It never
+     * says "deadline": the deadline is when registration closes.
      */
     public function feeSummary(?Carbon $at = null): string
     {
-        if (! $this->isEarlyPriceAt($at)) {
+        if (! $this->isEarlyBirdAt($at)) {
             return Money::format($this->listPriceAt($at));
         }
 
-        return __(':early through :date, then :late', [
+        return __(':early early bird through :date, then :regular', [
             'early' => Money::format($this->price_cents),
-            'date' => $this->earlyPriceLastDay()->format('F j'),
-            'late' => Money::format((int) $this->late_price_cents),
+            'date' => $this->earlyBirdLastDay()->format('F j'),
+            'regular' => Money::format((int) $this->regular_price_cents),
         ]);
     }
 

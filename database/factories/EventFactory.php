@@ -39,14 +39,14 @@ class EventFactory extends Factory
     }
 
     /**
-     * An early fee of $275 until `$lateFrom`, then $325 (the 2027 pricing).
+     * Early bird $275 until `$regularFrom`, then the regular $325 (the 2027 pricing).
      */
-    public function withLateFee(Carbon $lateFrom, int $earlyCents = 27500, int $lateCents = 32500): static
+    public function withEarlyBird(Carbon $regularFrom, int $earlyCents = 27500, int $regularCents = 32500): static
     {
         return $this->state(fn (array $attributes) => [
             'price_cents' => $earlyCents,
-            'late_price_cents' => $lateCents,
-            'late_price_starts_at' => $lateFrom,
+            'regular_price_cents' => $regularCents,
+            'regular_price_starts_at' => $regularFrom,
         ]);
     }
 

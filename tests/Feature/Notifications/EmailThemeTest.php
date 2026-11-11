@@ -161,11 +161,18 @@ describe('the brand design', function () {
     });
 
     it('puts the fair and the venue in the eyebrow when the message has one', function () {
+        // Always an apostrophe, so the escaping below is exercised every run
+        // rather than whenever Faker happens to pick one.
+        $this->fair->update(['venue_name' => "O'Keefe Convention Center"]);
+
         Notification::route('mail', 'someone@example.edu')
             ->notify(new RegistrationOpenAnnouncement($this->fair));
 
+        // e(): the factory's venue is fake()->company(), which is sometimes
+        // "O'Keefe" and friends, and the email escapes the apostrophe. Comparing
+        // the raw name failed whenever Faker picked one.
         expect((string) lastSentEmail()?->getHtmlBody())
-            ->toContain($this->fair->starts_at->format('F j, Y').' · '.$this->fair->venue_name);
+            ->toContain(e($this->fair->starts_at->format('F j, Y').' · '.$this->fair->venue_name));
     });
 
     it('uses email-safe fonts only', function () {

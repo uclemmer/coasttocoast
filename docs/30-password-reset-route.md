@@ -50,3 +50,19 @@ Once core ships it, this method can go.
 
 It failed on the old code with the same exception the owner saw, and passes
 now. Suite: 1017 passed, 34 skipped.
+
+## Resolved in core `v0.8.6` (2026-11-11)
+
+Core shipped the fix as `v0.9.1`, and as `v0.8.6` on a `0.8.x` branch for hosts on `^0.8`, which
+this app is. It sets the same callback in `AuthRouteRegistrar`, alongside the auth routes it names,
+with a core test that renders the real mail.
+
+This app took it as a **lock move only** (`v0.8.5` → `v0.8.6`; `^0.8` already admits it), and
+`AppServiceProvider::pointPasswordResetsAtCore()` went, as the section above said it could.
+Keeping both would have been harmless, with two callbacks building the same URL and whichever
+registered last winning. It would also have left a second copy of core's behaviour here, and that
+copy would go stale the first time core's route changed.
+
+`CoreAuthSurfaceTest` "emails a reset link that opens the reset page" is unchanged. It sends the
+real mail, follows the link and finds the form, and it now passes on core's callback alone, which is
+the proof the shim is no longer needed.

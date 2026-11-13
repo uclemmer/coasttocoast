@@ -55,6 +55,11 @@ use Illuminate\Support\Carbon;
  */
 class EventSeeder extends Seeder
 {
+    /**
+     * Where the 2022–2026 fairs were held. History, so it stays: the move to
+     * The Westin starts with the 2027 fair, whose row names its own venue
+     * (owner, 2026-11-10; docs/29). Do not "update" this constant.
+     */
     protected const VENUE_NAME = 'Chattanooga Convention & Trade Center';
 
     protected const VENUE_ADDRESS = "1150 Carter Street\nChattanooga, TN 37402";

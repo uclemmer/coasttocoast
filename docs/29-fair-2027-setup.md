@@ -150,6 +150,35 @@ Westin's details are known (owner: "drop it until we have details"):
 The hero button now reads "Venue & map". The fallback venue, used before any
 fair is published, is the Westin.
 
+**The rest of the old venue, swept 2026-11-13** (owner: "change all the old
+references to the convention center"). Two pieces of seeded copy still named
+it, and both live in the database once seeded:
+- **The FAQ** "When and where is the fair?" said the Chattanooga Convention &
+  Trade Center, 1150 Carter Street. It now says The Westin Chattanooga, 801
+  Pine Street.
+- **The `home.hero` content block** promised "complimentary parking, and
+  student volunteers to carry your materials in". Those were the Convention
+  Center's arrangements, so they went, like the homepage lines above.
+
+The seeders never overwrite an existing row, so both were changed twice:
+- in `FaqSeeder` and `ContentBlockSeeder`, for a fresh database;
+- by the migration `move_venue_copy_to_the_westin`, for one already seeded.
+
+The migration rewrites a row **only while it still holds the original seeded
+text**. An answer already edited in `/staff/faq` or `/admin` is left alone. On
+production, check both after deploying.
+
+**Kept on purpose:** the 2022–2026 fair rows. Those fairs were at the
+Convention Center, so `EventSeeder::VENUE_NAME` stays, with a docblock saying
+not to update it. Until the 2027 fair is published, the home and event pages
+show the most recent published fair, 2026, at its real venue.
+`WestinVenueTest` covers:
+- the fresh seed;
+- the migration on old text, including CRLF;
+- an edited answer, left alone;
+- the rollback;
+- the home page and the FAQ, once 2027 is published.
+
 ## 6. Monthly registration report
 
 `php artisan fair:send-registration-report` runs at 08:00 on the 1st of each

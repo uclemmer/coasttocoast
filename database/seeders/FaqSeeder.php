@@ -36,7 +36,10 @@ class FaqSeeder extends Seeder
         return [
             [
                 'When and where is the fair?',
-                'The fair is held at the Chattanooga Convention & Trade Center, 1150 Carter Street, '
+                // The Westin since 2027 (owner, 2026-11-10; docs/29). The
+                // migration `move_venue_copy_to_the_westin` rewrites an existing
+                // row that still carries the old Convention Center answer.
+                'The fair is held at The Westin Chattanooga, 801 Pine Street, '
                     .'Chattanooga, TN 37402. The counselor reception runs from 5:00 to 6:30 PM and the fair '
                     .'is open to students and families from 6:30 to 8:00 PM. See the event page for this '
                     ."year's date.",

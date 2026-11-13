@@ -58,9 +58,12 @@ class ContentBlockSeeder extends Seeder
                 'body' => <<<'MD'
                     Each spring, more than one hundred colleges and universities meet the sophomores,
                     juniors, and parents of Tennessee's tri-state area in a single evening.
-                    Registration includes your exhibit table, the pre-fair dinner reception,
-                    complimentary parking, and student volunteers to carry your materials in.
+                    Registration includes your exhibit table and the pre-fair dinner reception.
                     MD,
+                // "Complimentary parking, and student volunteers to carry your
+                // materials in" were the Convention Center's arrangements. They
+                // left with the move to The Westin and come back when its
+                // arrangements are known (owner, 2026-11-10; docs/29).
             ],
 
             'home.for_representatives' => [

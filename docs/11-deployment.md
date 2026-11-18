@@ -218,6 +218,8 @@ of a receipt. Do not point both at `outbound` to save a step.
 - [ ] **The owner content queue below is empty**
 - [ ] DNS cut over from ISPEUS
 - [ ] Backups running and a restore tested
+- [ ] Terms of Service and Privacy Policy reviewed (every TODO resolved, a lawyer's read) and published in `/admin` → Legal; `core:doctor` no longer warns about them (doc 31)
+- [ ] The W-9 uploaded as the FAQ attachment on "Can we get a W-9?" (doc 29 §11)
 - [ ] `php artisan down --render="errors::503"` shows the maintenance page, and `php artisan up` clears it
 - [ ] `TRUSTED_PROXIES` matches the real topology, verified by a recorded IP being a visitor's rather than the proxy's
 

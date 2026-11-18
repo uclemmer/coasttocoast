@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 use UClemmer\LaravelCore\Admin\Admin;
 use UClemmer\LaravelCore\Auth\Permission;
 use UClemmer\LaravelCore\Auth\Role;
+use UClemmer\LaravelLegal\Admin\LegalScreens;
 use UClemmer\LaravelPostmaster\Integration\Core\AdminScreens;
 
 /*
@@ -28,7 +29,7 @@ it('mounts core\'s admin at /admin', function () {
         ->and(Admin::url('dashboard'))->toEndWith('/admin');
 });
 
-it('contributes only the message log, and gets the rest from core', function () {
+it('contributes only the message log and the legal editor, and gets the rest from core', function () {
     /*
      * Inverted 2026-08-21 when the fair's resources left for /staff (docs/13):
      * `core.admin.plugins` holds `ProvidesAdminScreens` class-strings, and this
@@ -39,11 +40,15 @@ it('contributes only the message log, and gets the rest from core', function () 
      * so /admin looks the same to a user while the message log arrives from a
      * different package. The fair's own screens are still at /staff and still
      * contribute nothing here.
+     *
+     * Two since 2026-11-17: `uclemmer/laravel-legal` contributes the Terms of
+     * Service and Privacy Policy editor the same way (docs/31).
      */
     expect(config('core.admin.plugins'))
-        ->toBe([AdminScreens::class])
+        ->toBe([AdminScreens::class, LegalScreens::class])
         ->and(Admin::has('users.index'))->toBeTrue()
-        ->and(Admin::has('postmaster-messages.index'))->toBeTrue();
+        ->and(Admin::has('postmaster-messages.index'))->toBeTrue()
+        ->and(Admin::has('legal.index'))->toBeTrue();
 });
 
 /*

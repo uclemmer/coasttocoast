@@ -15,6 +15,16 @@
             &copy; 2007&ndash;{{ now()->year }} {{ config('app.name') }} &middot; {{ __('Chattanooga, Tennessee') }}
         </p>
 
+        {{-- Terms and Privacy, once each is published in /admin (docs/31).
+             Unpublished documents have no public page, so no link. --}}
+        @if ($legalLinks = \App\Support\LegalLinks::published())
+            <nav aria-label="{{ __('Legal') }}" class="flex gap-4">
+                @foreach ($legalLinks as $label => $url)
+                    <a href="{{ $url }}" class="underline underline-offset-2 hover:text-white">{{ $label }}</a>
+                @endforeach
+            </nav>
+        @endif
+
         <p class="m-0">{{ __('Powered by Uriah Clemmer') }}</p>
     </div>
 </footer>

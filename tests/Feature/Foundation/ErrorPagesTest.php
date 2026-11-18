@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -109,5 +110,53 @@ describe('the exception handler', function () {
         $this->get('/__test-explodes')
             ->assertStatus(500)
             ->assertSee('Something went wrong');
+    });
+});
+
+/*
+ * The gaps the handoff did not draw (docs/31). Each of these used to fall
+ * through to Laravel's stock grey page: 419 on a form left open too long, 429
+ * from the throttled forms, 401, and any other 4xx or 5xx. They share the
+ * shell, so they inherit its standalone rule; these pin that each one is
+ * picked up for its code, with the code on the page.
+ */
+describe('the pages the handoff did not draw', function () {
+    beforeEach(function () {
+        // Debug off, which is the only way production renders 5xx views.
+        config(['app.debug' => false]);
+
+        Route::get('/__test-abort/{code}', fn (int $code) => abort($code))->middleware('web');
+    });
+
+    it('renders each one standalone, with no dependency on the Vite build', function (int $code, string $heading) {
+        $this->get('/__test-abort/'.$code)
+            ->assertStatus($code)
+            ->assertSee($heading, escape: false)
+            ->assertSee('<div class="code" aria-hidden="true">'.$code.'</div>', escape: false)
+            ->assertSee('<meta name="robots" content="noindex">', escape: false)
+            ->assertDontSee('/build/assets/', escape: false);
+    })->with([
+        '401' => [401, 'Please log in'],
+        '419' => [419, 'Page expired'],
+        '429' => [429, 'Too many requests'],
+        'a 4xx with no view of its own' => [418, 'We couldn&#039;t do that'],
+        'a 5xx with no view of its own' => [502, 'Something went wrong'],
+    ]);
+
+    it('renders 419 for an expired form, the way a representative meets it', function () {
+        // The exception the CSRF check throws when a registration form has sat
+        // open past the session lifetime. The check itself is skipped under
+        // test, so the route throws what it would have thrown.
+        Route::post('/__test-csrf', fn () => throw new TokenMismatchException('CSRF token mismatch.'))
+            ->middleware('web');
+
+        $this->post('/__test-csrf')
+            ->assertStatus(419)
+            ->assertSee('Page expired')
+            ->assertSee('Go back');
+    });
+
+    it('offers log in from 401', function () {
+        $this->get('/__test-abort/401')->assertSee('href="'.url('/login').'"', escape: false);
     });
 });

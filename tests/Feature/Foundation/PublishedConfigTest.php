@@ -43,10 +43,17 @@ it('carries every key the installed package config defines', function (string $p
     $shipped = dottedConfigKeys(require base_path("vendor/uclemmer/{$package}/config/{$file}"));
     $published = dottedConfigKeys(require config_path($file));
 
-    expect(array_values(array_diff($shipped, $published)))->toBe([]);
+    // A section the package ships empty (legal's `starters => []`) is a single
+    // leaf in `$shipped`; a host that fills it has keys beneath it instead.
+    // Those keys carry the section, so they count as having it.
+    $missing = array_filter($shipped, fn (string $key): bool => ! in_array($key, $published, true)
+        && collect($published)->doesntContain(fn (string $have): bool => str_starts_with($have, $key.'.')));
+
+    expect(array_values($missing))->toBe([]);
 })->with([
     'core' => ['laravel-core', 'core.php'],
     'postmaster' => ['laravel-postmaster', 'postmaster.php'],
+    'legal' => ['laravel-legal', 'legal.php'],
 ]);
 
 it('guards every admin route with authentication and the admin permission', function () {

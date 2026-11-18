@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "16f1bec78e8bd7cebde488c41df90de3",
+    "content-hash": "ffc61c8682027b71d409576da080e184",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -6815,6 +6815,132 @@
                 }
             ],
             "time": "2026-11-11T03:22:30+00:00"
+        },
+        {
+            "name": "uclemmer/laravel-legal",
+            "version": "v0.7.1",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:uclemmer/laravel-legal.git",
+                "reference": "a787b34587c5fcd9ab317fdc1d7b32d2edd4ff59"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/uclemmer/laravel-legal/zipball/a787b34587c5fcd9ab317fdc1d7b32d2edd4ff59",
+                "reference": "a787b34587c5fcd9ab317fdc1d7b32d2edd4ff59",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^13.0",
+                "livewire/livewire": "^4.4.8",
+                "php": "^8.5",
+                "spatie/laravel-package-tools": "^1.16",
+                "uclemmer/laravel-core": "^0.8"
+            },
+            "conflict": {
+                "symfony/http-client": "<7.4.23 || >=8.0,<8.1.11",
+                "symfony/http-foundation": "<7.4.23 || >=8.0,<8.1.11",
+                "symfony/http-kernel": "<7.4.23 || >=8.0,<8.1.11",
+                "symfony/mime": "<7.4.22 || >=8.0,<8.1.10",
+                "symfony/routing": "<7.4.23 || >=8.0,<8.1.11",
+                "symfony/yaml": "<7.4.23 || >=8.0,<8.1.11"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.14",
+                "nunomaduro/collision": "^8.8",
+                "orchestra/testbench": "^11.0.0",
+                "pestphp/pest": "^4.0",
+                "pestphp/pest-plugin-arch": "^4.0",
+                "pestphp/pest-plugin-laravel": "^4.0",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "spatie/laravel-ray": "^1.35"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "UClemmer\\LaravelLegal\\LegalServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "UClemmer\\LaravelLegal\\": "src/",
+                    "UClemmer\\LaravelLegal\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "UClemmer\\LaravelLegal\\Tests\\": "tests/",
+                    "Workbench\\App\\": "workbench/app/"
+                }
+            },
+            "scripts": {
+                "post-autoload-dump": [
+                    "@composer run prepare"
+                ],
+                "prepare": [
+                    "@php vendor/bin/testbench package:discover --ansi"
+                ],
+                "test": [
+                    "@php -d memory_limit=1G vendor/bin/pest"
+                ],
+                "test-coverage": [
+                    "@php -d memory_limit=1G vendor/bin/pest --coverage"
+                ],
+                "analyse": [
+                    "@prepare",
+                    "vendor/bin/phpstan analyse --memory-limit=1G"
+                ],
+                "analyze": [
+                    "@analyse"
+                ],
+                "format": [
+                    "@format-php",
+                    "@format-blade"
+                ],
+                "format-php": [
+                    "vendor/bin/pint"
+                ],
+                "format-blade": [
+                    "npx blade-formatter --write \"resources/views/**/*.blade.php\""
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Uriah M. Clemmer IV",
+                    "email": "uriah@nihil.co",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Versioned, publishable legal documents for Laravel: immutable published versions, frozen variables, an acceptance log and a re-consent interstitial. Built on uclemmer/laravel-core.",
+            "homepage": "https://github.com/uclemmer/laravel-legal",
+            "keywords": [
+                "UClemmer",
+                "consent",
+                "filament",
+                "laravel",
+                "legal",
+                "privacy",
+                "terms"
+            ],
+            "support": {
+                "source": "https://github.com/uclemmer/laravel-legal/tree/v0.7.1",
+                "issues": "https://github.com/uclemmer/laravel-legal/issues"
+            },
+            "funding": [
+                {
+                    "type": "github",
+                    "url": "https://github.com/UClemmer"
+                }
+            ],
+            "time": "2026-11-08T03:51:15+00:00"
         },
         {
             "name": "uclemmer/laravel-postmaster",

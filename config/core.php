@@ -1,6 +1,7 @@
 <?php
 
 use App\Support\Permissions;
+use UClemmer\LaravelLegal\Admin\LegalScreens;
 use UClemmer\LaravelPostmaster\Integration\Core\AdminScreens;
 
 /*
@@ -503,11 +504,13 @@ return [
          *
          * The message log used to be in that list and is not any more: core
          * 0.5.0 gave it up, and `uclemmer/laravel-postmaster` contributes it
-         * back through this key. That is the only entry here — the fair's own
-         * screens still live at /staff and are not contributed to /admin.
+         * back through this key. `uclemmer/laravel-legal` adds the Terms of
+         * Service and Privacy Policy editor the same way (docs/31). The fair's
+         * own screens still live at /staff and are not contributed to /admin.
          */
         'plugins' => [
             AdminScreens::class,
+            LegalScreens::class,
         ],
 
         'modules' => [

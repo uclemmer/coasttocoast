@@ -31,6 +31,7 @@ class ProductionSeeder extends Seeder
             SponsorSeeder::class,
             FaqSeeder::class,
             EventSeeder::class,
+            LegalDocumentSeeder::class,
         ]);
     }
 }

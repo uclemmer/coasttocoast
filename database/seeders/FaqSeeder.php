@@ -74,9 +74,10 @@ class FaqSeeder extends Seeder
             ],
             [
                 'Can we get a W-9?',
-                'Yes. TODO-OWNER: upload the current signed W-9 as this question\'s attachment '
-                    .'(Staff → FAQ → edit this question → Attachment). A download link appears '
-                    .'under this answer once it is there, and this sentence can be replaced.',
+                // The PDF itself is uploaded through Staff → FAQ → this question →
+                // Attachment, not seeded: a signed W-9 carries the fair's EIN,
+                // so it stays out of git (docs/29 §9).
+                'Yes. Download our W-9 from the link below this answer.',
             ],
             [
                 'Where do we park, and where do we unload?',
@@ -88,7 +89,14 @@ class FaqSeeder extends Seeder
             ],
             [
                 'What are the guidelines for representatives at the fair?',
-                'TODO-OWNER: transcribe the fair conduct guidelines from the current site.',
+                // From the live site's FAQ, 2026-11-17 (docs/29 §9).
+                "These apply to everyone at the fair, exhibitors and visitors alike.\n\n"
+                    ."- **No recording or live streaming.** To protect the privacy of attendees and exhibitors, recording or live streaming of the event is not permitted.\n"
+                    ."- **No solicitation.** Soliciting or distributing promotional materials outside of designated exhibitor booths is prohibited.\n"
+                    ."- **Respectful behavior.** All attendees are expected to behave respectfully towards exhibitors and other attendees. Any form of harassment or disruptive behavior will not be tolerated.\n"
+                    ."- **Follow the event schedule.** Please adhere to the event schedule and attend sessions on time to avoid disruptions.\n"
+                    ."- **Keep aisles clear.** Ensure that aisles and walkways are kept clear for easy movement and access.\n"
+                    .'- **Follow the venue\'s rules.** Follow all rules and regulations set by the venue, including any safety protocols.',
             ],
             [
                 'Will we hear from you before the fair?',

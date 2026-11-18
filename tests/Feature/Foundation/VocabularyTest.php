@@ -38,6 +38,11 @@ const NON_ENTITY_SENSES = [
 
     // The visitors the fair is for: high schoolers and their parents.
     '/high\s+school/i',
+
+    // Quoted speech: Ann Katherine Taylor's testimonial, imported from the live
+    // site (docs/29 §11). Her word, so it is not ours to rewrite. Phrase-exact,
+    // so it excuses this sentence and nothing else.
+    '/schools\s+they\s+may\s+not\s+have\s+thought\s+about\s+before/i',
 ];
 
 /** @return array<int, string> */

@@ -34,6 +34,7 @@ class SiteController extends Controller
             // sized and cropped to the layout.
             'heroBody' => ContentBlocks::render('home.hero'),
             'registrationIntro' => ContentBlocks::render('home.for_representatives'),
+            'testimonial' => ContentBlocks::render('home.testimonial'),
         ]);
     }
 

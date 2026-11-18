@@ -75,6 +75,22 @@ class ContentBlockSeeder extends Seeder
                     MD,
             ],
 
+            // The live site's one testimonial, read 2026-11-17 (docs/29 §9). Its
+            // "Coast-to –Coast" typo is corrected; the words are otherwise hers.
+            // Blank this block in /admin to take the section off the home page.
+            'home.testimonial' => [
+                'title' => 'Home — testimonial',
+                'body' => <<<'MD'
+                    "I believe it is important for students to expand their horizons, and the wide
+                    variety of colleges that attend the Coast-to-Coast fair allows them to consider
+                    schools they may not have thought about before. Perhaps they will discover that
+                    attending college in another part of the country will challenge them to learn and
+                    grow beyond their wildest dreams!"
+
+                    **Ann Katherine Taylor**, Baylor School
+                    MD,
+            ],
+
             'about.body' => [
                 'title' => 'About — body',
                 'body' => <<<'MD'

@@ -211,6 +211,21 @@
                 </a>
             </div>
         </section>
+
+        {{-- ── Testimonial ───────────────────────────────────────────────────
+             The `home.testimonial` content block, imported from the live site
+             (docs/29 §9). Editable in /admin; blank it and the section goes. --}}
+        @if ($testimonial)
+            <section id="testimonial" aria-label="{{ __('Testimonial') }}" class="mb-20 grid justify-items-center text-center">
+                <x-ui.eyebrow class="mb-4 text-[28px]">{{ __('In their words') }}</x-ui.eyebrow>
+
+                <figure class="m-0 max-w-[62ch]">
+                    <blockquote class="m-0">
+                        <x-ui.prose :html="$testimonial" class="mx-auto text-[18px] italic [&_strong]:not-italic [&_strong]:font-semibold [&_strong]:text-ink-900" />
+                    </blockquote>
+                </figure>
+            </section>
+        @endif
     </x-site.container>
 
     {{-- ── Sponsors ───────────────────────────────────────────────────────── --}}

@@ -123,7 +123,7 @@ describe('the production seed', function () {
         expect(User::query()->count())->toBe(1)
             ->and(Sponsor::query()->count())->toBe(4)
             ->and(Event::query()->count())->toBe(6)
-            ->and(Content::query()->ofType(ContentType::Block)->count())->toBe(9);
+            ->and(Content::query()->ofType(ContentType::Block)->count())->toBe(10);
     });
 
     it('is safe to run after the coordinator deletes a block', function () {

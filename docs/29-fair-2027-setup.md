@@ -271,3 +271,58 @@ Then confirm the opening date and publish.
 - The two old map tests asserted click-to-load. They were rewritten to the
   owner's reversal: the iframe is present on load and pinned at the venue.
 - Pint clean.
+
+## 11. Imported from the live site, 2026-11-17
+
+The owner asked for anything else on coasttocoastcollegefair.com to be
+brought across. Every page was read on 2026-11-17 and compared with this app.
+
+**Imported:**
+- **The fair guidelines.** The FAQ answer "What are the guidelines for
+  representatives at the fair?" was a TODO-OWNER placeholder. It now lists
+  the live site's six rules as a Markdown list: no recording or live
+  streaming, no solicitation, respectful behavior, the schedule, clear aisles,
+  the venue's rules. The live site words them for every attendee, so the
+  answer opens by saying so.
+- **The W-9 answer.** The placeholder now reads "Download our W-9 from the
+  link below this answer." The PDF, `C2C-W9-2022.pdf` (332 KB, one scanned
+  page), was downloaded from the live site. It was attached to the question
+  in the local database, but **not committed**: a signed W-9 carries the
+  fair's EIN. On production, upload it at `/staff/faq` → "Can we get a
+  W-9?" → Attachment. Until then the answer points at a link that is not
+  there. It is a 2022 form, so check whether a newer one exists.
+- **Sponsor staff.** `SponsorSeeder` seeds all twelve names and titles from
+  the live Sponsors page, in its order. Before, it seeded only Meg Conner.
+  Re-running it adds whoever is missing and never rewrites a title, so an
+  existing database keeps Meg Conner's earlier "Fair Coordinator, College
+  Counseling". The live site calls her Associate Director of College
+  Counseling.
+- **The testimonial.** The live home page has one, from Ann Katherine Taylor
+  of Baylor School; eight fresh loads all showed the same quote. It is the
+  new `home.testimonial` content block, rendered between the venue and the
+  sponsors. Its "Coast-to –Coast" typo is corrected. Blanking the block in
+  `/admin` removes the section.
+
+The two FAQ answers reach an already-seeded database through
+`import_live_site_faq_answers`, only while they still hold their
+placeholders. The sponsor staff and the testimonial block arrive on the next
+`ProductionSeeder` run, which adds missing rows. `LiveSiteImportTest` covers
+all of it, including the testimonial's classes in the built stylesheet.
+
+**Not imported, and why:**
+- **The rosters:** the 2023–2026 registrations came from the participant
+  export (doc 18).
+- **Parking, drop-off, hotel and map:** all describe the Convention Center
+  and its neighbouring Marriott.
+- **The Privacy Policy and Terms:** the live pages are empty, just their
+  headings, though the live contact form asks visitors to agree to them.
+- **The images:** the wordmark and the cityscape are already here.
+
+**Open, for the owner:**
+- **The financial-aid workshop.** The `about.body` block says one "runs
+  alongside the fair". The live site says "we hope to provide" one.
+- **The dinner end time.** The live home page says 5:00–6:00 and the live
+  FAQ says 5:00–6:30. This app copied both: the home page says 6:00 and the
+  FAQ says 6:30.
+- **When registration opens.** The live site opened 2026 registration on
+  November 1 at noon. The seeded 2027 opening, December 1, is a placeholder.
